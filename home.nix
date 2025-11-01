@@ -12,12 +12,6 @@
     lxgw-wenkai
   ];
 
-  xdg.configFile."ibus/rime/ibus_rime.custom.yaml".text = ''
-    patch:
-     style/horizontal: true
-     style/preedit_style: preview
-  '';
-
   # GNOME 设置
   dconf.settings = {
     "org/gnome/shell" = {
@@ -59,5 +53,13 @@
         identityFile = "/home/lophophora/.ssh/lysergic";
       };
     };
+  };
+
+  programs = {
+    direnv = {
+      enable = true;
+      nix-direnv.enable = true; # 启用 nix-direnv
+    };
+    fish.enable = true; # 启用 Fish shell 管理
   };
 }

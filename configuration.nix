@@ -6,6 +6,7 @@
   config,
   pkgs,
   inputs,
+  lib,
   ...
 }:
 
@@ -51,7 +52,12 @@
 
   # Enable the GNOME Desktop Environment.
   services.displayManager.gdm.enable = true;
+  services.displayManager.gdm.wayland = true;
   services.desktopManager.gnome.enable = true;
+  qt.platformTheme = "gnome";
+
+  services.flatpak.enable = true;
+
   environment.gnome.excludePackages = (
     with pkgs;
     [
@@ -69,6 +75,8 @@
       totem # video player
       yelp
       gnome-weather
+      gnome-software
+      loupe
     ]
   );
 
@@ -83,9 +91,37 @@
       ffmpeg
       fastfetch
       imagemagick
-      wl-clipboard
+      (texlive.combine {
+        inherit (texlive)
+          scheme-basic # Basic TeX scheme
+          ctex # Chinese support
+          chinese-jfm # Chinese support
+          fontspec # Custom fonts
+          luatex # LuaLaTeX engine
+          luacode # Lua code in LaTeX
+          graphics # Image inclusion
+          geometry # Page margins
+          fancyhdr # Headers/footers
+          titlesec
+          hyphen-greek
+          hyperref # Hyperlinks
+          postnotes # Endnotes
+          eso-pic # Background images
+          footmisc # Footnote formatting
+          polyglossia # Multilingual support
+          wrapfig
+          capt-of
+          ;
+      })
+      texlab
+      nixfmt
+      nixd
+      unzip
+      gnome-sound-recorder
       gnome-themes-extra
       gnome-tweaks
+      prismlauncher
+      luanti
     ];
   };
 
@@ -112,22 +148,13 @@
     '';
   };
 
-  # programs.firefox.enable = true;
-
   # List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
   environment.systemPackages = with pkgs; [
     nano
     git
     wget
-    gnome-sound-recorder
-    texlive.combined.scheme-full
-    texlab
-    inputs.agenix.packages."${system}".default
-    nixd
-    power-profiles-daemon
-    unzip
-    nixfmt
+    inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   # dae service
@@ -148,14 +175,14 @@
   # font config and input method
   fonts = {
     enableDefaultPackages = true;
+    fontDir.enable = true;
     packages = with pkgs; [
       noto-fonts-cjk-sans-static
       noto-fonts-cjk-serif-static
       noto-fonts
       ibm-plex
       (ibm-plex.override { families = [ "sans-sc" ]; })
-      noto-fonts-extra
-      noto-fonts-emoji
+      noto-fonts-color-emoji
     ];
     fontconfig = {
       enable = true;
@@ -214,6 +241,7 @@
     {
       settings."org/gnome/desktop/interface" = {
         text-scaling-factor = 1.42;
+        cursor-size = lib.gvariant.mkInt32 32;
       };
     }
   ];

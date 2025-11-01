@@ -22,10 +22,22 @@
       home-manager,
       ...
     }@inputs:
+
+    with nixpkgs.lib;
+
+    let
+      system = "x86_64-linux"; # 你可以改成其他架构
+      pkgs = nixpkgs.legacyPackages.${system}; # 必须先定义 pkgs
+    in
     {
-      nixosConfigurations.flowerpot = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
+      nixosConfigurations.flowerpot = nixosSystem {
+        inherit system pkgs; # 推荐！自动一致
+        # system = pkgs.stdenv.hostPlatform.system;     # 也可以，但 inherit 更简洁
+
+        specialArgs = { inherit inputs; };
+
         modules = [
+          ./configuration.nix
           agenix.nixosModules.default
           home-manager.nixosModules.home-manager
           {
@@ -38,9 +50,7 @@
               ];
             };
           }
-          ./configuration.nix
         ];
-        specialArgs = { inherit inputs; };
       };
     };
 }
