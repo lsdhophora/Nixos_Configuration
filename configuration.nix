@@ -54,7 +54,6 @@
   services.displayManager.gdm.enable = true;
   services.displayManager.gdm.wayland = true;
   services.desktopManager.gnome.enable = true;
-  qt.platformTheme = "gnome";
 
   services.flatpak.enable = true;
 
@@ -77,6 +76,7 @@
       gnome-weather
       gnome-software
       loupe
+      evince
     ]
   );
 
@@ -111,6 +111,7 @@
           polyglossia # Multilingual support
           wrapfig
           capt-of
+          everypage
           ;
       })
       texlab
@@ -120,30 +121,34 @@
       gnome-sound-recorder
       gnome-themes-extra
       gnome-tweaks
-      prismlauncher
-      luanti
+      papers
+      showtime
     ];
   };
 
   programs.fish = {
     enable = true;
     promptInit = ''
-       function fish_prompt
-          set -l nix_shell_info (
-              if test -n "$IN_NIX_SHELL"
-                  echo -n "<nix-shell> "
-              end
-          )
-          echo -n -s "$nix_shell_info"
-          set_color green
-          echo -n -s "~>"
-          set_color normal
-          echo -n " "
-          set -l git_status (__fish_git_prompt "%s")
-          if test -n "$git_status"
-              echo -n -s "($git_status)"
-              echo -n " "
+      function fish_prompt
+        set -l nix_shell_info (
+          if test -n "$IN_NIX_SHELL"
+            echo -n "<nix-shell> "
           end
+        )
+        echo -n -s "$nix_shell_info"
+        set_color green
+        echo -n -s "~>"
+        set_color normal
+        echo -n " "
+        set -l git_status (__fish_git_prompt "%s")
+        if test -n "$git_status"
+          echo -n -s "($git_status)"
+          echo -n " "
+        end
+      end
+
+      function zathura
+        command zathura $argv 2>/dev/null
       end
     '';
   };
@@ -199,7 +204,7 @@
     enable = true;
     type = "ibus";
     ibus.engines = with pkgs.ibus-engines; [
-      libpinyin
+      rime
     ];
   };
 

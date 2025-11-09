@@ -4,194 +4,258 @@
     enable = true;
     package = pkgs.emacs-pgtk;
     extraPackages = epkgs: [
-      epkgs.pdf-tools
       epkgs.direnv
+      epkgs.auctex
+      epkgs.nix-mode
+      epkgs.magit
+      epkgs.nov
+      epkgs.vertico
+      epkgs.dashboard
+      epkgs.cider
     ];
     extraConfig = ''
-                              ;; 基本设置
-                        (setq initial-buffer-choice
-                              (lambda ()
-                                (if (or (buffer-file-name)
-                                        (eq major-mode 'dired-mode))
-                                    (current-buffer)
-                                  (find-file "~/.config/emacs/dashboard.org"))))
+       ;; -*- lexical-binding: t -*-
+       (setq custom-file "~/.config/emacs/custom.el")
+       (when (file-exists-p custom-file)
+        (load custom-file :noerror))
 
-                        ;; Load custom file if it exists
-                        (setq custom-file "~/.config/emacs/custom.el")
-                        (when (file-exists-p custom-file)
-                          (load custom-file :noerror))
+       (add-hook 'after-init-hook
+               (lambda ()
+                 (when (display-graphic-p)
+                   (set-fontset-font t 'han "Noto Sans CJK SC" nil 'prepend)
+                   (set-fontset-font t 'cjk-misc "Noto Sans CJK SC" nil 'prepend)
+                   (load-theme 'modus-vivendi t))))
 
-                        ;; Disable auto-save for dashboard.org
-                        (add-hook 'find-file-hook
-                                  (lambda ()
-                                    (when (and (buffer-file-name)
-                                               (string= (buffer-file-name) (expand-file-name "~/.config/emacs/dashboard.org")))
-                                      (setq-local auto-save-default nil))))
+       (tool-bar-mode -1)
+       (scroll-bar-mode -1)
+       (menu-bar-mode -1)
 
-                        (add-hook 'after-init-hook
-                                  (lambda ()
-                                    (when (display-graphic-p)
-                                      (set-face-attribute 'default nil :height 120) ; 字体大小 12 点
-                                      ;; 设置中文字符的字体为 Noto Sans CJK SC
-                                      (set-fontset-font t 'han "Noto Sans CJK SC" nil 'prepend)
-                                      ;; 设置全角符号的字体为 Noto Sans CJK SC
-                                      (set-fontset-font t '(#xFF00 . #xFFEF) "Noto Sans CJK SC" nil 'prepend)
-                                      (load-theme 'modus-vivendi t))))
+       (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                               ("melpa" . "https://melpa.org/packages/")))
+       (package-initialize)
 
+       (use-package eglot
+        :ensure t
+        :config
+        (setq eglot-sync-connect 5)
+        (setq eglot-autoshutdown t)
+        (setq corfu-auto-delay 0.2))
 
-                        ;; 禁用工具栏和滚动条
-                        (tool-bar-mode -1)
-                        (scroll-bar-mode -1)
+       (use-package corfu
+        :ensure t
+        :config
+        (setq corfu-auto t)
+        (setq corfu-auto-delay 0.2)
+        (setq corfu-auto-prefix 1))
 
-                        ;; 设置包源
-                        (setq package-archives '(("gnu" . "https://mirrors.ustc.edu.cn/elpa/gnu/")
-                                                 ("melpa" . "https://mirrors.ustc.edu.cn/elpa/melpa/")
-                                                 ("nongnu" . "https://mirrors.ustc.edu.cn/elpa/nongnu/")))
-                        (package-initialize)
-
-                        ;; 安装和配置 eglot
-                        (use-package eglot
-                          :ensure t
-                          :config
-                          (setq eglot-sync-connect 5)
-                          (setq eglot-autoshutdown t)
-                          (setq corfu-auto-delay 0.2))
-
-                        (use-package corfu
-                          :ensure t
-                          :hook ((LaTeX-mode . corfu-mode)
-                                 (nix-mode . corfu-mode))
-                          :config
-                          (setq corfu-auto t)           ; Enable auto-completion
-                          (setq corfu-auto-delay 0.2)
-                          (setq corfu-auto-prefix 1))
-
-                        (use-package tex
-                          :ensure auctex
-                          :hook ((LaTeX-mode . corfu-mode)
-                                 (LaTeX-mode . eglot-ensure))
-                          :config
-                          (setq TeX-auto-save t)
-                          (setq TeX-PDF-mode t)
-                          (setq TeX-command-default "LuaLaTeX")
-                          (setq-default TeX-engine 'luatex)
-                          (add-to-list 'TeX-command-list
-                                       '("LuaLaTeX" "lualatex -synctex=1 -interaction=nonstopmode %s" TeX-run-command nil t :help "Run LuaLaTeX on LaTeX file")
-                                       t)
-                          (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
-                          (setq TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view)))
-                          (setq TeX-source-correlate-mode t)
-                          (setq TeX-source-correlate-start-server t)
-                          (with-eval-after-load 'pdf-tools
-                            (pdf-tools-install :no-query)))
-
-                        (use-package pdf-tools
-                          :ensure t
-                          :mode ("\\.pdf\\'" . pdf-view-mode)
-                          :config
-                          (pdf-tools-install))
-
-                        ;; 定义 dashboard 文件路径
-                        (defvar my/dashboard-file (expand-file-name "~/.config/emacs/dashboard.org"))
-
-                        ;; 修改 org-open-file 为全屏 dired
-                        (defun my/org-open-file-dired-full-window (orig-fun path &optional in-emacs line search)
-                          "在 dashboard 文件中打开目录时全屏显示 dired，其他情况使用默认行为。"
-                          (if (and (buffer-file-name)
-                                   (string= (buffer-file-name) my/dashboard-file)
-                                   (file-directory-p path))
-                              (progn
-                                (delete-other-windows)
-                                (dired path))
-                            (funcall orig-fun path in-emacs line search)))
-
-                        (with-eval-after-load 'org
-                          (advice-add 'org-open-file :around #'my/org-open-file-dired-full-window))
-
-                        (use-package nix-mode
-                          :ensure t
-                          :hook
-                          (nix-mode . eglot-ensure)
-                          (nix-mode . corfu-mode) ;; So that envrc mode will work
-                          (before-save . (lambda () (when (eq major-mode 'nix-mode) (eglot-format-buffer))))
-                          :config
-                          (add-to-list 'eglot-server-programs
-                                       '(nix-mode . ("nixd" "--inlay-hints=false")))
-                          (setq eglot-nix-server-path "nixd"
-                                eglot-nix-formatting-command ["nixfmt"]
-                                eglot-nix-nixpkgs-expr "import <nixpkgs> { }"
-                                eglot-nix-nixos-options-expr "(builtins.getFlake \"/home/nb/nixos\").nixosConfigurations.mnd.options"
-                                eglot-nix-home-manager-options-expr "(builtins.getFlake \"/home/nb/nixos\").homeConfigurations.\"nb@mnd\".options"))
+       (use-package corfu-terminal
+        :ensure t
+        :config
+        (unless (display-graphic-p)
+          (corfu-terminal-mode 1)))
 
 
-                        (use-package magit
-                          :ensure t
-                          :bind (("C-x g" . magit-status))
-                          :config
-                          (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+       (use-package nix-mode
+        :ensure t
+        :hook
+        (nix-mode . eglot-ensure)
+        (nix-mode . corfu-mode) ;; So that envrc mode will work
+        (before-save . (lambda () (when (eq major-mode 'nix-mode) (eglot-format-buffer))))
+        :config
+        (add-to-list 'eglot-server-programs
+                     '(nix-mode . ("nixd" "--inlay-hints=false")))
+        (setq eglot-nix-server-path "nixd"
+              eglot-nix-formatting-command ["nixfmt"]
+              eglot-nix-nixpkgs-expr "import <nixpkgs> { }"
+              eglot-nix-nixos-options-expr "(builtins.getFlake \"/home/nb/nixos\").nixosConfigurations.mnd.options"
+              eglot-nix-home-manager-options-expr "(builtins.getFlake \"/home/nb/nixos\").homeConfigurations.\"nb@mnd\".options"))
 
-                        (use-package nov
-                          :ensure t
-                          :mode ("\\.epub\\'" . nov-mode))
+       (use-package magit
+        :ensure t
+        :bind (("C-x g" . magit-status))
+        :config
+        (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
-                        (when (boundp 'native-comp-async-report-warnings)
-                          (setq native-comp-async-report-warnings '(error)))
-
-                        (use-package corfu-terminal
-                          :ensure t
-                          :config
-                          (unless (display-graphic-p)  ; 仅在终端（非图形界面）启用
-                            (corfu-terminal-mode 1)))
-
-                        (defun my-pdf-annot-print-annotation-header-advice (orig-fun a)
-                          "Advice to remove 'subject' from the annotation header."
-                          (let ((header
-                                 (cond
-                                  ((eq 'file (pdf-annot-get a 'type))
-                                   (let ((att (pdf-annot-get-attachment a)))
-                                     (format "File attachment `%s' of %s"
-                                             (or (cdr (assq 'filename att)) "unnamed")
-                                             (if (cdr (assq 'size att))
-                                                 (format "size %s" (file-size-human-readable
-                                                                    (cdr (assq 'size att))))
-                                               "unknown size"))))
-                                  (t
-                                   (format "%s"
-                                           (mapconcat
-                                            #'identity
-                                            (mapcar
-                                             (lambda (property)
-                                               (pdf-annot-print-property a property))
-                                             `(label modified))  ; Exclude subject
-                                            ";"))))))
-                            (propertize header 'face 'header-line
-                                        'intangible t 'read-only t
-                                        'display (propertize header 'face 'header-line))))
-
-                        ;; Remove any existing advice to avoid conflicts
-                        (advice-remove 'pdf-annot-print-annotation-header 'my-pdf-annot-print-annotation-header-advice)
-
-                        ;; Apply the corrected advice
-                        (advice-add 'pdf-annot-print-annotation-header :around #'my-pdf-annot-print-annotation-header-advice)
-
-                        (setq pdf-annot-default-annotation-properties
-                              '((t (label . "lophophora"))))
-
-      (add-hook 'python-mode-hook
+       (add-hook 'python-mode-hook
                 (lambda ()
-                  (direnv-update-environment)  ; 强制更新 direnv 环境
+                  (direnv-update-environment)
                   (when (executable-find "pylsp")
                     (eglot-ensure)
                     (corfu-mode 1))))
 
-            (use-package direnv
-              :ensure t
-              :config
-              (direnv-mode))
+       (use-package direnv
+         :ensure t
+         :config
+         (direnv-mode))
+
+       (use-package dashboard
+         :ensure t
+         :config
+         (dashboard-setup-startup-hook)
+         (setq dashboard-startup-banner 2)
+         (setq dashboard-center-content t)
+         (setq dashboard-vertically-center-content t)
+         (setq dashboard-display-icons-p nil)
+         (setq dashboard-init-info (lambda () ""))
+         (setq dashboard-set-footer nil)
+         (setq dashboard-show-shortcuts nil)
+         (setq dashboard-set-navigator nil)
+         (setq dashboard-agenda-prefix-format " %i %s ")
+         (setq dashboard-items '((agenda . 50)))
+         (setq dashboard-item-names '(("Agenda for today:" . "My Agenda")
+                                      ("Agenda for the coming week:" . "My Agenda")))
+         (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda))
+         (setq org-directory "~/.config/emacs")
+         (setq org-agenda-files '("~/.config/emacs/agenda.org"))
+         (setq org-default-notes-file "~/.config/emacs/agenda.org")
+         (setq org-log-done 'time)
+         (setq org-todo-keywords
+               '((sequence "TODO(t)" "IN-PROGRESS(p)" "|" "DONE(d)")))
+         (setq org-todo-keyword-faces
+               '(("TODO" . (:foreground "red" :weight bold))
+                 ("IN-PROGRESS" . (:foreground "red" :weight bold))
+                 ("DONE" . (:foreground "forest green" :weight bold))))
+
+
+       (use-package vertico
+        :ensure t
+        :init
+        (vertico-mode))
+
+
+       (use-package auctex
+         :ensure t
+         :defer t
+         :hook (LaTeX-mode . (lambda ()
+                               (TeX-engine-set 'luatex)
+                               (TeX-PDF-mode 1)
+                               (TeX-source-correlate-mode 1)
+                               (reftex-mode 1)))
+         :custom
+         (TeX-auto-save t)
+         (TeX-parse-self t)
+         (TeX-master nil)
+         (TeX-source-correlate-method 'synctex)
+         (TeX-view-program-selection '((output-pdf "Zathura")))
+         (TeX-view-program-list
+          '(("Zathura" "zathura --synctex-forward %n:0:'%b' %o")))
+         (TeX-command-default "latexmk")
+         :config
+         (require 'tex)
+         (setf (alist-get "latexmk" TeX-command-list nil nil #'equal)
+               '("latexmk"
+                 "latexmk -pdf -pdflatex=lualatex -synctex=1 -shell-escape %s"
+                 TeX-run-command nil t
+                 :help "Run latexmk with LuaLaTeX + SyncTeX"))
+         (setq TeX-file-line-error t)
+         (setq TeX-source-correlate-start-server t))
+
+
+       (use-package nov
+        :ensure t
+        :mode ("\\.epub\\'" . nov-mode)
+        :config
+        (setq nov-text-width t)
+        (setq visual-fill-column-center-text t)
+        (add-hook 'nov-mode-hook 'visual-line-mode)
+        (add-hook 'nov-mode-hook (lambda () (setq truncate-lines nil)))
+        (defun my-nov-font-setup ()
+          (face-remap-add-relative 'variable-pitch
+                                   :family "Adwaita Sans"
+                                   :height 111)
+          (setq-local text-quote-style 'straight)
+          (setq-local line-spacing 0.2)
+          (setq-local word-wrap nil)
+          (setq-local word-wrap-by-category t))
+        (add-hook 'nov-mode-hook #'my-nov-font-setup)
+        (defcustom nov-header-line-format-no-chapter "%t"
+          "Header line format when chapter part is hidden."
+          :type 'string
+          :group 'nov)
+        (defvar-local nov-hide-chapter-part nil
+          "Non-nil to hide chapter part in header line.")
+        (defun nov-toggle-chapter-display ()
+          "Toggle display of chapter part in header line and save state."
+          (interactive)
+          (setq nov-hide-chapter-part (not nov-hide-chapter-part))
+          (let ((identifier (cdr (assq 'identifier nov-metadata)))
+                (index nov-documents-index))
+            (nov-save-place identifier index (point)))
+          (nov-render-document)
+          (message "Chapter display %s" (if nov-hide-chapter-part "disabled" "enabled")))
+        (defun my-nov-render-title-advice (orig-func dom)
+          (let ((nov-header-line-format 
+                 (if nov-hide-chapter-part
+                     nov-header-line-format-no-chapter
+                   nov-header-line-format)))
+            (funcall orig-func dom)))
+        (advice-add 'nov-render-title :around #'my-nov-render-title-advice)
+        (defun nov-save-place-with-state (identifier index point)
+          (when nov-save-place-file
+            (let* ((place `(,identifier (index . ,index)
+                                        (point . ,point)
+                                        (hide-chapter . ,nov-hide-chapter-part)))
+                   (places (cons place (assq-delete-all identifier (nov-saved-places))))
+                   print-level
+                   print-length)
+              (with-temp-file nov-save-place-file
+                (insert (prin1-to-string places))))))
+        (advice-add 'nov-save-place :override #'nov-save-place-with-state)
+        (defun nov-restore-display-state ()
+          "Restore the chapter display state from saved place data."
+          (when (and nov-metadata nov-documents)
+            (let* ((identifier (cdr (assq 'identifier nov-metadata)))
+                   (place (nov-saved-place identifier)))
+              (when place
+                (setq nov-hide-chapter-part (cdr (assq 'hide-chapter place))))
+              (let ((current-path (cdr (aref nov-documents nov-documents-index))))
+                (when current-path
+                  (let* ((html (nov-slurp current-path))
+                         (dom (with-temp-buffer
+                                (insert html)
+                                (libxml-parse-html-region (point-min) (point-max))))
+                         (title-node (esxml-query "title" dom)))
+                    (when title-node
+                      (nov-render-title title-node))))))))
+        (add-hook 'nov-mode-hook #'nov-restore-display-state))
+
+      (use-package cider
+        :ensure t
+        :mode (("\\.clj\\'" . clojure-mode)
+               ("\\.bb\\'" . clojure-mode))
+        :config
+        (setq cider-allow-jack-in-without-project t)
+        (setq cider-repl-display-help-banner nil)
+        (setq cider-repl-display-startup-command nil)
+
+        (defun my-clojure-mode-for-bb ()
+          (when (and buffer-file-name (string-match-p "\\.bb$" buffer-file-name))
+            (setq mode-name "Babashka")))
+
+        (defun my-empty-repl-banner ()
+          "Override to return an empty string for the REPL banner."
+          "")
+
+        (defun my-no-insert-startup-commands ()
+          "Override to disable inserting the Startup command line."
+          nil)
+
+        (defun my-cider-quit-and-close-window (&rest _)
+          "Automatically close the REPL window when quitting CIDER."
+          (when-let ((repl-buffer (cider-current-repl-buffer)))
+            (when-let ((window (get-buffer-window repl-buffer)))
+              (delete-window window))))
+
+        (advice-add 'cider-repl--banner :override #'my-empty-repl-banner)
+        (advice-add 'cider-repl--insert-startup-commands :override #'my-no-insert-startup-commands)
+        (advice-add 'cider-quit :before #'my-cider-quit-and-close-window)
+
+        (add-hook 'clojure-mode-hook #'my-clojure-mode-for-bb))
 
     '';
   };
 
-  home.file.".config/emacs/init.el".text = ''
-  '';
+  home.file.".config/emacs/init.el".text = "";
+  home.file.".local/share/applications/emacsclient-mail.desktop".text = "";
+  home.file.".local/share/applications/emacs-mail.desktop".text = "";
 }
