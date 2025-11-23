@@ -12,7 +12,6 @@
 
 {
   imports = [
-    # Include the results of the hardware scan.
     ./hardware-configuration.nix
   ];
 
@@ -40,7 +39,7 @@
       "amdgpu"
     ];
 
-    kernelPackages = pkgs.linuxPackages_latest;
+    kernelPackages = pkgs.linuxPackages_zen;
   };
 
   documentation.nixos.enable = false;
@@ -54,29 +53,51 @@
   services.displayManager.gdm.enable = true;
   services.displayManager.gdm.wayland = true;
   services.desktopManager.gnome.enable = true;
-
-  services.flatpak.enable = true;
-
+  nixpkgs.overlays = [
+    (final: prev: {
+      gnome-sound-recorder = prev.gnome-sound-recorder.overrideAttrs (old: {
+        prePatch = ''
+          waveformJs=$(find "$PWD" -name 'waveform.js' -path '*/src/*')
+          substituteInPlace "$waveformJs" \
+            --replace-fail \
+              'this._peaks.unshift(p.toFixed(2));' \
+              'if(this._warmup-- > 0)return;this._peaks.unshift(Math.max(0,Math.min(1,p)));' \
+            --replace-fail \
+              'this._peaks = [];' \
+              'this._peaks=[];this._warmup=5;' \
+            --replace-fail \
+              'this._peaks = p;' \
+              'this._peaks = (this.waveType === 1 && p.length > 1) ? p.slice(1) : p;'
+        '';
+        postPatch = ''
+          chmod +x build-aux/meson_post_install.py
+          substituteInPlace build-aux/meson_post_install.py \
+            --replace-fail 'gtk-update-icon-cache' 'gtk4-update-icon-cache'
+          patchShebangs build-aux/meson_post_install.py
+          substituteInPlace data/ui/row.ui \
+            --replace-fail emblem-ok-symbolic object-select-symbolic
+        '';
+      });
+    })
+  ];
   environment.gnome.excludePackages = (
     with pkgs;
     [
-      atomix # puzzle game
-      cheese # webcam tool
-      epiphany # web browser
-      geary # email reader
-      gedit # text editor
+      atomix
+      cheese
+      geary
+      gedit
+      epiphany
       gnome-characters
       gnome-tour
       gnome-photos
-      hitori # sudoku game
-      iagno # go game
-      tali # poker game
-      totem # video player
+      hitori
+      iagno
+      tali
+      totem
       yelp
       gnome-weather
       gnome-software
-      loupe
-      evince
     ]
   );
 
@@ -111,9 +132,13 @@
           polyglossia # Multilingual support
           wrapfig
           capt-of
+          unicode-math
+          lualatex-math
+          selnolig
           everypage
           ;
       })
+      pandoc
       texlab
       nixfmt
       nixd
@@ -197,6 +222,18 @@
         monospace = [ "Noto Sans Mono CJK SC" ];
         emoji = [ "Noto Color Emoji" ];
       };
+      localConf = ''
+        <fontconfig>
+          <match target="pattern">
+            <test name="family">
+              <string>IBM Plex Sans</string>
+            </test>
+            <edit name="weight" mode="assign">
+              <int>100</int>
+            </edit>
+          </match>
+        </fontconfig>
+      '';
     };
   };
 
@@ -250,6 +287,8 @@
       };
     }
   ];
+
+  networking.firewall.enable = false;
 
   system.stateVersion = "25.05";
 }

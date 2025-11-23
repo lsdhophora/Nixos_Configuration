@@ -6,40 +6,33 @@
   home.stateVersion = "25.11";
 
   home.packages = with pkgs; [
-    gnomeExtensions.hide-universal-access
     gnomeExtensions.caffeine
+    gnomeExtensions.just-perfection
+    gnomeExtensions.blur-my-shell
+    gnomeExtensions.run-or-raise
     gnome-epub-thumbnailer
-    babashka
     lxgw-wenkai
+    localsend
+    dialect
   ];
 
-  # GNOME 设置
   dconf.settings = {
     "org/gnome/shell" = {
       enabled-extensions = [
-        "hide-universal-access@akiirui.github.io"
         "caffeine@patapon.info"
+        "just-perfection-desktop@just-perfection"
+        "blur-my-shell@aunetx"
+        "run-or-raise@edvard.cz"
       ];
     };
     "org/gnome/desktop/interface" = {
-      font-name = "Adwaita Sans 11";
-      text-scaling-factor = 1.42; # 缩放因子
-    };
-    "org/gnome/desktop/interface" = {
-      cursor-size = 32; # 设置光标大小（像素，例如 48 或 64，默认为 24）
-    };
-  };
+      font-name = "IBM Plex Sans 10";
+      text-scaling-factor = 1.45;
+      cursor-size = 32;
 
-  # Firefox 配置
-  programs.firefox = {
-    enable = true;
-    package = pkgs.firefox-esr;
-    profiles.default = {
-      settings = {
-        "browser.translations.enable" = false;
-        "browser.translations.autoTranslate" = false; # 防止自动触发
-        "browser.translations.panel.shown" = false; # 隐藏翻译面板
-      };
+    };
+    "org/gnome/settings-daemon/plugins/housekeeping" = {
+      donation-reminder-enabled = false;
     };
   };
 
@@ -56,12 +49,28 @@
     };
   };
 
-  programs = {
-    direnv = {
-      enable = true;
-      nix-direnv.enable = true; # 启用 nix-direnv
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
+  programs.librewolf = {
+    enable = true;
+    profiles.default = {
+      settings = {
+        "browser.translations.enable" = false;
+        "browser.translations.autoTranslate" = false;
+        "browser.translations.panel.shown" = false;
+        "browser.chrome.toolbar_tips" = false;
+        "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+      };
+      userChrome = ''
+        menupopup#context-sendimage,
+        #context-sendimage {
+          display: none !important;
+        }
+      '';
     };
-    fish.enable = true; # 启用 Fish shell 管理
   };
 
   programs.zathura = {
@@ -98,6 +107,9 @@
       set completion-highlight-fg "#000000"
       set render-loading-bg "#000000"
       set render-loading-fg "#FFFFFF"
+      unmap j
+      unmap J
+      unmap all
       map [normal] <C-b> scroll left
       map [normal] <C-n> scroll down
       map [normal] <C-p> scroll up
@@ -266,4 +278,10 @@
       map [presentation] <A-\>> goto bottom
     '';
   };
+
+  home.file.".local/share/applications/org.gnome.Papers.desktop".text = "";
+  home.file.".local/share/applications/org.pwmt.zathura-pdf-mupdf.desktop".text = "";
+  home.file.".local/share/applications/org.pwmt.zathura-ps.desktop".text = "";
+  home.file.".local/share/applications/org.pwmt.zathura-djvu.desktop".text = "";
+  home.file.".local/share/applications/org.pwmt.zathura-cb.desktop".text = "";
 }
