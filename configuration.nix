@@ -29,17 +29,14 @@
       "rd.systemd.show_status=auto"
     ];
 
-    # 使用 systemd-boot 作为 EFI 启动加载器
     loader.systemd-boot.enable = true;
     loader.efi.canTouchEfiVariables = true;
 
-    # 内核模块和最新内核
     kernelModules = [
-      "amd_pstate"
       "amdgpu"
     ];
 
-    kernelPackages = pkgs.linuxPackages_zen;
+    kernelPackages = pkgs.linuxPackages;
   };
 
   documentation.nixos.enable = false;
@@ -49,10 +46,23 @@
   # Set your time zone.
   time.timeZone = "Asia/Shanghai";
 
+  # Set my networks
+  networking.networkmanager = {
+    enable = true;
+
+    # Configure unmanaged devices (e.g., loopback interface)
+    unmanaged = [ "interface-name:lo" ];
+  };
+
   # Enable the GNOME Desktop Environment.
   services.displayManager.gdm.enable = true;
   services.displayManager.gdm.wayland = true;
   services.desktopManager.gnome.enable = true;
+  services.desktopManager.gnome.extraGSettingsOverrides = ''
+    [org.gnome.mutter]
+    experimental-features=['scale-monitor-framebuffer', 'xwayland-native-scaling']
+  '';
+
   nixpkgs.overlays = [
     (final: prev: {
       gnome-sound-recorder = prev.gnome-sound-recorder.overrideAttrs (old: {
@@ -80,6 +90,7 @@
       });
     })
   ];
+
   environment.gnome.excludePackages = (
     with pkgs;
     [
@@ -98,15 +109,17 @@
       yelp
       gnome-weather
       gnome-software
+      gnome-console
     ]
   );
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.lophophora = {
     isNormalUser = true;
+    description = "费雪";
     hashedPassword = "$y$j9T$ywlcAEMJIDVX/1G5Pm5bi1$YSb/zJEgyNykoFHYt0F8b5DZ8mK9GZE.QlQzMfOfUO3";
     extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-    shell = pkgs.fish;
+    shell = pkgs.zsh;
     packages = with pkgs; [
       tree
       ffmpeg
@@ -144,38 +157,19 @@
       nixd
       unzip
       gnome-sound-recorder
-      gnome-themes-extra
-      gnome-tweaks
-      papers
-      showtime
+      (ghostty.overrideAttrs (old: {
+        buildInputs =
+          old.buildInputs
+          ++ (with gst_all_1; [
+            gstreamer
+            gst-plugins-base
+            gst-plugins-good
+          ]);
+        postInstall = (old.postInstall or "") + ''
+          rm -f $out/share/nautilus-python/extensions/ghostty.py
+        '';
+      }))
     ];
-  };
-
-  programs.fish = {
-    enable = true;
-    promptInit = ''
-      function fish_prompt
-        set -l nix_shell_info (
-          if test -n "$IN_NIX_SHELL"
-            echo -n "<nix-shell> "
-          end
-        )
-        echo -n -s "$nix_shell_info"
-        set_color green
-        echo -n -s "~>"
-        set_color normal
-        echo -n " "
-        set -l git_status (__fish_git_prompt "%s")
-        if test -n "$git_status"
-          echo -n -s "($git_status)"
-          echo -n " "
-        end
-      end
-
-      function zathura
-        command zathura $argv 2>/dev/null
-      end
-    '';
   };
 
   # List packages installed in system profile.
@@ -210,6 +204,7 @@
       noto-fonts-cjk-sans-static
       noto-fonts-cjk-serif-static
       noto-fonts
+      charis-sil
       ibm-plex
       (ibm-plex.override { families = [ "sans-sc" ]; })
       noto-fonts-color-emoji
@@ -222,18 +217,6 @@
         monospace = [ "Noto Sans Mono CJK SC" ];
         emoji = [ "Noto Color Emoji" ];
       };
-      localConf = ''
-        <fontconfig>
-          <match target="pattern">
-            <test name="family">
-              <string>IBM Plex Sans</string>
-            </test>
-            <edit name="weight" mode="assign">
-              <int>100</int>
-            </edit>
-          </match>
-        </fontconfig>
-      '';
     };
   };
 
@@ -279,16 +262,40 @@
     !include ${config.age.secrets.access-tokens-github.path}
   '';
 
+  networking.firewall.enable = false;
+
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        text-scaling-factor = 1.42;
-        cursor-size = lib.gvariant.mkInt32 32;
+        cursor-size = lib.gvariant.mkInt32 28;
+        text-scaling-factor = 1.33;
       };
     }
   ];
 
-  networking.firewall.enable = false;
+  environment.sessionVariables = {
+    XCOMPOSECACHE = "/tmp/.compose-cache/";
+  };
+
+  programs.zsh = {
+    enable = true;
+    promptInit = ''
+      if [[ -n "$IN_NIX_SHELL" ]]; then
+        export PS1="%F{green}[nix-shell] →%f "
+      else
+        export PS1="%F{green}→%f "
+      fi
+    '';
+    interactiveShellInit = ''
+      setopt NO_PROMPT_CR
+      setopt no_beep
+    '';
+  };
+
+  programs.nautilus-open-any-terminal = {
+    enable = true;
+    terminal = "ghostty";
+  };
 
   system.stateVersion = "25.05";
 }

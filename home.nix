@@ -11,9 +11,11 @@
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise
     gnome-epub-thumbnailer
+    gnome-themes-extra
     lxgw-wenkai
     localsend
-    dialect
+    wordbook
+    blanket
   ];
 
   dconf.settings = {
@@ -26,10 +28,8 @@
       ];
     };
     "org/gnome/desktop/interface" = {
-      font-name = "IBM Plex Sans 10";
-      text-scaling-factor = 1.45;
-      cursor-size = 32;
-
+      font-name = "Adwaita Sans 11";
+      #cursor-size = 26;
     };
     "org/gnome/settings-daemon/plugins/housekeeping" = {
       donation-reminder-enabled = false;
@@ -56,6 +56,7 @@
 
   programs.librewolf = {
     enable = true;
+    package = pkgs.librewolf;
     profiles.default = {
       settings = {
         "browser.translations.enable" = false;
@@ -63,6 +64,11 @@
         "browser.translations.panel.shown" = false;
         "browser.chrome.toolbar_tips" = false;
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
+        "browser.tabs.opentabfor.middleclick" = false;
+        "middlemouse.openNewWindow" = false;
+        "layout.css.devPixelsPerPx" = 2.3;
+        "middlemouse.contentLoadURL" = false;
+        "middlemouse.paste" = false;
       };
       userChrome = ''
         menupopup#context-sendimage,
@@ -107,9 +113,6 @@
       set completion-highlight-fg "#000000"
       set render-loading-bg "#000000"
       set render-loading-fg "#FFFFFF"
-      unmap j
-      unmap J
-      unmap all
       map [normal] <C-b> scroll left
       map [normal] <C-n> scroll down
       map [normal] <C-p> scroll up
@@ -279,9 +282,18 @@
     '';
   };
 
-  home.file.".local/share/applications/org.gnome.Papers.desktop".text = "";
-  home.file.".local/share/applications/org.pwmt.zathura-pdf-mupdf.desktop".text = "";
-  home.file.".local/share/applications/org.pwmt.zathura-ps.desktop".text = "";
-  home.file.".local/share/applications/org.pwmt.zathura-djvu.desktop".text = "";
-  home.file.".local/share/applications/org.pwmt.zathura-cb.desktop".text = "";
+  home.file = builtins.listToAttrs (
+    map
+      (name: {
+        name = ".local/share/applications/${name}";
+        value.text = "";
+      })
+      [
+        "org.pwmt.zathura-pdf-mupdf.desktop"
+        "org.pwmt.zathura-pdf-poppler.desktop"
+        "org.pwmt.zathura-djvu.desktop"
+        "org.pwmt.zathura-ps.desktop"
+        "org.pwmt.zathura-cb.desktop"
+      ]
+  );
 }

@@ -2,7 +2,7 @@
 {
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs-pgtk;
+    package = pkgs.emacs-gtk;
     extraPackages = epkgs: [
       epkgs.direnv
       epkgs.auctex
@@ -16,17 +16,20 @@
       (setq custom-file "~/.config/emacs/custom.el")
       (when (file-exists-p custom-file)
        (load custom-file :noerror))
-       (add-hook 'after-init-hook
-        (lambda ()
-          (when (display-graphic-p)
-            (setq default-frame-alist '((width . 81) (height . 35)))
-            (set-face-attribute 'default nil :font "IBM Plex Mono")
-            (set-fontset-font t 'han "Noto Sans CJK SC" nil 'prepend)
-            (set-fontset-font t 'cjk-misc "Noto Sans CJK SC" nil 'prepend)
-            (load-theme 'modus-vivendi t))))
 
+      (add-hook 'after-init-hook
+          (lambda ()
+            (when (display-graphic-p)
+              (load-theme 'modus-vivendi t))))
+
+      (add-to-list 'initial-frame-alist '(width . 81))
+      (add-to-list 'initial-frame-alist '(height . 32))
 
       (setq nobreak-char-display nil)
+      (set-face-attribute 'default nil :height 120)
+      (set-face-attribute 'default nil :font "IBM Plex Mono")
+      (set-fontset-font t 'han "Noto Sans CJK SC" nil 'prepend)
+      (set-fontset-font t 'cjk-misc "Noto Sans CJK SC" nil 'prepend)
 
       (tool-bar-mode -1)
       (scroll-bar-mode -1)
@@ -106,7 +109,7 @@
         (setq dashboard-items '((agenda . 50)))
         (setq dashboard-item-names '(("Agenda for today:" . "My Agenda")
                                      ("Agenda for the coming week:" . "My Agenda")))
-        (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda))
+        (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
         (setq org-directory "~/.config/emacs")
         (setq org-agenda-files '("~/.config/emacs/agenda.org"))
         (setq org-default-notes-file "~/.config/emacs/agenda.org")
@@ -116,7 +119,25 @@
         (setq org-todo-keyword-faces
               '(("TODO" . (:foreground "red" :weight bold))
                 ("IN-PROGRESS" . (:foreground "red" :weight bold))
-                ("DONE" . (:foreground "forest green" :weight bold))))
+                ("DONE" . (:foreground "forest green" :weight bold)))))
+        :custom-face
+        ((dashboard-items-face ((t (:height 1.0)))))
+
+        (defun my/disable-text-scale-commands-in-dashboard ()
+        "Disable all text scaling commands in dashboard buffer only, completely silent."
+        (when (eq major-mode 'dashboard-mode)
+          (dolist (cmd '(text-scale-increase
+                         text-scale-decrease
+                         text-scale-adjust
+                         text-scale-set
+                         text-scale-mode-step
+                         text-scale-pinch))
+            (when (fboundp cmd)
+              (local-set-key (vector 'remap cmd) #'ignore)))))
+
+      (add-hook 'dashboard-mode-hook #'my/disable-text-scale-commands-in-dashboard)
+
+
 
       (use-package auctex
         :ensure t
@@ -131,10 +152,10 @@
         (TeX-parse-self t)
         (TeX-master nil)
         (TeX-source-correlate-method 'synctex)
-        (TeX-view-program-selection '((output-pdf "Zathura")))
+        (TeX-view-program-selection '((output-pdf "Papers")))
         (TeX-view-program-list
-         '(("Zathura" "zathura --synctex-forward %n:0:'%b' %o")))
-        (TeX-command-default "latexmk")
+        '(("Papers" "Papers ./%o")))
+
         :config
         (require 'tex)
         (setf (alist-get "latexmk" TeX-command-list nil nil #'equal)
@@ -226,37 +247,6 @@
                   (message "Already at the last chapter.")
                 (funcall orig-func (or count 1)))))
           (advice-add 'nov-next-document :around #'nov-next-document-last-chapter-guard))
-
-        (defvar my/dired-desired-column nil)
-
-        (defun my/dired-keep-column (orig-fun &rest args)
-          (let ((wanted-col (current-column)))
-            (apply orig-fun args)
-            (setq my/dired-desired-column wanted-col)
-            (let ((max-col (1- (line-end-position))))
-              (if (>= max-col wanted-col)
-                  (move-to-column wanted-col)
-                (goto-char max-col)))))
-
-        (defun my/dired-restore-column-after-move-to-filename (&optional _point)
-          (when (and my/dired-desired-column
-                     (memq this-command '(dired-next-line dired-previous-line
-                                           dired-next-dirline dired-prev-dirline
-                                           next-line previous-line
-                                           dired-next-line-page dired-previous-line-page)))
-            (let ((max-col (1- (line-end-position))))
-              (if (>= max-col my/dired-desired-column)
-                  (move-to-column my/dired-desired-column)
-                (goto-char max-col)))))
-
-        (advice-add 'dired-next-line     :around #'my/dired-keep-column)
-        (advice-add 'dired-previous-line :around #'my/dired-keep-column)
-        (advice-add 'dired-move-to-filename :after #'my/dired-restore-column-after-move-to-filename)
-
-          (add-hook 'dired-mode-hook
-                    (lambda ()
-                      (let ((inhibit-message t))
-                        (toggle-truncate-lines 1))))
     '';
   };
 
