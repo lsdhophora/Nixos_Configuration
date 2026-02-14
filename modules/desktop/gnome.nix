@@ -47,15 +47,9 @@
       yelp
       gnome-weather
       gnome-software
-      gnome-console
       showtime
     ]
   );
-
-  programs.nautilus-open-any-terminal = {
-    enable = true;
-    terminal = "ghostty";
-  };
 
   programs.dconf.profiles.gdm.databases = [
     {

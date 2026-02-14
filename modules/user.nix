@@ -49,18 +49,6 @@
       nixd
       unzip
       gnome-sound-recorder
-      (ghostty.overrideAttrs (old: {
-        buildInputs =
-          old.buildInputs
-          ++ (with gst_all_1; [
-            gstreamer
-            gst-plugins-base
-            gst-plugins-good
-          ]);
-        postInstall = (old.postInstall or "") + ''
-          rm -f $out/share/nautilus-python/extensions/ghostty.py
-        '';
-      }))
     ];
   };
 
