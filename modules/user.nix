@@ -1,0 +1,75 @@
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
+
+{
+  users.users.lophophora = {
+    isNormalUser = true;
+    description = "费雪";
+    hashedPassword = "$y$j9T$ywlcAEMJIDVX/1G5Pm5bi1$YSb/zJEgyNykoFHYt0F8b5DZ8mK9GZE.QlQzMfOfUO3";
+    extraGroups = [ "wheel" ];
+    shell = pkgs.zsh;
+    packages = with pkgs; [
+      tree
+      ffmpeg
+      fastfetch
+      imagemagick
+      (texlive.combine {
+        inherit (texlive)
+          scheme-basic
+          ctex
+          chinese-jfm
+          fontspec
+          luatex
+          luacode
+          graphics
+          geometry
+          fancyhdr
+          titlesec
+          hyphen-greek
+          hyperref
+          postnotes
+          eso-pic
+          footmisc
+          polyglossia
+          wrapfig
+          capt-of
+          unicode-math
+          lualatex-math
+          selnolig
+          everypage
+          ;
+      })
+      pandoc
+      texlab
+      nixfmt
+      nixd
+      unzip
+      gnome-sound-recorder
+      (ghostty.overrideAttrs (old: {
+        buildInputs =
+          old.buildInputs
+          ++ (with gst_all_1; [
+            gstreamer
+            gst-plugins-base
+            gst-plugins-good
+          ]);
+        postInstall = (old.postInstall or "") + ''
+          rm -f $out/share/nautilus-python/extensions/ghostty.py
+        '';
+      }))
+    ];
+  };
+
+  environment.systemPackages = with pkgs; [
+    nano
+    git
+    wget
+    inputs.agenix.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+
+  system.stateVersion = "25.05";
+}
