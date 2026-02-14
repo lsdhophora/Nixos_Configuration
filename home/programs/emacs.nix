@@ -3,16 +3,17 @@
   programs.emacs = {
     enable = true;
     package = pkgs.emacs-pgtk;
-    extraPackages = epkgs: [
-      epkgs.direnv
-      epkgs.auctex
-      epkgs.nix-mode
-      epkgs.magit
-      epkgs.nov
-      epkgs.vterm
-      epkgs.nerd-icons
-      epkgs.dashboard
-    ];
+    extraPackages =
+      epkgs: with epkgs; [
+        direnv
+        auctex
+        nix-mode
+        magit
+        nov
+        vterm
+        nerd-icons
+        dashboard
+      ];
     extraConfig = ''
       ;; -*- lexical-binding: t -*-
       (setq custom-file "~/.config/emacs/custom.el")
