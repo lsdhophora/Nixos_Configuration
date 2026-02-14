@@ -107,7 +107,7 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 
 ```bash
 # Dry-run build to check for errors before committing
-nixos-rebuild build --flake .#flowerpot
+nixos-rebuild dry-build --flake .#flowerpot
 
 # Build system
 sudo nixos-rebuild switch --flake .#flowerpot
