@@ -18,5 +18,6 @@
     blanket
     celluloid
     opencode
+    transmission_4-gtk
   ];
 }
