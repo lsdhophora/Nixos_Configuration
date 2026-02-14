@@ -106,14 +106,14 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 ## Common Commands
 
 ```bash
+# Dry-run build to check for errors before committing
+sudo nixos-rebuild build --flake .#flowerpot
+
 # Build system
 sudo nixos-rebuild switch --flake .#flowerpot
 
 # Update flake inputs
 sudo nixos-rebuild switch --flake .#flowerpot --update-input nixpkgs
-
-# Test build (no switch)
-sudo nixos-rebuild build --flake .#flowerpot
 ```
 
 ## Notes
