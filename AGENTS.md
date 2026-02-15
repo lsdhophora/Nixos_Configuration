@@ -102,6 +102,7 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 - Prefer `with pkgs;` for package lists
 - Use `pkgs.writeTextFile` or `pkgs.substituteAll` for generated files
 - Keep modules focused and composable
+- Only declare attributes that are actually used (e.g., `pkgs`, `config`, `inputs`) to avoid "attribute of argument is not used" warnings
 
 ## Common Commands
 
