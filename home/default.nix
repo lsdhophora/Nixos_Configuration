@@ -10,6 +10,7 @@
   home.stateVersion = "25.11";
 
   imports = [
+    ./desktop-files.nix
     ./packages.nix
     ./dconf.nix
     ./programs/ssh.nix
