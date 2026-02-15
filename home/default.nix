@@ -12,6 +12,7 @@
     ./desktop-files.nix
     ./packages.nix
     ./dconf.nix
+    ./programs/git.nix
     ./programs/ssh.nix
     ./programs/direnv.nix
     ./programs/librewolf.nix
