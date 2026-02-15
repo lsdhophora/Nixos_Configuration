@@ -24,7 +24,7 @@
       "amdgpu"
     ];
 
-    kernelPackages = pkgs.linuxPackages;
+    kernelPackages = pkgs.linuxPackages_zen;
   };
 
   swapDevices = [
