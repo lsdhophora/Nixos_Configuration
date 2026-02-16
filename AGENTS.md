@@ -107,10 +107,13 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 ## Common Commands
 
 ```bash
-# Dry-run build to check for errors before committing
+# Always run this AFTER making any modification to verify config is valid
 nixos-rebuild dry-build --flake .#flowerpot
 
-# Build system
+# Commit after successful dry-build (keep commits small and focused)
+git add -A && git commit
+
+# Build and switch to new system
 sudo nixos-rebuild switch --flake .#flowerpot
 
 # Update flake inputs
