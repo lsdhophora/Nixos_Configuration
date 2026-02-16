@@ -125,3 +125,13 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Some patches in `patches/` are applied via overrideAttrs
 - Unused configs in `unused/` are kept for reference but not imported
 - **Important**: After making changes to the configuration, run `tree -L 3 --noreport -I 'result|*.lock'` to update the Project Structure section in this file to keep it in sync with actual modifications. Also update Key Features, Code Style, Common Commands, and Notes sections as needed.
+
+## Lessons Learned
+
+- Use `nixos-rebuild dry-build` instead of `nixos-rebuild build` for testing (no `result` symlink created)
+- Package names in nixpkgs may differ from expected (e.g., `transmission_4-gtk` not `transmission-gtk`)
+- Home Manager uses `settings` instead of `config` for git configuration (`programs.git.settings`)
+- Use `force = true` on `home.file` options to forcefully overwrite existing desktop entries
+- When hiding desktop entries, search for the exact desktop file name in nix store with `find /nix -name "*.desktop"`
+- Always test build with `nixos-rebuild dry-build` before committing
+- Use LSP (nixd) in editor to catch attribute errors early
