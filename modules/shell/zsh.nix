@@ -19,7 +19,7 @@
       nixos-assistant() {
         local orig_dir="$(pwd)"
         cd ~/.config/nixos
-        opencode -s ses_3a4bcecf7ffemi02sJ5poVS1vw
+        opencode -s ses_39b95d44cffeJx5hXCgsSlRBKC
         cd "$orig_dir"
       }
     '';
