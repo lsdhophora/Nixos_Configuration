@@ -19,10 +19,6 @@
     loader.systemd-boot.enable = true;
     loader.efi.canTouchEfiVariables = true;
 
-    kernelModules = [
-      "amdgpu"
-    ];
-
     kernelPackages = pkgs.linuxPackages_zen;
   };
 
