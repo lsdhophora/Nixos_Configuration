@@ -8,7 +8,7 @@
   home.stateVersion = "25.11";
 
   imports = [
-    ./desktop-files.nix
+    ./housekeeping.nix
     ./packages.nix
     ./dconf.nix
     ./programs/git.nix
