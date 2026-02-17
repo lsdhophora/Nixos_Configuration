@@ -17,6 +17,7 @@
     wordbook
     blanket
     celluloid
+    shortwave
     opencode
     transmission_4-gtk
     wl-clipboard
