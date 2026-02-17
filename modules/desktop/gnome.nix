@@ -54,7 +54,7 @@
     {
       settings."org/gnome/desktop/interface" = {
         cursor-size = lib.gvariant.mkInt32 28;
-        text-scaling-factor = 1.33;
+        text-scaling-factor = 1.0;
       };
     }
   ];
