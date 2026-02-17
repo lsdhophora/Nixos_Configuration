@@ -32,6 +32,7 @@
         "middlemouse.contentLoadURL" = false;
         "middlemouse.paste" = false;
         "layout.spellcheckDefault" = 0;
+        "widget.gtk.rounded-bottom-corners.enabled" = true;
       };
       userChrome = ''
         menupopup#context-sendimage,
