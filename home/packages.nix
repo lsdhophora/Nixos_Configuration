@@ -9,6 +9,7 @@
     gnomeExtensions.just-perfection
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise
+    gnomeExtensions.rounded-window-corners-reborn
     gnome-epub-thumbnailer
     gnome-themes-extra
     lxgw-wenkai

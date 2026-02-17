@@ -10,6 +10,7 @@
         "just-perfection-desktop@just-perfection"
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
+        "rounded-window-corners@fxgn"
       ];
     };
     "org/gnome/desktop/interface" = {
