@@ -50,10 +50,18 @@
     ]
   );
 
+  environment.systemPackages = [
+    (pkgs.runCommand "Kuromi-cursor" { } ''
+      mkdir -p $out/share/icons
+      ln -s ${../../assets/icons/Kuromi-cursor} $out/share/icons/Kuromi-cursor
+    '')
+  ];
+
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        cursor-size = lib.gvariant.mkInt32 28;
+        cursor-size = lib.gvariant.mkInt32 32;
+        cursor-theme = "Kuromi-cursor";
         text-scaling-factor = 1.0;
       };
     }

@@ -108,6 +108,7 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 
 ```bash
 # Always run this AFTER making any modification to verify config is valid
+# IMPORTANT: If you add new files, run 'git add <files>' BEFORE dry-build
 nixos-rebuild dry-build --flake .#flowerpot
 
 # Commit after successful dry-build (keep commits small and focused)
