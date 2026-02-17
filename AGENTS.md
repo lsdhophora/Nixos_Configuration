@@ -111,10 +111,7 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 nixos-rebuild dry-build --flake .#flowerpot
 
 # Commit after successful dry-build (keep commits small and focused)
-git add -A && git commit
-
-# Push commits to remote
-git push
+git add -A && git commit && git push
 
 # Build and switch to new system
 sudo nixos-rebuild switch --flake .#flowerpot
