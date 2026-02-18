@@ -55,7 +55,7 @@
     wantedBy = [ "graphical-session.target" ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = "${pkgs.dbus}/bin/dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply=literal /org/freedesktop/Accounts/User$(id -u lophophora) org.freedesktop.Accounts.User.SetIconFile string:/home/lophophora/.face";
+      ExecStart = "/run/current-system/sw/bin/dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply=literal /org/freedesktop/Accounts/User1000 org.freedesktop.Accounts.User.SetIconFile string:/home/lophophora/.face";
     };
   };
 
