@@ -60,7 +60,7 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        cursor-size = lib.gvariant.mkInt32 32;
+        cursor-size = lib.gvariant.mkInt32 48;
         cursor-theme = "Kuromi-cursor";
         text-scaling-factor = 1.0;
       };
