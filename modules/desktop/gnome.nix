@@ -56,8 +56,8 @@
       ln -s ${../../assets/icons/Kuromi-cursor} $out/share/icons/Kuromi-cursor
     '')
     (pkgs.runCommand "Kuromi-wallpapers" { } ''
-      mkdir -p $out/share/backgrounds
-      cp -r ${../../assets/Kuromi-Wallpapers}/* $out/share/backgrounds/
+      mkdir -p $out/share/backgrounds/gnome
+      cp -r ${../../assets/Kuromi-Wallpapers}/* $out/share/backgrounds/gnome/
     '')
   ];
 
