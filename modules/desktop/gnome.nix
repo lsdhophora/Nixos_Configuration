@@ -57,7 +57,9 @@
     '')
     (pkgs.runCommand "Kuromi-wallpapers" { } ''
       mkdir -p $out/share/backgrounds/gnome
+      mkdir -p $out/share/gnome-background-properties
       cp -r ${../../assets/Kuromi-Wallpapers}/* $out/share/backgrounds/gnome/
+      cp ${../../assets/Kuromi-Wallpapers}/*.xml $out/share/gnome-background-properties/
     '')
   ];
 

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>Kuromi Aesthetic 4</name>
+    <filename>/run/current-system/sw/share/backgrounds/gnome/kuromi-4.jpg</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#8B5CF6</pcolor>
+    <scolor>#000000</scolor>
+  </wallpaper>
+</wallpapers>
