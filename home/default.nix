@@ -8,6 +8,7 @@
   home.stateVersion = "25.11";
 
   imports = [
+    ./avatar.nix
     ./housekeeping.nix
     ./packages.nix
     ./dconf.nix
