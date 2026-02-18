@@ -14,29 +14,31 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 │   ├── boot.nix              # Boot configuration (plymouth, kernel)
 │   ├── networking.nix        # Hostname, timezone, NetworkManager, firewall
 │   ├── user.nix              # User creation and system packages
-│   ├── nix.nix               # Nix settings and git config
+│   ├── nix-config.nix        # Nix settings and git config
 │   ├── i18n.nix              # Fonts and input method (IBus Rime)
 │   ├── shell/zsh.nix         # Zsh shell configuration
+│   ├── desktop/gnome.nix     # GNOME desktop configuration
 │   ├── services/
 │   │   └── dae.nix           # DAE service (transparent proxy)
 │   └── security/
-│       └── age.nix           # Agenix secret management
+│       └── age.nix            # Agenix secret management
 ├── home/                     # Home Manager configurations
-│   ├── default.nix          # Home Manager entry point
-│   ├── packages.nix         # User packages (GNOME extensions, apps)
+│   ├── default.nix            # Home Manager entry point
+│   ├── packages.nix           # User packages (GNOME extensions, apps)
 │   ├── dconf.nix             # GNOME dconf settings
+│   ├── housekeeping.nix       # Hidden desktop entries
 │   └── programs/
-│       ├── ssh.nix           # SSH configuration (GitHub via SSH over 443)
+│       ├── ssh.nix            # SSH configuration (GitHub via SSH over 443)
 │       ├── direnv.nix         # Direnv with nix-direnv
 │       ├── librewolf.nix      # LibreWolf browser configuration
-│       └── emacs.nix          # Emacs configuration (extensive)
+│       ├── emacs.nix          # Emacs configuration (extensive)
+│       └── git.nix            # Git configuration
+├── assets/                   # Static assets
+│   ├── icons/Kuromi-cursor/  # Custom cursor theme
+│   └── Kuromi-Wallpapers/    # Wallpapers with GNOME selector XML
 ├── secrets/                  # Agenix secrets (age encrypted)
 │   ├── config.dae.age        # DAE config secret
 │   └── access-tokens-github.age  # GitHub access token
-├── desktop/                  # Desktop environment configs (empty)
-├── services/                 # Additional services (empty)
-├── shell/                    # Shell configs (empty)
-├── security/                 # Security configs (empty)
 ├── patches/                  # Application patches
 │   └── celluloid-fix-save-position.patch
 └── unused/                   # Deprecated/unused configurations
