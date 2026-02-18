@@ -15,6 +15,7 @@
     };
     "org/gnome/desktop/interface" = {
       font-name = "Adwaita Sans 11";
+      accent-color = "#8b5cf6";
     };
     "org/gnome/settings-daemon/plugins/housekeeping" = {
       donation-reminder-enabled = false;

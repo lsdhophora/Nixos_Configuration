@@ -55,6 +55,10 @@
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Kuromi-cursor} $out/share/icons/Kuromi-cursor
     '')
+    (pkgs.runCommand "Kuromi-wallpapers" { } ''
+      mkdir -p $out/share/backgrounds
+      cp -r ${../../assets/Kuromi-Wallpapers}/* $out/share/backgrounds/
+    '')
   ];
 
   programs.dconf.profiles.gdm.databases = [
@@ -63,6 +67,7 @@
         cursor-size = lib.gvariant.mkInt32 48;
         cursor-theme = "Kuromi-cursor";
         text-scaling-factor = 1.0;
+        color-scheme = "prefer-dark";
       };
     }
   ];
