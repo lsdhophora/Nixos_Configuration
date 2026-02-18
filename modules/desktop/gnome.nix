@@ -68,7 +68,7 @@
       settings."org/gnome/desktop/interface" = {
         cursor-size = lib.gvariant.mkInt32 48;
         cursor-theme = "Kuromi-cursor";
-        text-scaling-factor = 1.38;
+        text-scaling-factor = 2.0;
         accent-color = "purple";
         color-scheme = "prefer-dark";
       };
