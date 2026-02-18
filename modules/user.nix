@@ -51,6 +51,14 @@
     ];
   };
 
+  systemd.user.services.set-avatar = {
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.dbus}/bin/dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply=literal /org/freedesktop/Accounts/User$(id -u lophophora) org.freedesktop.Accounts.User.SetIconFile string:/home/lophophora/.face";
+    };
+  };
+
   environment.systemPackages = with pkgs; [
     nano
     git
