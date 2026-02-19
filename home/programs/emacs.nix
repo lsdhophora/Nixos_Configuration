@@ -13,6 +13,7 @@
         vterm
         nerd-icons
         dashboard
+        trashed
       ];
     extraConfig = ''
       ;; -*- lexical-binding: t -*-
