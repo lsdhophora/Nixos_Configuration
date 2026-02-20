@@ -62,6 +62,7 @@ This is a NixOS flake-based system configuration for a laptop named "flowerpot".
 
 ### Desktop Environment
 - **GNOME** with extensive customization
+- **Accent color**: Purple (#9141AC)
 - **Extensions**: Caffeine, Just Perfection, Blur My Shell, Run or Raise
 - **Excluded packages**: Many GNOME defaults removed (cheese, geary, gedit, epiphany, etc.)
 - **Nautilus**: Open-in-terminal configured to use Ghostty
