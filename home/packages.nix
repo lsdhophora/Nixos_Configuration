@@ -12,6 +12,7 @@
     gnome-epub-thumbnailer
     gnome-themes-extra
     lxgw-wenkai
+    maple-mono.NF-CN-unhinted
     localsend
     wordbook
     blanket
