@@ -15,6 +15,7 @@
       ibm-plex
       (ibm-plex.override { families = [ "sans-sc" ]; })
       noto-fonts-color-emoji
+      maple-mono.NF-CN-unhinted
     ];
     fontconfig = {
       enable = true;
