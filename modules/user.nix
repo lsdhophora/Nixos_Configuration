@@ -1,6 +1,7 @@
 {
   pkgs,
   inputs,
+  config,
   ...
 }:
 
@@ -8,7 +9,7 @@
   users.users.lophophora = {
     isNormalUser = true;
     description = "费雪";
-    hashedPassword = "$y$j9T$ywlcAEMJIDVX/1G5Pm5bi1$YSb/zJEgyNykoFHYt0F8b5DZ8mK9GZE.QlQzMfOfUO3";
+    hashedPasswordFile = config.age.secrets.hashedPassword.path;
     extraGroups = [ "wheel" ];
     shell = pkgs.zsh;
     packages = with pkgs; [

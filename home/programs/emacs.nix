@@ -26,9 +26,6 @@
             (when (display-graphic-p)
               (load-theme 'modus-vivendi t))))
 
-      (add-to-list 'initial-frame-alist '(width . 72))
-      (add-to-list 'initial-frame-alist '(height . 32))
-
       (setq nobreak-char-display nil)
       (set-face-attribute 'default nil :height 120)
       (set-face-attribute 'default nil :font "IBM Plex Mono")
@@ -68,7 +65,7 @@
        :ensure t
        :hook
        (nix-mode . eglot-ensure)
-       (nix-mode . corfu-mode) ;; So that envrc mode will work
+       (nix-mode . corfu-mode)
        (before-save . (lambda () (when (eq major-mode 'nix-mode) (eglot-format-buffer))))
        :config
        (add-to-list 'eglot-server-programs
@@ -76,8 +73,7 @@
        (setq eglot-nix-server-path "nixd"
              eglot-nix-formatting-command ["nixfmt"]
              eglot-nix-nixpkgs-expr "import <nixpkgs> { }"
-             eglot-nix-nixos-options-expr "(builtins.getFlake \"/home/nb/nixos\").nixosConfigurations.mnd.options"
-             eglot-nix-home-manager-options-expr "(builtins.getFlake \"/home/nb/nixos\").homeConfigurations.\"nb@mnd\".options"))
+             eglot-nix-nixos-options-expr "(builtins.getFlake \"/home/lophophora/.config/nixos\").nixosConfigurations.flowerpot.options"))
 
       (use-package magit
        :ensure t
@@ -261,8 +257,8 @@
 
   home.file.".config/emacs/init.el".text = "";
   home.file.".config/emacs/early-init.el".text = ''
-    (add-to-list 'initial-frame-alist '(width . 100))
-    (add-to-list 'initial-frame-alist '(height . 32))
+    (setq initial-frame-alist
+      '((top . 1) (left . 1) (width . 80) (height . 32)))
   '';
   home.file.".local/share/applications/emacsclient-mail.desktop".text = "";
   home.file.".local/share/applications/emacs-mail.desktop".text = "";

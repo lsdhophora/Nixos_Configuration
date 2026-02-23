@@ -5,7 +5,7 @@
 {
   home.username = "lophophora";
   home.homeDirectory = "/home/lophophora";
-  home.stateVersion = "25.11";
+  home.stateVersion = "25.05";
 
   imports = [
     ./avatar.nix

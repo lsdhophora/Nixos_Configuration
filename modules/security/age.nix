@@ -5,6 +5,14 @@
 }:
 
 {
+  age.secrets.hashedPassword = {
+    file = ../../secrets/hashed-password.age;
+    path = "/run/agenix/hashed-password";
+    owner = "root";
+    group = "root";
+    mode = "600";
+  };
+
   age.secrets.access-tokens-github = {
     file = ../../secrets/access-tokens-github.age;
     path = "/run/agenix/access-tokens-github";
