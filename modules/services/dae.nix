@@ -7,7 +7,7 @@
 {
   age.secrets.daeConfig = {
     file = ../../secrets/config.dae.age;
-    path = "/run/secrets/dae/config.dae";
+    path = "/run/agenix/dae-config";
     mode = "600";
     owner = "root";
     group = "root";
