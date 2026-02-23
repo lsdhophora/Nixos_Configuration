@@ -26,7 +26,7 @@
             (when (display-graphic-p)
               (load-theme 'modus-vivendi t))))
 
-      (add-to-list 'initial-frame-alist '(width . 100))
+      (add-to-list 'initial-frame-alist '(width . 72))
       (add-to-list 'initial-frame-alist '(height . 32))
 
       (setq nobreak-char-display nil)
