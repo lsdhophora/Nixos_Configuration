@@ -7,7 +7,6 @@
 {
   age.secrets.hashedPassword = {
     file = ../../secrets/hashed-password.age;
-    path = "/run/agenix/hashed-password";
     owner = "root";
     group = "root";
     mode = "600";
