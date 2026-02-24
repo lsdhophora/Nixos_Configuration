@@ -11,7 +11,7 @@
     description = "费雪";
     hashedPasswordFile = config.age.secrets.hashedPassword.path;
     extraGroups = [ "wheel" ];
-    shell = pkgs.zsh;
+    shell = pkgs.elvish;
     packages = with pkgs; [
       tree
       ffmpeg

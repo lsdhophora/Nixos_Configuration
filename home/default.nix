@@ -17,5 +17,6 @@
     ./programs/direnv.nix
     ./programs/librewolf.nix
     ./programs/emacs.nix
+    ./programs/elvish.nix
   ];
 }
