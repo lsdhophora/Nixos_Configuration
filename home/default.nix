@@ -17,6 +17,7 @@
     ./programs/direnv.nix
     ./programs/librewolf.nix
     ./programs/emacs.nix
+    ./programs/ghostty.nix
     ./shell/elvish.nix
   ];
 }

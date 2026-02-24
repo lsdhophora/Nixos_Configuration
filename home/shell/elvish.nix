@@ -21,7 +21,6 @@
     }
 
     # Basic settings
-    set edit:completion:binding[tab] = { edit:completion:start }
     set edit:rprompt = (constantly "")
   '';
 }

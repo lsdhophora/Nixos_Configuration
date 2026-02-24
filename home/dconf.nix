@@ -12,7 +12,7 @@
       favorite-apps = [
         "librewolf.desktop"
         "emacs.desktop"
-        "org.gnome.Console.desktop"
+        "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
       ];
       disable-user-extensions = false;
