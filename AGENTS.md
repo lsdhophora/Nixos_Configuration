@@ -132,6 +132,7 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Some patches in `patches/` are applied via overrideAttrs
 - Unused configs in `unused/` are kept for reference but not imported
 - **Important**: After making changes to the configuration, run `tree -L 3 --noreport -I 'result|*.lock'` to update the Project Structure section in this file to keep it in sync with actual modifications. Also update Key Features, Code Style, Common Commands, and Notes sections as needed.
+- `nixpkgs/` is a local clone of the NixOS/nixpkgs repository for AI reference only (excluded from git)
 
 ## Lessons Learned
 
