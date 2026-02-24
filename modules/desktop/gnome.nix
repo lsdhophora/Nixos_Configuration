@@ -47,6 +47,7 @@
       gnome-weather
       gnome-software
       showtime
+      gnome-console
     ]
   );
 
