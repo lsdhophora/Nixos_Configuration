@@ -63,23 +63,6 @@
       enable-animations = true;
     };
 
-    "org/gnome/desktop/background" = {
-      picture-uri = "file:///run/current-system/sw/share/backgrounds/gnome/Kuromi%20Aesthetics.jpg";
-      picture-uri-dark = "file:///run/current-system/sw/share/backgrounds/gnome/Kuromi%20Aesthetics.jpg";
-      picture-options = "zoom";
-      primary-color = "#8B5CF6";
-      secondary-color = "#000000";
-      color-shading-type = "solid";
-    };
-
-    "org/gnome/desktop/screensaver" = {
-      picture-uri = "file:///run/current-system/sw/share/backgrounds/gnome/Kuromi%20Aesthetics.jpg";
-      picture-options = "zoom";
-      primary-color = "#8B5CF6";
-      secondary-color = "#000000";
-      color-shading-type = "solid";
-    };
-
     "org/gnome/desktop/input-sources" = {
       sources = [
         (pkgs.lib.gvariant.mkTuple [
