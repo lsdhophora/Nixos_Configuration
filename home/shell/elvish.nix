@@ -1,6 +1,11 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
+  home.packages = with pkgs; [
+    elvish
+    carapace
+  ];
+
   home.file.".config/elvish/rc.elv".text = ''
     # Carapace completions
     eval (carapace _carapace elvish | slurp)

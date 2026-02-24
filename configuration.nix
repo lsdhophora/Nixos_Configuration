@@ -15,7 +15,6 @@
     ./modules/nix-config.nix
     ./modules/services/dae.nix
     ./modules/services/pipewire.nix
-    ./modules/shell/elvish.nix
     ./modules/security/age.nix
   ];
 }
