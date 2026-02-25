@@ -18,6 +18,7 @@
     ./programs/librewolf.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix
+    ./programs/opencode.nix
     ./shell/elvish.nix
   ];
 }

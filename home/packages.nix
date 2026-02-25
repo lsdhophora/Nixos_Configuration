@@ -18,7 +18,6 @@
     celluloid
     shortwave
     bat
-    opencode
     transmission_4-gtk
     wl-clipboard
   ];
