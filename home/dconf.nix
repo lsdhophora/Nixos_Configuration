@@ -43,7 +43,7 @@
 
     "org/gnome/shell/extensions/caffeine" = {
       cli-toggle = false;
-      indicator-position-max = 0;
+      indicator-position-max = 1;
     };
 
     "org/gnome/shell/extensions/just-perfection" = {
@@ -54,13 +54,18 @@
 
     "org/gnome/desktop/interface" = {
       font-name = "Adwaita Sans 11";
+      document-font-name = "Adwaita Sans 11";
       accent-color = "purple";
       cursor-theme = "Kuromi-cursor";
-      text-scaling-factor = 1.38;
+      cursor-size = 48;
+      text-scaling-factor = 1.35;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
       icon-theme = "Adwaita";
       enable-animations = true;
+      font-antialiasing = "rgba";
+      font-hinting = "full";
+      toolkit-accessibility = false;
     };
 
     "org/gnome/desktop/input-sources" = {
@@ -79,10 +84,23 @@
 
     "org/gnome/desktop/wm/preferences" = {
       action-middle-click-titlebar = "none";
+      resize-with-right-button = false;
     };
 
     "org/gnome/desktop/peripherals/touchpad" = {
       two-finger-scrolling-enabled = true;
+    };
+
+    "org/gnome/desktop/sound" = {
+      event-sounds = true;
+      theme-name = "__custom";
+    };
+
+    "org/gnome/desktop/notifications" = {
+      application-children = [
+        "gnome-power-panel"
+        "org-gnome-console"
+      ];
     };
 
     "org/gnome/desktop/app-folders" = {
@@ -128,6 +146,13 @@
       ];
     };
 
+    "org/gnome/mutter" = {
+      experimental-features = [
+        "scale-monitor-framebuffer"
+        "variable-refresh-rate"
+      ];
+    };
+
     "org/gnome/nautilus/preferences" = {
       default-folder-viewer = "icon-view";
     };
@@ -140,8 +165,47 @@
       sleep-inactive-ac-type = "nothing";
     };
 
+    "org/gnome/settings-daemon/plugins/media-keys" = {
+      volume-step = 5;
+    };
+
+    "org/gnome/settings-daemon/plugins/color" = {
+      night-light-schedule-automatic = false;
+    };
+
     "org/gnome/tweaks" = {
       show-extensions-notice = false;
+    };
+
+    "org/gnome/Loupe" = {
+      show-properties = true;
+    };
+
+    "org/gnome/Console" = {
+      font-scale = 1.0;
+    };
+
+    "org/gnome/maps" = {
+      window-maximized = true;
+      transportation-type = "pedestrian";
+      zoom-level = 2;
+    };
+
+    "org/gnome/papers" = {
+      night-mode = false;
+    };
+
+    "org/gnome/papers/default" = {
+      continuous = true;
+      dual-page = false;
+      dual-page-odd-left = false;
+      enable-spellchecking = true;
+      show-sidebar = false;
+      sizing-mode = "automatic";
+    };
+
+    "org/gnome/control-center" = {
+      last-panel = "display";
     };
   };
 }
