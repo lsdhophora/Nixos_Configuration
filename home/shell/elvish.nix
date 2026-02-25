@@ -7,7 +7,13 @@
   ];
 
   home.file.".config/elvish/rc.elv".text = ''
-    # Elvish modules
+    # Elvish package manager
+    use epm
+
+    # Declarative install third-party modules
+    epm:install &silent-if-installed github.com/zzamboni/elvish-modules
+
+    # Load terminal-title module
     use github.com/zzamboni/elvish-modules/terminal-title
 
     # Carapace completions
