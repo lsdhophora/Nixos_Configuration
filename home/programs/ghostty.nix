@@ -21,7 +21,7 @@
     settings = {
       theme = "Adwaita Dark";
       "cursor-style" = "block";
-      "shell-integration-features" = "no-cursor";
+      "shell-integration-features" = "no-cursor,title";
       "bell-features" = "no-title,attention";
       "font-family" = [
         "Adwaita Mono"
