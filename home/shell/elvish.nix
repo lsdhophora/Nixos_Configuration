@@ -7,6 +7,9 @@
   ];
 
   home.file.".config/elvish/rc.elv".text = ''
+    # Elvish modules
+    use github.com/zzamboni/elvish-modules/terminal-title
+
     # Carapace completions
     eval (carapace _carapace elvish | slurp)
 
