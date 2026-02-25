@@ -11,6 +11,7 @@
     gnomeExtensions.run-or-raise
     gnome-epub-thumbnailer
     gnome-themes-extra
+    gnome-tweaks
     lxgw-wenkai
     localsend
     wordbook
