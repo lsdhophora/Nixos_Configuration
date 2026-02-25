@@ -10,6 +10,10 @@
     # Carapace completions
     eval (carapace _carapace elvish | slurp)
 
+    # Terminal title - show current directory with ~ abbreviation
+    set terminal-title:title-during-prompt = { put (tilde-abbr $pwd) }
+    set terminal-title:title-during-command = {|cmd| put (tilde-abbr $pwd) }
+
     # Prompt
     fn prompt {
       if (has-env IN_NIX_SHELL) {
