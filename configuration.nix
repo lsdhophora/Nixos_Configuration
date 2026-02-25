@@ -17,4 +17,6 @@
     ./modules/services/pipewire.nix
     ./modules/security/age.nix
   ];
+
+  programs.nix-ld.enable = true;
 }
