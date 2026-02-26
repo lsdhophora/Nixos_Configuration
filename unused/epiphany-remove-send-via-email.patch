@@ -1,0 +1,54 @@
+diff --git a/src/ephy-window.c b/src/ephy-window.c
+index a7abcf8c9..af44ce15c 100644
+--- a/src/ephy-window.c
++++ b/src/ephy-window.c
+@@ -958,7 +958,6 @@ static const GActionEntry popup_entries [] = {
+   { "download-link-as", context_cmd_download_link_as },
+   { "copy-link-address", context_cmd_copy_link_address },
+   { "copy-email-address", context_cmd_copy_link_address },
+-  { "send-via-email", context_cmd_send_via_email },
+   { "add-link-to-bookmarks", context_cmd_add_link_to_bookmarks },
+ 
+   /* Images. */
+@@ -1005,7 +1004,6 @@ const struct {
+   { "paste-as-plain-text", N_("_Paste Text Only") },
+   { "select-all", N_("Select _All") },
+ 
+-  { "send-via-email", N_("S_end Link by Email…") },
+   { "add-link-to-bookmarks", N_("Add _Link to Bookmarks") },
+ 
+   { "reload", N_("_Reload") },
+@@ -1100,10 +1098,6 @@ _ephy_window_set_default_actions_sensitive (EphyWindow *window,
+                                        "context-bookmark-page");
+   ephy_action_change_sensitivity_flags (G_SIMPLE_ACTION (action),
+                                         flags, set);
+-  action = g_action_map_lookup_action (G_ACTION_MAP (action_group),
+-                                       "send-via-email");
+-  ephy_action_change_sensitivity_flags (G_SIMPLE_ACTION (action),
+-                                        flags, set);
+ 
+   /* Toolbar */
+   action_group = ephy_window_get_action_group (window, "toolbar");
+@@ -1707,8 +1701,6 @@ populate_context_menu (WebKitWebView       *web_view,
+       add_action_to_context_menu (context_menu, popup_action_group,
+                                   "copy-link-address", window);
+     }
+-    add_action_to_context_menu (context_menu, popup_action_group,
+-                                "send-via-email", window);
+     add_action_to_context_menu (context_menu, popup_action_group,
+                                 "add-link-to-bookmarks", window);
+   } else if (webkit_hit_test_result_context_is_editable (hit_test_result)) {
+@@ -1858,13 +1850,6 @@ populate_context_menu (WebKitWebView       *web_view,
+   g_free (search_selection_action_name);
+ 
+   if (!app_mode) {
+-    if (is_document && !is_image && !is_media) {
+-      webkit_context_menu_append (context_menu,
+-                                  webkit_context_menu_item_new_separator ());
+-      add_action_to_context_menu (context_menu, popup_action_group,
+-                                  "send-via-email", window);
+-    }
+-
+     webkit_context_menu_append (context_menu,
+                                 webkit_context_menu_item_new_separator ());
+     add_action_to_context_menu (context_menu, window_action_group,
