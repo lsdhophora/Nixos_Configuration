@@ -19,6 +19,11 @@
     ./modules/security/age.nix
   ];
 
+  nixpkgs.overlays = [
+    (import ./overlays/epiphany-beta.nix)
+    (import ./overlays/gnome-sound-recorder.nix)
+  ];
+
   programs.nix-ld.enable = true;
 
   services.flatpak.enable = true;
