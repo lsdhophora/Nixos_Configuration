@@ -8,6 +8,7 @@
         "just-perfection-desktop@just-perfection"
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
+        "rounded-window-corners@fxgn"
       ];
       favorite-apps = [
         "librewolf.desktop"
@@ -146,7 +147,7 @@
         "org.gnome.Snapshot.desktop"
         "com.rafaelmardojai.Blanket.desktop"
         "io.github.celluloid_player.Celluloid.desktop"
-        "io.github.babluboy.wordbook.desktop"
+        "dev.mufeed.Wordbook.desktop"
       ];
     };
 
