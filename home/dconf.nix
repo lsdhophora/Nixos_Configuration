@@ -10,7 +10,6 @@
         "run-or-raise@edvard.cz"
       ];
       favorite-apps = [
-        "org.gnome.Epiphany.desktop"
         "emacs.desktop"
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"

@@ -27,6 +27,7 @@
       gnome-characters
       gnome-tour
       gnome-photos
+      epiphany
       hitori
       iagno
       tali
