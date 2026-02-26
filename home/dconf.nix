@@ -10,7 +10,7 @@
         "run-or-raise@edvard.cz"
       ];
       favorite-apps = [
-        "librewolf.desktop"
+        "org.gnome.Epiphany.desktop"
         "emacs.desktop"
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
@@ -44,6 +44,7 @@
     "org/gnome/shell/extensions/caffeine" = {
       cli-toggle = false;
       indicator-position-max = 1;
+      user-enabled = false;
     };
 
     "org/gnome/shell/extensions/just-perfection" = {
@@ -58,7 +59,7 @@
       accent-color = "purple";
       cursor-theme = "Kuromi-cursor";
       cursor-size = 48;
-      text-scaling-factor = 1.35;
+      text-scaling-factor = 1.0;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
       icon-theme = "Adwaita";
@@ -155,6 +156,7 @@
 
     "org/gnome/nautilus/preferences" = {
       default-folder-viewer = "icon-view";
+      migrated-gtk-settings = true;
     };
 
     "org/gnome/settings-daemon/plugins/housekeeping" = {
