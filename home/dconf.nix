@@ -10,11 +10,14 @@
         "run-or-raise@edvard.cz"
       ];
       favorite-apps = [
+        "org.gnome.Epiphany.Canary.desktop"
         "emacs.desktop"
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
       ];
       disable-user-extensions = false;
+      last-selected-power-profile = "power-saver";
+      welcome-dialog-last-shown-version = "49.4";
     };
 
     "org/gnome/shell/extensions/blur-my-shell" = {
