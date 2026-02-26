@@ -7,6 +7,7 @@
 {
   nixpkgs.overlays = [
     (import ../../overlays/gnome-sound-recorder.nix)
+    (import ../../overlays/epiphany.nix)
   ];
 
   services.displayManager.gdm.enable = true;
