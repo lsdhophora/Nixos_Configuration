@@ -6,6 +6,7 @@
 
 {
   nixpkgs.overlays = [
+    (import ../../overlays/gnome-sound-recorder.nix)
     (import ../../overlays/epiphany-beta.nix)
   ];
 
