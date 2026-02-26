@@ -61,7 +61,7 @@
       document-font-name = "Adwaita Sans 11";
       accent-color = "purple";
       cursor-theme = "Kuromi-cursor";
-      cursor-size = 48;
+      cursor-size = 32;
       text-scaling-factor = 1.0;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
