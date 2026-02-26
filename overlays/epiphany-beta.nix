@@ -5,8 +5,10 @@ let
     version = "4.21.5";
     src = prev.fetchurl {
       url = "https://download.gnome.org/sources/gtk/4.21/gtk-4.21.5.tar.xz";
-      hash = "sha256-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=";
+      hash = "sha256-ZT2g1VahGj57fTbW77ybFkfLJbjoH0DslAvQh4niSBw=";
     };
+    buildInputs = (old.buildInputs or [ ]) ++ [ prev.shared-mime-info ];
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ prev.shared-mime-info ];
   });
 in
 

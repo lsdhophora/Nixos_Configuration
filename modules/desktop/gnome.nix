@@ -14,20 +14,8 @@
   '';
 
   nixpkgs.overlays = [
-    (
-      self: super:
-      import ../../overlays/gnome-sound-recorder.nix {
-        final = self;
-        prev = super;
-      }
-    )
-    (
-      self: super:
-      import ../../overlays/epiphany-beta.nix {
-        final = self;
-        prev = super;
-      }
-    )
+    (import ../../overlays/gnome-sound-recorder.nix)
+    (import ../../overlays/epiphany-beta.nix)
   ];
 
   environment.gnome.excludePackages = (
