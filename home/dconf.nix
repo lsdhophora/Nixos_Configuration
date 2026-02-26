@@ -10,7 +10,7 @@
         "run-or-raise@edvard.cz"
       ];
       favorite-apps = [
-        "org.gnome.Epiphany.Canary.desktop"
+        "librewolf.desktop"
         "emacs.desktop"
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
@@ -146,6 +146,7 @@
         "org.gnome.Snapshot.desktop"
         "com.rafaelmardojai.Blanket.desktop"
         "io.github.celluloid_player.Celluloid.desktop"
+        "io.github.babluboy.wordbook.desktop"
       ];
     };
 

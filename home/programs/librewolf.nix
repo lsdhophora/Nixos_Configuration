@@ -28,7 +28,7 @@
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
         "browser.tabs.opentabfor.middleclick" = false;
         "middlemouse.openNewWindow" = false;
-        "layout.css.devPixelsPerPx" = "1.05";
+        "layout.css.devPixelsPerPx" = "1.0";
         "middlemouse.contentLoadURL" = false;
         "middlemouse.paste" = false;
         "layout.spellcheckDefault" = 0;
