@@ -9,6 +9,7 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
+        "accent-directories@taswbi.github.com"
       ];
       favorite-apps = [
         "librewolf.desktop"

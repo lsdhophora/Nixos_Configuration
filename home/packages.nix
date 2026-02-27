@@ -10,6 +10,7 @@
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise
     gnomeExtensions.rounded-window-corners-reborn
+    gnomeExtensions.accent-icons-theme
     gnome-epub-thumbnailer
     gnome-themes-extra
     lxgw-wenkai
