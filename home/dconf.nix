@@ -9,7 +9,6 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
-        "accent-directories@taiwbi.com"
       ];
       favorite-apps = [
         "librewolf.desktop"
@@ -17,7 +16,7 @@
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
       ];
-      disable-user-extensions = false;
+      disable-user-extensions = true;
       last-selected-power-profile = "power-saver";
       welcome-dialog-last-shown-version = "49.4";
     };
@@ -66,7 +65,7 @@
       text-scaling-factor = 1.0;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
-      icon-theme = "Adwaita-Purple";
+      icon-theme = "Adwaita-purple";
       enable-animations = true;
       font-antialiasing = "rgba";
       font-hinting = "full";

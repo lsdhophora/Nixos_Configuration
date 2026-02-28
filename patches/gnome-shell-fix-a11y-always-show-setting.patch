@@ -1,0 +1,23 @@
+From: Bug Reporter <bug@example.com>
+Date: Sat, 28 Feb 2026
+Subject: [PATCH] loginDialog: Remove a11y button from GDM login screen
+
+---
+
+ js/gdm/loginDialog.js | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/js/gdm/loginDialog.js b/js/gdm/loginDialog.js
+index 9f8a3afc2..123456789 100644
+--- a/js/gdm/loginDialog.js
++++ b/js/gdm/loginDialog.js
+@@ -653,9 +653,6 @@ export const LoginDialog extends GObject.registerClass({
+         this._sessionMenuButton.show();
+         this._bottomButtonGroup.add_child(this._sessionMenuButton);
+ 
+-        this._a11yMenuButton = new A11yMenuButton();
+-        this._bottomButtonGroup.add_child(this._a11yMenuButton);
+-
+         this._logoBin = new St.Widget({
+             style_class: 'login-dialog-logo-bin',
+             x_align: Clutter.ActorAlign.CENTER,

@@ -15,7 +15,7 @@
   services.desktopManager.gnome.enable = true;
   services.desktopManager.gnome.extraGSettingsOverrides = ''
     [org.gnome.mutter]
-    experimental-features=['variable-refresh-rate']
+    experimental-features=['variable-refresh-rate','scale-monitor-framebuffer']
   '';
 
   environment.gnome.excludePackages = (
@@ -46,6 +46,10 @@
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Kuromi-cursor} $out/share/icons/Kuromi-cursor
     '')
+    (pkgs.runCommand "Adwaita-purple-icon-theme" { } ''
+      mkdir -p $out/share/icons
+      ln -s ${../../assets/icons/Adwaita-purple} $out/share/icons/Adwaita-purple
+    '')
     (pkgs.runCommand "Kuromi-wallpapers" { } ''
       mkdir -p $out/share/backgrounds/gnome
       mkdir -p $out/share/gnome-background-properties
@@ -57,15 +61,25 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        cursor-size = lib.gvariant.mkInt32 48;
+        cursor-size = lib.gvariant.mkInt32 32;
         cursor-theme = "Kuromi-cursor";
-        text-scaling-factor = 1.5;
+        #text-scaling-factor = 1.5;
         accent-color = "purple";
         color-scheme = "prefer-dark";
+        icon-theme = "Adwaita-purple";
+        toolkit-accessibility = false;
       };
       settings."org/gnome/desktop/a11y" = {
         always-show-universal-access-status = false;
       };
+      settings."org/gnome/mutter" = {
+        experimental-features = [ "scale-monitor-framebuffer" ];
+      };
     }
   ];
+
+  programs.nautilus-open-any-terminal = {
+    enable = true;
+    terminal = "ghostty";
+  };
 }
