@@ -23,7 +23,7 @@
     set terminal-title:title-during-prompt = { put (tilde-abbr $pwd) }
     set terminal-title:title-during-command = {|cmd| put (tilde-abbr $pwd) }
 
-    # Prompt
+    # Prompt function
     fn prompt {
       if (has-env IN_NIX_SHELL) {
         put (styled (styled "[nix-shell] →" green) bold)
@@ -32,6 +32,9 @@
       }
       put " "
     }
+
+    # Assign the prompt function
+    set edit:prompt = $prompt~
 
     # Basic settings
     set edit:rprompt = (constantly "")
