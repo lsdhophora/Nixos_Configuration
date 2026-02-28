@@ -63,6 +63,9 @@
         accent-color = "purple";
         color-scheme = "prefer-dark";
       };
+      settings."org/gnome/desktop/a11y" = {
+        always-show-universal-access-status = false;
+      };
     }
   ];
 }
