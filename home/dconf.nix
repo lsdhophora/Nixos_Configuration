@@ -9,7 +9,7 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
-        "accent-directories@taswbi.github.com"
+        "accent-directories@taiwbi.com"
       ];
       favorite-apps = [
         "librewolf.desktop"
@@ -66,7 +66,7 @@
       text-scaling-factor = 1.0;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
-      icon-theme = "Adwaita";
+      icon-theme = "Adwaita-Purple";
       enable-animations = true;
       font-antialiasing = "rgba";
       font-hinting = "full";
