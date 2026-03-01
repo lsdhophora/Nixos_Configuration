@@ -9,6 +9,7 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
+        "customize-ibus@hollowman.ml"
       ];
       favorite-apps = [
         "librewolf.desktop"
@@ -16,7 +17,7 @@
         "com.mitchellh.ghostty.desktop"
         "org.gnome.Nautilus.desktop"
       ];
-      disable-user-extensions = true;
+      disable-user-extensions = false;
       last-selected-power-profile = "power-saver";
       welcome-dialog-last-shown-version = "49.4";
     };
@@ -56,6 +57,36 @@
       panel = true;
     };
 
+    "org/gnome/shell/extensions/customize-ibus" = {
+      custom-font = "Sans 11.5";
+      enable-auto-switch = false;
+      use-custom-font = true;
+      use-input-indicator = false;
+    };
+
+    "com/github/libpinyin/ibus-libpinyin/libpinyin" = {
+      auto-commit = false;
+      clear-custom-table = "user";
+      clear-user-data = "user";
+      display-style = 2;
+      emoji-candidate = false;
+      english-candidate = false;
+      english-input-mode = false;
+      export-dictionary = "/home/lophophora/Documents/test";
+      init-chinese = true;
+      init-full = false;
+      init-full-punct = true;
+      keyboard-layout = "us";
+      lua-extension = false;
+      main-switch = "";
+      minus-equal-page = false;
+      remember-every-input = true;
+      shift-select-candidate = false;
+      square-bracket-page = true;
+      table-input-mode = true;
+      use-custom-table = false;
+    };
+
     "org/gnome/desktop/interface" = {
       font-name = "Adwaita Sans 11";
       document-font-name = "Adwaita Sans 11";
@@ -80,7 +111,7 @@
         ])
         (pkgs.lib.gvariant.mkTuple [
           "ibus"
-          "rime"
+          "libpinyin"
         ])
       ];
       xkb-options = [ "terminate:ctrl_alt_bksp" ];
