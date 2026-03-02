@@ -91,6 +91,7 @@
       font-name = "Adwaita Sans 11";
       document-font-name = "Adwaita Sans 11";
       accent-color = "purple";
+      cursor-size = 32;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
       icon-theme = "Adwaita-purple";

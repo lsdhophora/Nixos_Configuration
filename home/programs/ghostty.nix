@@ -17,7 +17,6 @@
       "bell-features" = "no-title,attention";
       "font-family" = [ "Maple Mono NF CN" ];
       "link-url" = false;
-      "working-directory" = "inherit";
       "right-click-action" = "ignore";
       "resize-overlay" = "never";
     };
