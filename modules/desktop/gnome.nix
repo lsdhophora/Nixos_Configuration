@@ -42,10 +42,6 @@
   );
 
   environment.systemPackages = [
-    (pkgs.runCommand "Kuromi-cursor" { } ''
-      mkdir -p $out/share/icons
-      ln -s ${../../assets/icons/Kuromi-cursor} $out/share/icons/Kuromi-cursor
-    '')
     (pkgs.runCommand "Adwaita-purple-icon-theme" { } ''
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Adwaita-purple} $out/share/icons/Adwaita-purple
@@ -61,13 +57,10 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        cursor-size = lib.gvariant.mkInt32 32;
-        cursor-theme = "Kuromi-cursor";
-        #text-scaling-factor = 1.5;
+        text-scaling-factor = 1.5;
         accent-color = "purple";
         color-scheme = "prefer-dark";
         icon-theme = "Adwaita-purple";
-        toolkit-accessibility = false;
       };
       settings."org/gnome/desktop/a11y" = {
         always-show-universal-access-status = false;

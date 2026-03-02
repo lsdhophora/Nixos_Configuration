@@ -58,7 +58,7 @@
     };
 
     "org/gnome/shell/extensions/customize-ibus" = {
-      custom-font = "Sans 11.5";
+      custom-font = "Adwaita Sans 11.5";
       enable-auto-switch = false;
       use-custom-font = true;
       use-input-indicator = false;
@@ -91,9 +91,6 @@
       font-name = "Adwaita Sans 11";
       document-font-name = "Adwaita Sans 11";
       accent-color = "purple";
-      cursor-theme = "Kuromi-cursor";
-      cursor-size = 32;
-      text-scaling-factor = 1.0;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
       icon-theme = "Adwaita-purple";
@@ -216,10 +213,6 @@
 
     "org/gnome/Loupe" = {
       show-properties = true;
-    };
-
-    "org/gnome/Console" = {
-      font-scale = 1.0;
     };
 
     "org/gnome/maps" = {

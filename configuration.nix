@@ -29,11 +29,6 @@
 
   services.flatpak.enable = true;
 
-  environment.sessionVariables = {
-    XCURSOR_THEME = "Kuromi-cursor";
-    XCURSOR_SIZE = "48";
-  };
-
   environment.systemPackages = (
     with pkgs;
     [
