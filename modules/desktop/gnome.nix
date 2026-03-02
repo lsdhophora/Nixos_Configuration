@@ -57,7 +57,8 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        text-scaling-factor = 1.5;
+        cursor-size = lib.gvariant.mkInt32 24;
+        text-scaling-factor = 1.25;
         accent-color = "purple";
         color-scheme = "prefer-dark";
         icon-theme = "Adwaita-purple";
