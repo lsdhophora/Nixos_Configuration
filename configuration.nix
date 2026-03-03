@@ -17,6 +17,7 @@
     ./modules/services/dae.nix
     ./modules/services/pipewire.nix
     ./modules/security/age.nix
+    ./modules/security/sudo.nix
   ];
 
   nixpkgs.overlays = [
@@ -26,8 +27,6 @@
   ];
 
   programs.nix-ld.enable = true;
-
-  services.flatpak.enable = true;
 
   environment.systemPackages = (
     with pkgs;
