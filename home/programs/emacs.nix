@@ -152,9 +152,9 @@
         (TeX-parse-self t)
         (TeX-master nil)
         (TeX-source-correlate-method 'synctex)
-        (TeX-view-program-selection '((output-pdf "Papers")))
+        (TeX-view-program-selection '((output-pdf "Zathura")))
         (TeX-view-program-list
-        '(("Papers" "Papers ./%o")))
+        '(("Zathura" "zathura ./%o")))
 
         :config
         (require 'tex)

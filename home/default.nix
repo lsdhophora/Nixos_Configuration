@@ -19,6 +19,7 @@
     ./programs/emacs.nix
     ./programs/ghostty.nix
     ./programs/opencode.nix
+    ./programs/zathura.nix
     ./shell/elvish.nix
   ];
 }
