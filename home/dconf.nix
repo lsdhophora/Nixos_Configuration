@@ -64,6 +64,10 @@
       use-input-indicator = false;
     };
 
+    "org/gnome/shell/extensions/rounded-window-corners-reborn" = {
+      settings-version = 7;
+    };
+
     "com/github/libpinyin/ibus-libpinyin/libpinyin" = {
       auto-commit = false;
       clear-custom-table = "user";
@@ -178,6 +182,7 @@
         "com.rafaelmardojai.Blanket.desktop"
         "io.github.celluloid_player.Celluloid.desktop"
         "dev.mufeed.Wordbook.desktop"
+        "org.pwmt.zathura.desktop"
       ];
     };
 
