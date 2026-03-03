@@ -40,6 +40,5 @@
       ];
       outputs = builtins.filter (output: output != "devdoc") oldAttrs.outputs;
     }))
-    zathura
   ];
 }
