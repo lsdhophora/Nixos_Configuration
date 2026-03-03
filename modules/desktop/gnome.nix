@@ -46,9 +46,9 @@
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Adwaita-purple} $out/share/icons/Adwaita-purple
     '')
-    (pkgs.runCommand "Notwaita-Black-cursor-theme" { } ''
+    (pkgs.runCommand "Bibata-Modern-Classic-cursor-theme" { } ''
       mkdir -p $out/share/icons
-      ln -s ${../../assets/icons/Notwaita-Black} $out/share/icons/Notwaita-Black
+      ln -s ${../../assets/icons/Bibata-Modern-Classic} $out/share/icons/Bibata-Modern-Classic
     '')
     (pkgs.runCommand "Kuromi-wallpapers" { } ''
       mkdir -p $out/share/backgrounds/gnome
@@ -61,7 +61,7 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
-        cursor-theme = "Notwaita-Black";
+        cursor-theme = "Bibata-Modern-Classic";
         cursor-size = lib.gvariant.mkInt32 24;
         text-scaling-factor = 1.20;
         accent-color = "purple";
