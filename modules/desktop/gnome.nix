@@ -15,7 +15,7 @@
   services.desktopManager.gnome.enable = true;
   services.desktopManager.gnome.extraGSettingsOverrides = ''
     [org.gnome.mutter]
-    experimental-features=['variable-refresh-rate','scale-monitor-framebuffer']
+    experimental-features=['variable-refresh-rate','scale-monitor-framebuffer','xwayland-native-scaling']
   '';
 
   environment.gnome.excludePackages = (
@@ -46,6 +46,10 @@
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Adwaita-purple} $out/share/icons/Adwaita-purple
     '')
+    (pkgs.runCommand "Notwaita-Black-cursor-theme" { } ''
+      mkdir -p $out/share/icons
+      ln -s ${../../assets/icons/Notwaita-Black} $out/share/icons/Notwaita-Black
+    '')
     (pkgs.runCommand "Kuromi-wallpapers" { } ''
       mkdir -p $out/share/backgrounds/gnome
       mkdir -p $out/share/gnome-background-properties
@@ -57,8 +61,9 @@
   programs.dconf.profiles.gdm.databases = [
     {
       settings."org/gnome/desktop/interface" = {
+        cursor-theme = "Notwaita-Black";
         cursor-size = lib.gvariant.mkInt32 24;
-        text-scaling-factor = 1.25;
+        text-scaling-factor = 1.20;
         accent-color = "purple";
         color-scheme = "prefer-dark";
         icon-theme = "Adwaita-purple";
@@ -67,7 +72,10 @@
         always-show-universal-access-status = false;
       };
       settings."org/gnome/mutter" = {
-        experimental-features = [ "scale-monitor-framebuffer" ];
+        experimental-features = [
+          "scale-monitor-framebuffer"
+          "xwayland-native-scaling"
+        ];
       };
     }
   ];
