@@ -223,19 +223,6 @@
       zoom-level = 2;
     };
 
-    "org/gnome/papers" = {
-      night-mode = false;
-    };
-
-    "org/gnome/papers/default" = {
-      continuous = true;
-      dual-page = false;
-      dual-page-odd-left = false;
-      enable-spellchecking = true;
-      show-sidebar = false;
-      sizing-mode = "automatic";
-    };
-
     "org/gnome/control-center" = {
       last-panel = "display";
     };
