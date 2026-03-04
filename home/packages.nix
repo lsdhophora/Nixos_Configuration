@@ -10,7 +10,7 @@
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise
     gnomeExtensions.rounded-window-corners-reborn
-    gnomeExtensions.customize-ibus
+    gnomeExtensions.app-hider
     gnome-epub-thumbnailer
     gnome-themes-extra
     lxgw-wenkai
@@ -22,23 +22,5 @@
     bat
     transmission_4-gtk
     wl-clipboard
-    (pkgs.evince.overrideAttrs (oldAttrs: {
-      mesonFlags = (oldAttrs.mesonFlags or [ ]) ++ [
-        "-Dviewer=false"
-        "-Dpreviewer=false"
-        "-Dthumbnailer=true"
-        "-Dintrospection=false"
-        "-Ddbus=false"
-        "-Dgtk_doc=false"
-        "-Duser_doc=false"
-        "-Dcomics=disabled"
-        "-Ddjvu=disabled"
-        "-Ddvi=disabled"
-        "-Dps=disabled"
-        "-Dtiff=disabled"
-        "-Dxps=disabled"
-      ];
-      outputs = builtins.filter (output: output != "devdoc") oldAttrs.outputs;
-    }))
   ];
 }

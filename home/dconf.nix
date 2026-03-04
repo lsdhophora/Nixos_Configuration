@@ -9,7 +9,7 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
-        "customize-ibus@hollowman.ml"
+        "app-hider@lynith.dev"
       ];
       favorite-apps = [
         "librewolf.desktop"
@@ -57,38 +57,12 @@
       panel = true;
     };
 
-    "org/gnome/shell/extensions/customize-ibus" = {
-      custom-font = "Adwaita Sans 11.5";
-      enable-auto-switch = false;
-      use-custom-font = true;
-      use-input-indicator = false;
-    };
-
     "org/gnome/shell/extensions/rounded-window-corners-reborn" = {
       settings-version = 7;
     };
 
-    "com/github/libpinyin/ibus-libpinyin/libpinyin" = {
-      auto-commit = false;
-      clear-custom-table = "user";
-      clear-user-data = "user";
-      display-style = 2;
-      emoji-candidate = false;
-      english-candidate = false;
-      english-input-mode = false;
-      export-dictionary = "/home/lophophora/Documents/test";
-      init-chinese = true;
-      init-full = false;
-      init-full-punct = true;
-      keyboard-layout = "us";
-      lua-extension = false;
-      main-switch = "";
-      minus-equal-page = false;
-      remember-every-input = true;
-      shift-select-candidate = false;
-      square-bracket-page = true;
-      table-input-mode = true;
-      use-custom-table = false;
+    "org/gnome/shell/extensions/app-hider" = {
+      hidden-apps = [ "org.gnome.Papers.desktop" ];
     };
 
     "org/gnome/desktop/interface" = {
@@ -114,7 +88,7 @@
         ])
         (pkgs.lib.gvariant.mkTuple [
           "ibus"
-          "libpinyin"
+          "rime"
         ])
       ];
       xkb-options = [ "terminate:ctrl_alt_bksp" ];
