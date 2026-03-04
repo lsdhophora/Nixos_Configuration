@@ -9,6 +9,7 @@
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
         "rounded-window-corners@fxgn"
+        "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
       ];
       favorite-apps = [
@@ -55,6 +56,13 @@
       accessibility-menu = false;
       activities-button = true;
       panel = true;
+    };
+
+    "org/gnome/shell/extensions/customize-ibus" = {
+      custom-font = "Adwaita Sans 11.5";
+      enable-auto-switch = false;
+      use-custom-font = true;
+      use-input-indicator = false;
     };
 
     "org/gnome/shell/extensions/rounded-window-corners-reborn" = {

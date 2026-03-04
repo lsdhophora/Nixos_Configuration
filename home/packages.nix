@@ -10,6 +10,7 @@
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise
     gnomeExtensions.rounded-window-corners-reborn
+    gnomeExtensions.customize-ibus
     gnomeExtensions.app-hider
     gnome-epub-thumbnailer
     gnome-themes-extra
