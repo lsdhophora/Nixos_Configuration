@@ -12,5 +12,9 @@
     unmanaged = [ "interface-name:lo" ];
   };
 
-  networking.firewall.enable = false;
+  networking.firewall = {
+    enable = true;
+    allowedUDPPorts = [ 5353 ]; # mDNS for LocalSend discovery
+    allowedTCPPorts = [ 46357 ]; # LocalSend file transfer
+  };
 }
