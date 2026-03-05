@@ -12,12 +12,8 @@
     force = true;
   };
 
-  home.file.".local/share/applications/gnome-printers-panel.desktop" = {
-    text = ''
-      [Desktop Entry]
-      Name=Printers
-      NoDisplay=true
-    '';
-    force = true;
-  };
+  # Hide CUPS printing related apps
+  home.file.".local/share/applications/config-printer.desktop".text = "";
+  home.file.".local/share/applications/cups.desktop".text = "";
+  home.file.".local/share/applications/org.gtk.PrintEditor4.desktop".text = "";
 }
