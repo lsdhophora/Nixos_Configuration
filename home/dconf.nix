@@ -72,7 +72,8 @@
     "org/gnome/shell/extensions/app-hider" = {
       hidden-apps = [
         "org.gnome.Papers.desktop"
-        "gnome-printers-panel.desktop"
+        "config-printer.desktop"
+        "org.gtk.PrintEditor4.desktop"
       ];
     };
 

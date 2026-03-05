@@ -24,4 +24,8 @@
     transmission_4-gtk
     wl-clipboard
   ];
+
+  home.file.".local/share/applications/config-printer.desktop".text = "";
+  home.file.".local/share/applications/cups.desktop".text = "";
+  home.file.".local/share/applications/org.gtk.PrintEditor4.desktop".text = "";
 }
