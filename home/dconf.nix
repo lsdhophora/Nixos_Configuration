@@ -70,7 +70,10 @@
     };
 
     "org/gnome/shell/extensions/app-hider" = {
-      hidden-apps = [ "org.gnome.Papers.desktop" ];
+      hidden-apps = [
+        "org.gnome.Papers.desktop"
+        "gnome-printers-panel.desktop"
+      ];
     };
 
     "org/gnome/desktop/interface" = {
