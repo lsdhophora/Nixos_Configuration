@@ -2,9 +2,13 @@
   pkgs,
   ...
 }:
+let
+  patchedZathura = pkgs.zathura;
+in
 {
   programs.zathura = {
     enable = true;
+    package = patchedZathura;
     extraConfig = ''
       set selection-clipboard clipboard
       set scroll-full-overlap 0.2
@@ -218,6 +222,7 @@
         "org.pwmt.zathura-djvu.desktop"
         "org.pwmt.zathura-ps.desktop"
         "org.pwmt.zathura-cb.desktop"
+        "org.gnome.Papers.desktop"
       ]
   );
 }
