@@ -1,0 +1,50 @@
+diff --git a/zathura/print.c b/zathura/print.c
+index 2cd8fe7d..cb4ec58e 100644
+--- a/zathura/print.c
++++ b/zathura/print.c
+@@ -9,6 +9,7 @@
+ #include <girara-gtk/statusbar.h>
+ #include <girara-gtk/session.h>
+ #include <glib/gi18n.h>
++#include <string.h>
+ 
+ static void cb_print_end(GtkPrintOperation* UNUSED(print_operation), GtkPrintContext* UNUSED(context),
+                          zathura_t* zathura) {
+@@ -121,7 +122,7 @@ static void cb_print_request_page_setup(GtkPrintOperation* UNUSED(print_operatio
+ 
+   zathura_page_t* page = zathura_document_get_page(zathura_get_document(zathura), page_number);
+   double width         = zathura_page_get_width(page);
+-  double height        = zathura_page_get_height(page);
++  double height       = zathura_page_get_height(page);
+ 
+   if (width > height) {
+     gtk_page_setup_set_orientation(setup, GTK_PAGE_ORIENTATION_LANDSCAPE);
+@@ -130,6 +131,20 @@ static void cb_print_request_page_setup(GtkPrintOperation* UNUSED(print_operatio
+   }
+ }
+ 
++static void cb_print_status_changed(GtkPrintOperation* print_operation, zathura_t* zathura) {
++  if (zathura_has_document(zathura) == false || zathura->ui.session == NULL) {
++    return;
++  }
++
++  GtkPrintStatus status = gtk_print_operation_get_status(print_operation);
++  if (status == GTK_PRINT_STATUS_ERROR) {
++    const char* status_string = gtk_print_operation_get_status_string(print_operation);
++    if (status_string != NULL && strlen(status_string) > 0) {
++      girara_notify(zathura->ui.session, GIRARA_ERROR, "%s", status_string);
++    }
++  }
++}
++
+ void print(zathura_t* zathura) {
+   g_return_if_fail(zathura_has_document(zathura) == true);
+ 
+@@ -156,6 +171,7 @@ void print(zathura_t* zathura) {
+   g_signal_connect(print_operation, "draw-page", G_CALLBACK(cb_print_draw_page), zathura);
+   g_signal_connect(print_operation, "end-print", G_CALLBACK(cb_print_end), zathura);
+   g_signal_connect(print_operation, "request-page-setup", G_CALLBACK(cb_print_request_page_setup), zathura);
++  g_signal_connect(print_operation, "status-changed", G_CALLBACK(cb_print_status_changed), zathura);
+ 
+   /* print */
+   g_autoptr(GError) error        = NULL;

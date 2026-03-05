@@ -1,6 +1,4 @@
 {
-  inputs,
-  lib,
   pkgs,
   ...
 }:
@@ -14,6 +12,7 @@
     ./modules/user.nix
     ./modules/i18n.nix
     ./modules/nix-config.nix
+    ./modules/services/cups.nix
     ./modules/services/dae.nix
     ./modules/services/pipewire.nix
     ./modules/security/age.nix
@@ -24,14 +23,8 @@
     (import ./overlays/epiphany.nix)
     (import ./overlays/gnome-sound-recorder.nix)
     (import ./overlays/gnome-shell.nix)
+    (import ./overlays/zathura.nix)
   ];
 
   programs.nix-ld.enable = true;
-
-  environment.systemPackages = (
-    with pkgs;
-    [
-      flatpak
-    ]
-  );
 }
