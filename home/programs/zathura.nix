@@ -78,7 +78,10 @@ in
       map [normal] <A-Left> navigate previous
       map [normal] <PageDown> scroll full-down
       map [normal] <PageUp> scroll full-up
-      map [normal] <C-P> print
+      map [normal] <A-P> print
+      map [fullscreen] <A-P> print
+      map [presentation] <A-P> print
+      map [index] <A-P> print
       map [normal] c recolor
       map [normal] R reload
       map [normal] v rotate rotate_cw
@@ -140,7 +143,6 @@ in
       map [fullscreen] <A-Left> navigate previous
       map [fullscreen] <PageDown> scroll full-down
       map [fullscreen] <PageUp> scroll full-up
-      map [fullscreen] <C-P> print
       map [fullscreen] c recolor
       map [fullscreen] R reload
       map [fullscreen] v rotate rotate_cw
