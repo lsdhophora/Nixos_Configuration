@@ -1,14 +1,29 @@
-{
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 let
-  patchedZathura = pkgs.zathura;
+  zathuraPatched = pkgs.zathura.override {
+    zathura_core = pkgs.zathuraPkgs.zathura_core.overrideAttrs (oldAttrs: {
+      patches = (oldAttrs.patches or [ ]) ++ [
+        ../../patches/zathura-print-status-changed.patch
+      ];
+    });
+  };
+  zathuraWrapped =
+    pkgs.runCommand "zathura-wrapped"
+      {
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+      }
+      ''
+        mkdir -p $out/bin
+        makeWrapper ${zathuraPatched}/bin/zathura $out/bin/zathura \
+          --add-flags "2>/dev/null"
+        ln -s ${zathuraPatched}/share $out/share
+        ln -s ${zathuraPatched}/lib $out/lib
+      '';
 in
 {
   programs.zathura = {
     enable = true;
-    package = patchedZathura;
+    package = zathuraWrapped;
     extraConfig = ''
       set selection-clipboard clipboard
       set scroll-full-overlap 0.2
@@ -209,7 +224,6 @@ in
       map [presentation] <A-\>> goto bottom
     '';
   };
-
   home.file = builtins.listToAttrs (
     map
       (name: {
