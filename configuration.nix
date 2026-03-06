@@ -23,7 +23,6 @@
     (import ./overlays/epiphany.nix)
     (import ./overlays/gnome-sound-recorder.nix)
     (import ./overlays/gnome-shell.nix)
-    (import ./overlays/zathura.nix)
   ];
 
   programs.nix-ld.enable = true;
