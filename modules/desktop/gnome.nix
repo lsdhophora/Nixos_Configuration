@@ -38,7 +38,6 @@
       gnome-software
       showtime
       gnome-console
-      papers
     ]
   );
 
