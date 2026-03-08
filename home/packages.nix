@@ -5,7 +5,6 @@
 
 {
   home.packages = with pkgs; [
-    gnomeExtensions.caffeine
     gnomeExtensions.just-perfection
     gnomeExtensions.blur-my-shell
     gnomeExtensions.run-or-raise

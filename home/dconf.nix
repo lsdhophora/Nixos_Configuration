@@ -4,7 +4,6 @@
   dconf.settings = {
     "org/gnome/shell" = {
       enabled-extensions = [
-        "caffeine@patapon.info"
         "just-perfection-desktop@just-perfection"
         "blur-my-shell@aunetx"
         "run-or-raise@edvard.cz"
@@ -44,12 +43,6 @@
     };
     "org/gnome/shell/extensions/blur-my-shell/coverflow-alt-tab" = {
       pipeline = "pipeline_default";
-    };
-
-    "org/gnome/shell/extensions/caffeine" = {
-      cli-toggle = false;
-      indicator-position-max = 1;
-      user-enabled = false;
     };
 
     "org/gnome/shell/extensions/just-perfection" = {
