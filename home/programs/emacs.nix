@@ -145,13 +145,11 @@
         :hook (LaTeX-mode . (lambda ()
                               (TeX-engine-set 'luatex)
                               (TeX-PDF-mode 1)
-                              (TeX-source-correlate-mode 1)
                               (reftex-mode 1)))
         :custom
         (TeX-auto-save t)
         (TeX-parse-self t)
         (TeX-master nil)
-        (TeX-source-correlate-method 'synctex)
         (TeX-view-program-selection '((output-pdf "Zathura")))
         (TeX-view-program-list
         '(("Zathura" "zathura ./%o")))
@@ -160,9 +158,9 @@
         (require 'tex)
         (setf (alist-get "latexmk" TeX-command-list nil nil #'equal)
               '("latexmk"
-                "latexmk -pdf -pdflatex=lualatex -synctex=1 -shell-escape %s"
+                "latexmk -pdf -pdflatex="lualatex -synctex=0 %O %S" -shell-escape %s"
                 TeX-run-command nil t
-                :help "Run latexmk with LuaLaTeX + SyncTeX"))
+                :help "Run latexmk with LuaLaTeX"))
         (setq TeX-file-line-error t)
         (setq TeX-source-correlate-start-server t))
 
