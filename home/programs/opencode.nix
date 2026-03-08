@@ -1,15 +1,24 @@
 { pkgs, ... }:
 
 {
-  programs.uv.enable = true;
+  home.packages = [ pkgs.mcp-nixos ];
 
   programs.mcp.servers.nixos = {
-    command = "uvx";
-    args = [ "mcp-nixos" ];
+    enable = true;
+    command = "mcp-nixos";
   };
 
   programs.opencode = {
     enable = true;
-    enableMcpIntegration = true;
+    settings = {
+      "$schema" = "https://opencode.ai/config.json";
+      mcp = {
+        mcp_everything = {
+          type = "local";
+          command = [ "mcp-nixos" ];
+        };
+      };
+    };
   };
+
 }
