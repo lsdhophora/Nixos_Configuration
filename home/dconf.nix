@@ -52,7 +52,7 @@
     };
 
     "org/gnome/shell/extensions/customize-ibus" = {
-      custom-font = "Adwaita Sans 11.5";
+      custom-font = "Adwaita Sans 12";
       enable-auto-switch = false;
       use-custom-font = true;
       use-input-indicator = false;
