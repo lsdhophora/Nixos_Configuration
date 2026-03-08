@@ -34,6 +34,7 @@
         "layout.spellcheckDefault" = 0;
         "widget.gtk.rounded-bottom-corners.enabled" = true;
         "widget.use-xdg-desktop-portal.file-picker" = 1;
+        "browser.formfill.enable" = false;
       };
       userChrome = ''
         menupopup#context-sendimage,
