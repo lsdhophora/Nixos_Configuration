@@ -8,14 +8,12 @@
       url = "github:nix-community/home-manager/";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-flatpak.url = "github:gmodena/nix-flatpak/?ref=v0.7.0";
   };
   outputs =
     {
       nixpkgs,
       agenix,
       home-manager,
-      nix-flatpak,
       ...
     }@inputs:
     with nixpkgs.lib;
@@ -38,7 +36,6 @@
             home-manager.useUserPackages = true;
             home-manager.users.lophophora = {
               imports = [
-                nix-flatpak.homeManagerModules.nix-flatpak
                 ./home/default.nix
               ];
             };
