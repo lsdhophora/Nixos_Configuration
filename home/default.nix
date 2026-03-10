@@ -20,7 +20,6 @@
     ./programs/ghostty.nix
     ./programs/opencode.nix
     ./programs/zathura.nix
-    ./programs/flatpak.nix
     ./shell/elvish.nix
   ];
 }
