@@ -162,7 +162,7 @@
         "io.github.celluloid_player.Celluloid.desktop"
         "dev.mufeed.Wordbook.desktop"
         "org.pwmt.zathura.desktop"
-        "org.pitivi.Pitivi.desktop"
+        "org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop"
       ];
     };
 
