@@ -14,6 +14,7 @@
     ./modules/nix-config.nix
     ./modules/services/cups.nix
     ./modules/services/dae.nix
+    ./modules/services/flatpak.nix
     ./modules/services/pipewire.nix
     ./modules/security/age.nix
     ./modules/security/sudo.nix
