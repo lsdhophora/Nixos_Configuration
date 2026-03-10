@@ -162,6 +162,7 @@
         "io.github.celluloid_player.Celluloid.desktop"
         "dev.mufeed.Wordbook.desktop"
         "org.pwmt.zathura.desktop"
+        "video-trimmer.desktop"
       ];
     };
 
