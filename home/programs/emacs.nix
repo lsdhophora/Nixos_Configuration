@@ -465,6 +465,8 @@
     (defun audio-trimmer (file)
       "Open the audio trimmer (ffplay backend)."
       (interactive "fSelect audio file: ")
+      (when (file-directory-p file)
+        (error "Directories are not supported: %s" file))
       (unless (audio-trimmer--audio-p file)
         (error "Not an audio file: %s" file))
       (let ((buf (get-buffer-create "*audio-trimmer*"))
