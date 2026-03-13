@@ -27,6 +27,7 @@
         "browser.chrome.toolbar_tips" = false;
         "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
         "browser.tabs.opentabfor.middleclick" = false;
+        "browser.tabs.hoverPreview.enabled" = false;
         "middlemouse.openNewWindow" = false;
         "layout.css.devPixelsPerPx" = 1.42;
         "middlemouse.contentLoadURL" = false;
