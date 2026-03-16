@@ -42,6 +42,13 @@
         #context-sendimage {
           display: none !important;
         }
+        #spell-check-enabled,
+        #spell-add-to-dictionary,
+        #spell-suggestions-separator,
+        #spell-separator,
+        #context-sep-bidi {
+          display: none !important;
+        }
       '';
     };
   };
