@@ -6,7 +6,7 @@ final: prev: {
       owner = "GNOME";
       repo = "papers";
       rev = "50.0";
-      hash = "sha256-i18RJrDZDBM8oXJLYqEoMEDaoyAkVZUKgp1bdzjoJP4=";
+      hash = "sha256-3pus4MDgg0GWI5ayHRA+zS6JxXX+W8yjG/Un21GXRGo=";
     };
   });
 }
