@@ -153,9 +153,9 @@
         (TeX-auto-save t)
         (TeX-parse-self t)
         (TeX-master nil)
-        (TeX-view-program-selection '((output-pdf "Zathura")))
+        (TeX-view-program-selection '((output-pdf "Papers")))
         (TeX-view-program-list
-        '(("Zathura" "zathura ./%o")))
+        '(("Papers" "papers ./%o")))
 
         :config
         (require 'tex)
