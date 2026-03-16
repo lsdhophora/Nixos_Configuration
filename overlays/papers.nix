@@ -8,5 +8,6 @@ final: prev: {
       rev = "50.0";
       hash = "sha256-3pus4MDgg0GWI5ayHRA+zS6JxXX+W8yjG/Un21GXRGo=";
     };
+    cargoHash = "sha256-6Fd6V0Ksl8jqoM1znyYI0Mve2QQU+JBf3yn2C2Bcda8=";
   });
 }
