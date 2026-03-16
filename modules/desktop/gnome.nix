@@ -9,6 +9,7 @@
     (import ../../overlays/gnome-sound-recorder.nix)
     (import ../../overlays/epiphany.nix)
     (import ../../overlays/papers.nix)
+    (import ../../overlays/gnome-control-center.nix)
   ];
 
   services.displayManager.gdm.enable = true;
