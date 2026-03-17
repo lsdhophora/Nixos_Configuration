@@ -281,6 +281,7 @@
     (defvar audio-trimmer-buffer nil)
     (defvar audio-trimmer-trim-start nil)
     (defvar audio-trimmer-trim-end nil)
+    (defvar audio-trimmer-in-preview nil)
 
     (defun audio-trimmer--format-time (seconds)
       "Convert seconds to mm:ss.s format."
@@ -332,7 +333,8 @@
       "Stop ffplay and update position."
       (when (and audio-trimmer-player-process (process-live-p audio-trimmer-player-process))
         (delete-process audio-trimmer-player-process))
-      (setq audio-trimmer-is-playing nil)
+      (setq audio-trimmer-is-playing nil
+            audio-trimmer-in-preview nil)
       (when audio-trimmer-timer
         (cancel-timer audio-trimmer-timer)
         (setq audio-trimmer-timer nil)))
@@ -342,7 +344,12 @@
       (when audio-trimmer-is-playing
         (when (and audio-trimmer-player-process (process-live-p audio-trimmer-player-process))
           (setq audio-trimmer-position (min audio-trimmer-duration (+ audio-trimmer-position 0.05)))
-          (audio-trimmer--redraw))))
+          (audio-trimmer--redraw)
+          (when (and audio-trimmer-in-preview
+                     audio-trimmer-trim-end
+                     (>= audio-trimmer-position audio-trimmer-trim-end))
+            (audio-trimmer--stop-player)
+            (message "Preview ended at trim point: %s" (audio-trimmer--format-time audio-trimmer-position))))))
 
     (defun audio-trimmer--redraw ()
       "Update display."
@@ -414,7 +421,8 @@
       (if audio-trimmer-trim-start
           (let ((was-playing audio-trimmer-is-playing))
             (when was-playing (audio-trimmer--stop-player))
-            (setq audio-trimmer-position audio-trimmer-trim-start)
+            (setq audio-trimmer-position audio-trimmer-trim-start
+                  audio-trimmer-in-preview t)
             (audio-trimmer--redraw)
             (audio-trimmer--start-player)
             (message "Previewing from %s" (audio-trimmer--format-time audio-trimmer-trim-start)))
@@ -479,13 +487,16 @@
               audio-trimmer-timer nil
               audio-trimmer-trim-start nil
               audio-trimmer-trim-end nil
+              audio-trimmer-in-preview nil
               audio-trimmer-buffer buf)
         (with-current-buffer buf
           (setq buffer-read-only nil)
           (erase-buffer)
           (insert (format "File: %s\n" (file-name-nondirectory file)))
           (insert (format "Duration: %s\n\n" (audio-trimmer--format-time dur)))
-          (insert "Position: 00:00.0 / 00:00.0\n")
+          (insert (format "Position: %s / %s\n"
+                          (audio-trimmer--format-time 0.0)
+                          (audio-trimmer--format-time dur)))
           (insert "Trim: (not set)\n\n")
           (insert "Controls:\n")
           (insert "  SPC=play/pause  j=jump  ←→=±5s  ↑↓=±30s\n")
