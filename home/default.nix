@@ -15,6 +15,7 @@
     ./programs/git.nix
     ./programs/ssh.nix
     ./programs/direnv.nix
+    ./programs/kvantum.nix
     ./programs/librewolf.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix

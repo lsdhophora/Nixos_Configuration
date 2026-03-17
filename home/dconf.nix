@@ -59,14 +59,15 @@
     };
 
     "org/gnome/shell/extensions/rounded-window-corners-reborn" = {
+      blacklist = [ "org.kde.kdenlive" ];
       settings-version = 7;
     };
 
     "org/gnome/shell/extensions/app-hider" = {
       hidden-apps = [
-        "org.gnome.Papers.desktop"
         "config-printer.desktop"
         "org.gtk.PrintEditor4.desktop"
+        "kvantummanager.desktop"
       ];
     };
 
@@ -146,7 +147,6 @@
       apps = [
         "org.gnome.Decibels.desktop"
         "org.gnome.Connections.desktop"
-        "org.gnome.Papers.desktop"
         "org.gnome.font-viewer.desktop"
         "org.gnome.Loupe.desktop"
         "transmission-gtk.desktop"
@@ -161,8 +161,9 @@
         "com.rafaelmardojai.Blanket.desktop"
         "io.github.celluloid_player.Celluloid.desktop"
         "dev.mufeed.Wordbook.desktop"
-        "org.gnome.Papers.desktop"
         "org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop"
+        "org.kde.kdenlive.desktop"
+        "org.gnome.Papers.desktop"
       ];
     };
 

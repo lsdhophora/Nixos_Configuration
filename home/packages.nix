@@ -1,8 +1,17 @@
-{
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
 
+let
+  kdenlive-wrapped = pkgs.symlinkJoin {
+    name = "kdenlive";
+    paths = [ pkgs.kdePackages.kdenlive ];
+    buildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/kdenlive \
+        --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
+        --add-flags "--stylesheet ${./../assets/themes/kdenlive.qss}"
+    '';
+  };
+in
 {
   home.packages = with pkgs; [
     gnomeExtensions.just-perfection
@@ -23,5 +32,6 @@
     transmission_4-gtk
     wl-clipboard
     video-trimmer
+    kdenlive-wrapped
   ];
 }
