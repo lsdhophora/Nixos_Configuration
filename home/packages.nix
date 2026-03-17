@@ -7,7 +7,9 @@ let
     buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/kdenlive \
+        --set QT_QPA_PLATFORM xcb \
         --set QT_SCALE_FACTOR 1.10 \
+        --set QT_QPA_PLATFORMTHEME xdgdesktopportal \
         --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
         --add-flags "--stylesheet ${./../assets/themes/kdenlive.qss}"
     '';
