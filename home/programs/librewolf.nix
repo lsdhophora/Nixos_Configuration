@@ -36,6 +36,7 @@
         "widget.gtk.rounded-bottom-corners.enabled" = true;
         "widget.use-xdg-desktop-portal.file-picker" = 1;
         "browser.formfill.enable" = false;
+        "privacy.userContext.enabled" = false;
       };
       userChrome = ''
         menupopup#context-sendimage,
