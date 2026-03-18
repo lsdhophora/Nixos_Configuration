@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   dconf.settings = {
@@ -59,7 +59,7 @@
     };
 
     "org/gnome/shell/extensions/rounded-window-corners-reborn" = {
-      blacklist = [ "org.kde.kdenlive" ];
+      blacklist = [ ];
       settings-version = 7;
     };
 
@@ -214,4 +214,18 @@
       last-panel = "display";
     };
   };
+
+  home.activation.dconfRoundedCorners = lib.hm.dag.entryAfter [ "entryLast" ] ''
+     export PATH="${lib.makeBinPath [ pkgs.dconf ]}:$PATH"
+     dconf write /org/gnome/shell/extensions/rounded-window-corners-reborn/custom-rounded-corner-settings '{
+      "kdenlive": <{
+        "padding": <(uint32 0, uint32 0, uint32 0, uint32 0)>,
+        "keepRoundedCorners": <(false, false)>,
+        "borderRadius": <uint32 8>,
+        "smoothing": <0.5>,
+        "borderColor": <(0.5, 0.5, 0.5, 1.0)>,
+        "enabled": <true>
+      }>
+    }'
+  '';
 }
