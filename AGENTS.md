@@ -120,7 +120,7 @@ nixos-rebuild dry-build --flake .#flowerpot
 git add -A && git commit && git push
 
 # Build and switch to new system
-pkexec nixos-rebuild switch --flake .#flowerpot
+pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
 
 # Update flake inputs
 cd /home/lophophora/.config/nixos && nix flake update

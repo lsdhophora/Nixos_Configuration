@@ -1,8 +1,8 @@
-{ pkgs, pkgs-kdenlive-pinned, ... }:
+{ pkgs, ... }:
 let
   kdenlive-wrapped = pkgs.symlinkJoin {
     name = "kdenlive";
-    paths = [ pkgs-kdenlive-pinned.kdePackages.kdenlive ];
+    paths = [ pkgs.kdePackages.kdenlive ];
     buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/kdenlive \
