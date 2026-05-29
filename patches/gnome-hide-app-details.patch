@@ -1,0 +1,53 @@
+diff --git a/js/ui/appMenu.js b/js/ui/appMenu.js
+index b8d8f64a1..8c5e81cf3 100644
+--- a/js/ui/appMenu.js
++++ b/js/ui/appMenu.js
+@@ -79,28 +79,10 @@ export class AppMenu extends PopupMenu.PopupMenu {
+                 this._appFavorites.addFavorite(appId);
+         });
+ 
+-        this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+-
+-        this._detailsItem = this.addAction(_('App Details'), async () => {
+-            const id = this._app.get_id();
+-            const args = GLib.Variant.new('(ss)', [id, '']);
+-            const bus = await Gio.DBus.get(Gio.BusType.SESSION, null);
+-            bus.call(
+-                'org.gnome.Software',
+-                '/org/gnome/Software',
+-                'org.gtk.Actions', 'Activate',
+-                new GLib.Variant('(sava{sv})', ['details', [args], null]),
+-                null, 0, -1, null);
+-            Main.overview.hide();
+-        });
+-
+-        this.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+-
+         this._quitItem =
+             this.addAction(_('Quit'), () => this._app.request_quit());
+ 
+         this._appSystem.connectObject(
+-            'installed-changed', () => this._updateDetailsVisibility(),
+             'app-state-changed', this._onAppStateChanged.bind(this),
+             this.actor);
+ 
+@@ -121,7 +103,6 @@ export class AppMenu extends PopupMenu.PopupMenu {
+         this._updateQuitItem();
+         this._updateFavoriteItem();
+         this._updateGpuItem();
+-        this._updateDetailsVisibility();
+     }
+ 
+     _onAppStateChanged(sys, app) {
+@@ -179,11 +160,6 @@ export class AppMenu extends PopupMenu.PopupMenu {
+             : _('Launch Using Discrete Graphics Card');
+     }
+ 
+-    _updateDetailsVisibility() {
+-        const sw = this._appSystem.lookup_app('org.gnome.Software.desktop');
+-        this._detailsItem.visible = sw !== null;
+-    }
+-
+     _animateLaunch() {
+         if (this.sourceActor.animateLaunch)
+             this.sourceActor.animateLaunch();

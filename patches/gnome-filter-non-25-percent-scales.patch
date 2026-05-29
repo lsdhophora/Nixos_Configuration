@@ -1,0 +1,18 @@
+diff --git a/panels/display/cc-display-config.c b/panels/display/cc-display-config.c
+index 0da320175..73351869d 100644
+--- a/panels/display/cc-display-config.c
++++ b/panels/display/cc-display-config.c
+@@ -1588,9 +1588,10 @@ filter_out_invalid_scaled_modes (CcDisplayConfig *self)
+             {
+               float scale = g_array_index (mode->supported_scales, double, i);
+ 
+-              if (!G_APPROX_VALUE (scale, current_scale, DBL_EPSILON) &&
+-                  !G_APPROX_VALUE (scale, mode->preferred_scale, DBL_EPSILON) &&
+-                  !is_scaled_mode_allowed (self, mode, scale))
++              if ((!G_APPROX_VALUE (scale, current_scale, DBL_EPSILON) &&
++                   !G_APPROX_VALUE (scale, mode->preferred_scale, DBL_EPSILON) &&
++                   !is_scaled_mode_allowed (self, mode, scale)) ||
++                  fabs (fmod (scale * 100.0, 25.0)) > 0.5)
+                 {
+                   g_array_remove_index (mode->supported_scales, i);
+                 }

@@ -1,0 +1,367 @@
+From 1cef3b52aaae96895a2a0463b05c6bfe9d7e3044 Mon Sep 17 00:00:00 2001
+From: Alessandro Astone <alessandro.astone@canonical.com>
+Date: Tue, 14 Apr 2026 10:59:30 +0200
+Subject: [PATCH 1/4] clutter: Expose getter for global cursor
+
+---
+ clutter/clutter/clutter-backend-private.h         |  5 +++++
+ clutter/clutter/clutter-backend.c                 |  9 +++++++++
+ src/backends/meta-backend-private.h               |  2 ++
+ src/backends/meta-backend.c                       | 13 ++++++++++---
+ src/backends/native/meta-clutter-backend-native.c | 10 ++++++++++
+ 5 files changed, 36 insertions(+), 3 deletions(-)
+
+diff --git a/clutter/clutter/clutter-backend-private.h b/clutter/clutter/clutter-backend-private.h
+index f0ec62e8387..c85d4d31edb 100644
+--- a/clutter/clutter/clutter-backend-private.h
++++ b/clutter/clutter/clutter-backend-private.h
+@@ -107,6 +107,8 @@ struct _ClutterBackendClass
+   ClutterCursor * (* get_cursor) (ClutterBackend    *backend,
+                                   ClutterCursorType  cursor_type);
+ 
++  ClutterCursorType (* get_global_cursor_type) (ClutterBackend *backend);
++
+   /* signals */
+   void (* resolution_changed) (ClutterBackend *backend);
+ };
+@@ -137,6 +139,9 @@ CLUTTER_EXPORT
+ ClutterCursor * clutter_backend_get_cursor (ClutterBackend    *backend,
+                                             ClutterCursorType  cursor_type);
+ 
++CLUTTER_EXPORT
++ClutterCursorType clutter_backend_get_global_cursor_type (ClutterBackend *backend);
++
+ CLUTTER_EXPORT
+ void clutter_backend_destroy (ClutterBackend *backend);
+ 
+diff --git a/clutter/clutter/clutter-backend.c b/clutter/clutter/clutter-backend.c
+index 23fef7f6956..b9f47b28bb3 100644
+--- a/clutter/clutter/clutter-backend.c
++++ b/clutter/clutter/clutter-backend.c
+@@ -665,3 +665,12 @@ clutter_backend_get_cursor (ClutterBackend    *backend,
+ 
+   return CLUTTER_BACKEND_GET_CLASS (backend)->get_cursor (backend, cursor_type);
+ }
++
++ClutterCursorType
++clutter_backend_get_global_cursor_type (ClutterBackend *backend)
++{
++  if (!CLUTTER_BACKEND_GET_CLASS (backend)->get_global_cursor_type)
++    return CLUTTER_CURSOR_INHERIT;
++
++  return CLUTTER_BACKEND_GET_CLASS (backend)->get_global_cursor_type (backend);
++}
+diff --git a/src/backends/meta-backend-private.h b/src/backends/meta-backend-private.h
+index e95e985704c..26032250ead 100644
+--- a/src/backends/meta-backend-private.h
++++ b/src/backends/meta-backend-private.h
+@@ -246,3 +246,5 @@ uint32_t meta_evdev_tool_button_to_clutter (uint32_t evdev_button);
+ 
+ ClutterCursor * meta_backend_get_cursor (MetaBackend       *backend,
+                                          ClutterCursorType  cursor_type);
++
++ClutterCursorType meta_backend_get_global_cursor_type (MetaBackend *backend);
+diff --git a/src/backends/meta-backend.c b/src/backends/meta-backend.c
+index 4eeb6adb041..9e9ece8ced5 100644
+--- a/src/backends/meta-backend.c
++++ b/src/backends/meta-backend.c
+@@ -2168,12 +2168,19 @@ meta_backend_get_cursor (MetaBackend       *backend,
+                          ClutterCursorType  cursor_type)
+ {
+   MetaCursorTracker *cursor_tracker = meta_backend_get_cursor_tracker (backend);
+-  ClutterCursorType global_cursor = CLUTTER_CURSOR_INHERIT;
+-
+-  g_signal_emit (backend, signals[OVERRIDE_CURSOR], 0, &global_cursor);
++  ClutterCursorType global_cursor = meta_backend_get_global_cursor_type (backend);
+ 
+   if (global_cursor != CLUTTER_CURSOR_INHERIT)
+     cursor_type = global_cursor;
+ 
+   return CLUTTER_CURSOR (meta_cursor_xcursor_get (cursor_type, cursor_tracker));
+ }
++
++ClutterCursorType
++meta_backend_get_global_cursor_type (MetaBackend *backend)
++{
++  ClutterCursorType global_cursor = CLUTTER_CURSOR_INHERIT;
++
++  g_signal_emit (backend, signals[OVERRIDE_CURSOR], 0, &global_cursor);
++  return global_cursor;
++}
+diff --git a/src/backends/native/meta-clutter-backend-native.c b/src/backends/native/meta-clutter-backend-native.c
+index 468a4351262..01baf1c0b48 100644
+--- a/src/backends/native/meta-clutter-backend-native.c
++++ b/src/backends/native/meta-clutter-backend-native.c
+@@ -332,6 +332,15 @@ meta_clutter_backend_native_get_cursor (ClutterBackend    *clutter_backend,
+   return meta_backend_get_cursor (clutter_backend_native->backend, cursor_type);
+ }
+ 
++static ClutterCursorType
++meta_clutter_backend_native_get_global_cursor_type (ClutterBackend *clutter_backend)
++{
++  MetaClutterBackendNative *clutter_backend_native =
++    META_CLUTTER_BACKEND_NATIVE (clutter_backend);
++
++  return meta_backend_get_global_cursor_type (clutter_backend_native->backend);
++}
++
+ static void
+ meta_clutter_backend_native_constructed (GObject *object)
+ {
+@@ -386,6 +395,7 @@ meta_clutter_backend_native_class_init (MetaClutterBackendNativeClass *klass)
+   clutter_backend_class->foreach_sprite = meta_clutter_backend_native_foreach_sprite;
+   clutter_backend_class->get_key_focus = meta_clutter_backend_native_get_key_focus;
+   clutter_backend_class->get_cursor = meta_clutter_backend_native_get_cursor;
++  clutter_backend_class->get_global_cursor_type = meta_clutter_backend_native_get_global_cursor_type;
+ }
+ 
+ MetaClutterBackendNative *
+-- 
+GitLab
+
+
+From bb9728d3399007690a74abeb9eefa7c07dcbaa1e Mon Sep 17 00:00:00 2001
+From: Alessandro Astone <alessandro.astone@canonical.com>
+Date: Tue, 14 Apr 2026 11:00:29 +0200
+Subject: [PATCH 2/4] clutter/sprite: Use overridden global cursor in
+ invalidate_cursor
+
+Do not rely on the global cursor override being stored in the actors.
+This will become the main place where we change the cursor to the global
+override.
+---
+ clutter/clutter/clutter-sprite.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/clutter/clutter/clutter-sprite.c b/clutter/clutter/clutter-sprite.c
+index e45d47375e0..0d19790a8c1 100644
+--- a/clutter/clutter/clutter-sprite.c
++++ b/clutter/clutter/clutter-sprite.c
+@@ -27,6 +27,7 @@
+ 
+ #include "clutter/clutter-action-private.h"
+ #include "clutter/clutter-actor-private.h"
++#include "clutter/clutter-backend-private.h"
+ #include "clutter/clutter-debug.h"
+ #include "clutter/clutter-enum-types.h"
+ #include "clutter/clutter-event-private.h"
+@@ -1193,12 +1194,21 @@ clutter_sprite_invalidate_cursor (ClutterSprite *sprite)
+   ClutterContext *context = clutter_actor_get_context (CLUTTER_ACTOR (stage));
+   ClutterBackend *backend = clutter_context_get_backend (context);
+   ClutterSeat *seat = clutter_backend_get_default_seat (backend);
++  ClutterCursorType global_cursor;
+   g_autoptr (ClutterCursor) cursor = NULL;
+ 
+   if (clutter_sprite_get_role (sprite) == CLUTTER_SPRITE_ROLE_POINTER &&
+       !clutter_seat_is_unfocus_inhibited (seat))
+     goto out;
+ 
++  /* If there's a global cursor override, short circuit and use that */
++  global_cursor = clutter_backend_get_global_cursor_type (backend);
++  if (global_cursor != CLUTTER_CURSOR_INHERIT)
++    {
++      cursor = clutter_backend_get_cursor (backend, global_cursor);
++      goto out;
++    }
++
+   /* If there's an implicit grab, use this actor */
+   if (priv->implicit_grab_actor)
+     actor = priv->implicit_grab_actor;
+-- 
+GitLab
+
+
+From 29aedbedc6a3b9e514d32152e61a028da352b633 Mon Sep 17 00:00:00 2001
+From: Alessandro Astone <alessandro.astone@canonical.com>
+Date: Mon, 13 Apr 2026 18:58:48 +0200
+Subject: [PATCH 3/4] backend: Always retrieve the requested cursor
+
+Users of meta_backend_get_cursor expect to get the cursor matching the
+requested cursor type, and not the potentially overridden global cursor.
+Stop lying to the callers and always return what they asked for.
+
+This matters in the following sequence:
+* Create startup sequence
+* Set global CLUTTER_CURSOR_WAIT
+* Wayland surface gets pointer focus and requests cursor shape
+-> We must now store the requested cursor without global overrides
+-> The wayland pointer uses meta_backend_get_cursor so it must not lie
+* New startup sequence completes
+* Restore the previously requested cursor
+
+Closes: https://gitlab.gnome.org/GNOME/mutter/-/issues/4726
+---
+ src/backends/meta-backend.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/src/backends/meta-backend.c b/src/backends/meta-backend.c
+index 9e9ece8ced5..93134b4851c 100644
+--- a/src/backends/meta-backend.c
++++ b/src/backends/meta-backend.c
+@@ -2168,10 +2168,6 @@ meta_backend_get_cursor (MetaBackend       *backend,
+                          ClutterCursorType  cursor_type)
+ {
+   MetaCursorTracker *cursor_tracker = meta_backend_get_cursor_tracker (backend);
+-  ClutterCursorType global_cursor = meta_backend_get_global_cursor_type (backend);
+-
+-  if (global_cursor != CLUTTER_CURSOR_INHERIT)
+-    cursor_type = global_cursor;
+ 
+   return CLUTTER_CURSOR (meta_cursor_xcursor_get (cursor_type, cursor_tracker));
+ }
+-- 
+GitLab
+
+
+From 370b2cf6d3e16c9d3900773d22c61c0209414257 Mon Sep 17 00:00:00 2001
+From: Alessandro Astone <alessandro.astone@canonical.com>
+Date: Tue, 26 May 2026 15:59:38 +0200
+Subject: [PATCH 4/4] backend: Cleanup global cursor with an explicit setter
+
+There is no use for the g_signal_accumulator_first_wins "override-cursor"
+signal, so we can clean this up with an explicit setter in the backend instead.
+---
+ src/backends/meta-backend-private.h |  3 +++
+ src/backends/meta-backend.c         | 27 +++++++++++++++++----------
+ src/compositor/compositor.c         | 25 +++++--------------------
+ 3 files changed, 25 insertions(+), 30 deletions(-)
+
+diff --git a/src/backends/meta-backend-private.h b/src/backends/meta-backend-private.h
+index 26032250ead..d8ab5fbafda 100644
+--- a/src/backends/meta-backend-private.h
++++ b/src/backends/meta-backend-private.h
+@@ -248,3 +248,6 @@ ClutterCursor * meta_backend_get_cursor (MetaBackend       *backend,
+                                          ClutterCursorType  cursor_type);
+ 
+ ClutterCursorType meta_backend_get_global_cursor_type (MetaBackend *backend);
++
++gboolean meta_backend_set_global_cursor_type (MetaBackend       *backend,
++                                              ClutterCursorType  cursor_type);
+diff --git a/src/backends/meta-backend.c b/src/backends/meta-backend.c
+index 93134b4851c..9aba2d973c5 100644
+--- a/src/backends/meta-backend.c
++++ b/src/backends/meta-backend.c
+@@ -120,7 +120,6 @@ enum
+   LID_IS_CLOSED_CHANGED,
+   GPU_ADDED,
+   PREPARE_SHUTDOWN,
+-  OVERRIDE_CURSOR,
+   RESET_KEYMAP_DESCRIPTION,
+   RESET_KEYMAP_LAYOUT_INDEX,
+ 
+@@ -210,6 +209,7 @@ struct _MetaBackendPrivate
+ 
+   MetaRenderdoc *renderdoc;
+ 
++  ClutterCursorType global_cursor;
+   gboolean cursor_visible;
+ };
+ typedef struct _MetaBackendPrivate MetaBackendPrivate;
+@@ -893,12 +893,6 @@ meta_backend_class_init (MetaBackendClass *klass)
+                   0,
+                   NULL, NULL, NULL,
+                   G_TYPE_NONE, 0);
+-  signals[OVERRIDE_CURSOR] =
+-    g_signal_new ("override-cursor",
+-                  G_TYPE_FROM_CLASS (klass),
+-                  G_SIGNAL_RUN_LAST, 0,
+-                  g_signal_accumulator_first_wins, NULL, NULL,
+-                  CLUTTER_TYPE_CURSOR_TYPE, 0);
+   signals[RESET_KEYMAP_DESCRIPTION] =
+     g_signal_new ("reset-keymap-description",
+                   G_TYPE_FROM_CLASS (klass),
+@@ -1429,6 +1423,7 @@ meta_backend_init (MetaBackend *backend)
+ {
+   MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+ 
++  priv->global_cursor = CLUTTER_CURSOR_INHERIT;
+   priv->cursor_visible = TRUE;
+ }
+ 
+@@ -2175,8 +2170,20 @@ meta_backend_get_cursor (MetaBackend       *backend,
+ ClutterCursorType
+ meta_backend_get_global_cursor_type (MetaBackend *backend)
+ {
+-  ClutterCursorType global_cursor = CLUTTER_CURSOR_INHERIT;
++  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
+ 
+-  g_signal_emit (backend, signals[OVERRIDE_CURSOR], 0, &global_cursor);
+-  return global_cursor;
++  return priv->global_cursor;
+ }
++
++gboolean
++meta_backend_set_global_cursor_type (MetaBackend       *backend,
++                                     ClutterCursorType  cursor_type)
++{
++  MetaBackendPrivate *priv = meta_backend_get_instance_private (backend);
++
++  if (priv->global_cursor == cursor_type)
++    return FALSE;
++
++  priv->global_cursor = cursor_type;
++  return TRUE;
++}
+\ No newline at end of file
+diff --git a/src/compositor/compositor.c b/src/compositor/compositor.c
+index 4065c514735..612d9472aeb 100644
+--- a/src/compositor/compositor.c
++++ b/src/compositor/compositor.c
+@@ -1091,13 +1091,13 @@ meta_compositor_set_global_cursor (MetaCompositor    *compositor,
+   MetaCompositorPrivate *priv =
+     meta_compositor_get_instance_private (compositor);
+   MetaBackend *backend = priv->backend;
+-  ClutterStage *stage = CLUTTER_STAGE (meta_backend_get_stage (backend));
+ 
+-  if (priv->global_cursor == cursor_type)
+-    return;
++  if (meta_backend_set_global_cursor_type (backend, cursor_type))
++    {
++      ClutterStage *stage = CLUTTER_STAGE (meta_backend_get_stage (backend));
+ 
+-  priv->global_cursor = cursor_type;
+-  clutter_stage_foreach_sprite (stage, invalidate_cursor_cb, compositor);
++      clutter_stage_foreach_sprite (stage, invalidate_cursor_cb, compositor);
++    }
+ }
+ 
+ static void
+@@ -1122,15 +1122,6 @@ on_startup_notification_changed (MetaCompositor *compositor)
+   meta_compositor_update_global_cursor (compositor);
+ }
+ 
+-static ClutterCursorType
+-on_override_cursor (MetaCompositor *compositor)
+-{
+-  MetaCompositorPrivate *priv =
+-    meta_compositor_get_instance_private (compositor);
+-
+-  return priv->global_cursor;
+-}
+-
+ static void
+ meta_compositor_set_property (GObject      *object,
+                               guint         prop_id,
+@@ -1229,9 +1220,6 @@ meta_compositor_constructed (GObject *object)
+   g_signal_connect_swapped (priv->display->startup_notification, "changed",
+                             G_CALLBACK (on_startup_notification_changed),
+                             object);
+-
+-  g_signal_connect_swapped (priv->backend, "override-cursor",
+-                            G_CALLBACK (on_override_cursor), object);
+ }
+ 
+ static void
+@@ -1245,9 +1233,6 @@ meta_compositor_dispose (GObject *object)
+   g_signal_handlers_disconnect_by_func (priv->display->startup_notification,
+                                         on_startup_notification_changed,
+                                         object);
+-  g_signal_handlers_disconnect_by_func (priv->backend,
+-                                        on_override_cursor,
+-                                        object);
+ 
+   g_clear_object (&priv->laters);
+ 
+-- 
+GitLab
+

@@ -1,0 +1,52 @@
+{ pkgs, ... }:
+
+{
+  home.packages = with pkgs; [
+    elvish
+  ];
+
+  programs.zsh = {
+    enable = true;
+    enableCompletion = true;
+    enableVteIntegration = true;
+    autosuggestion.enable = true;
+
+    history = {
+      append = true;
+      extended = true;
+      ignoreAllDups = true;
+      ignoreSpace = true;
+      save = 10000;
+      size = 10000;
+      share = true;
+    };
+
+    initContent = ''
+      nix() {
+        if [[ -n $NIX_GET_COMPLETIONS ]]; then
+          command nix "$@"
+        elif [[ $1 == "shell" ]]; then
+          shift
+          command nix shell -s IN_NIX_SHELL nix3 "$@"
+        else
+          command nix "$@"
+        fi
+      }
+
+      if [[ $IN_NIX_SHELL == "nix3" ]]; then
+        PROMPT='%F{green}%B[nix shell]%b %F{green}%B$%b%f '
+      elif [[ -n $IN_NIX_SHELL ]]; then
+        PROMPT='%F{green}%B[nix-shell]%b %F{green}%B$%b%f '
+      else
+        PROMPT='%F{green}%B$%b%f '
+      fi
+      RPROMPT=""
+    '';
+
+    shellAliases = {
+      ls = "ls --color=auto";
+      ll = "ls -lah";
+      grep = "grep --color=auto";
+    };
+  };
+}
