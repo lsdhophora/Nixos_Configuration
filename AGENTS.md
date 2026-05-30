@@ -147,3 +147,4 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Always test build with `nixos-rebuild dry-build` before committing
 - Use LSP (nixd) in editor to catch attribute errors early
 - Use `pkexec` instead of `sudo` for all commands requiring root (e.g., `nixos-rebuild switch`)
+- Commit messages must start with a capital letter (e.g., "Switch home-manager to release-26.05", not "switch home-manager...")
