@@ -12,7 +12,7 @@ final: prev: {
             inherit (ff) gtk3 applicationName meta;
             passthru = (ff.passthru or { }) // {
               binaryName = ff.binaryName or "firefox";
-              libName = ff.libName or ff.applicationName or "firefox";
+              libName = ff.libName or "firefox";
               ffmpegSupport = ff.ffmpegSupport or false;
               gssSupport = ff.gssSupport or false;
               alsaSupport = ff.alsaSupport or false;
