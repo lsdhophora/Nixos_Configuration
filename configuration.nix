@@ -17,6 +17,10 @@
     ./modules/security/sudo.nix
   ];
 
-  programs.zsh.enable = true;
+  services.logind.settings.Login = {
+    HandleLidSwitch = "lock";
+    HandleLidSwitchExternalPower = "lock";
+    HandleLidSwitchDocked = "lock";
+  };
 
 }
