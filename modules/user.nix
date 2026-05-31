@@ -6,6 +6,8 @@
 }:
 
 {
+  programs.zsh.enable = true;
+
   users.users.lophophora = {
     isNormalUser = true;
     description = "费雪";
