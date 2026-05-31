@@ -10,6 +10,7 @@
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
         "openbar@neuromorph"
+        "achroma@ktauchathuranga.github.io"
         "blur-my-shell@aunetx"
       ];
       favorite-apps = [

@@ -21,6 +21,7 @@ in
     gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.customize-ibus
     gnomeExtensions.app-hider
+    gnomeExtensions.achroma
     gnomeExtensions.blur-my-shell
     gnome-epub-thumbnailer
     gnome-themes-extra
