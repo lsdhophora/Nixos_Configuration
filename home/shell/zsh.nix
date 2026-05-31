@@ -33,6 +33,15 @@
         fi
       }
 
+      update-flake() {
+        cd /home/lophophora/.config/nixos &&
+        nix flake update "$@" &&
+        if ! git diff --quiet -- flake.lock; then
+          git add flake.lock &&
+          git commit -m "Update flake inputs"
+        fi
+      }
+
       if [[ $IN_NIX_SHELL == "nix3" ]]; then
         PROMPT='%F{green}%B[nix shell]%b %F{green}%B$%b%f '
       elif [[ -n $IN_NIX_SHELL ]]; then
