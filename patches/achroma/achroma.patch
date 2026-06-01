@@ -1,0 +1,70 @@
+diff -ruN original/extension.js patched/extension.js
+--- original/extension.js	2026-06-01 10:42:42.808007643 +0800
++++ patched/extension.js	2026-06-01 10:42:42.865726857 +0800
+@@ -69,7 +69,7 @@
+ 
+             this._extensionObject = extensionObject;
+             this._settings = extensionObject.getSettings();
+-            this._isActive = false; // Start safe
++            this._isActive = this._settings.get_boolean("active");
+ 
+             this._icon = new St.Icon({
+                 icon_name: 'applications-graphics-symbolic',
+@@ -77,6 +77,11 @@
+             });
+ 
+             this.add_child(this._icon);
++            // Auto-apply effect if previously active
++            if (this._isActive) {
++                this._refreshEffect();
++                this._icon.add_style_class_name('achroma-active');
++            }
+             this._buildMenu();
+ 
+             // 1. Standard Profile Change
+@@ -135,6 +140,7 @@
+             this._toggleItem = new PopupMenu.PopupSwitchMenuItem('Enable Effect', this._isActive);
+             this._toggleItem.connect('toggled', (item, state) => {
+                 this._isActive = state;
++                this._settings.set_boolean("active", state);
+                 if (state) {
+                     this._refreshEffect();
+                     this._icon.add_style_class_name('achroma-active');
+@@ -268,9 +274,26 @@
+     enable() {
+         this._indicator = new AchromaIndicator(this);
+         Main.panel.addToStatusArea('achroma-toggle', this._indicator);
++        const shield = Main.screenShield;
++        if (shield) {
++            this._unlockId = shield.connect("locked-changed", () => {
++                if (!shield.locked && this._indicator) {
++                    this._indicator._isActive = this._indicator._settings.get_boolean("active");
++                    if (this._indicator._isActive) {
++                        this._indicator._refreshEffect();
++                    } else {
++                        this._indicator._disableEffect();
++                    }
++                }
++            });
++        }
+     }
+ 
+     disable() {
++        if (this._unlockId) {
++            Main.screenShield.disconnect(this._unlockId);
++            this._unlockId = null;
++        }
+         if (this._indicator) {
+             this._indicator.destroy();
+             this._indicator = null;
+diff -ruN original/schemas/org.gnome.shell.extensions.achroma.gschema.xml patched/schemas/org.gnome.shell.extensions.achroma.gschema.xml
+--- original/schemas/org.gnome.shell.extensions.achroma.gschema.xml	2026-06-01 10:42:42.808188955 +0800
++++ patched/schemas/org.gnome.shell.extensions.achroma.gschema.xml	2026-06-01 10:42:42.818798322 +0800
+@@ -21,5 +21,5 @@
+       <summary>Live Preview Data</summary>
+       <description>Temporary storage for the profile currently being edited</description>
+     </key>
+-  </schema>
++  <key name="active" type="b"><default>false</default><summary>Effect Active</summary></key></schema>
+ </schemalist>
+\ No newline at end of file

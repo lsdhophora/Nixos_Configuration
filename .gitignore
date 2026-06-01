@@ -11,3 +11,6 @@
 # Cloned for AI reference
 nixpkgs/
 /.agent-shell/
+
+# nix build result symlinks
+result
