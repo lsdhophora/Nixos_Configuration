@@ -25,6 +25,7 @@ in
     gnomeExtensions.blur-my-shell
     gnome-epub-thumbnailer
     gnome-themes-extra
+    cataclysm-dda
     lxgw-wenkai
     localsend
     wordbook
