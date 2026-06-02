@@ -109,6 +109,7 @@
       translate = true;
       apps = [
         "org.cataclysmdda.CataclysmDDA.desktop"
+        "shattered-pixel-dungeon.desktop"
         "tome4.desktop"
       ];
     };
