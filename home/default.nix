@@ -9,6 +9,7 @@
 
   imports = [
     ./avatar.nix
+    ./game.nix
     ./housekeeping.nix
     ./packages.nix
     ./dconf.nix

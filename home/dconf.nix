@@ -100,6 +100,16 @@
       folder-children = [
         "System"
         "Utilities"
+        "Games"
+      ];
+    };
+
+    "org/gnome/desktop/app-folders/folders/Games" = {
+      name = "Games";
+      translate = true;
+      apps = [
+        "org.cataclysmdda.CataclysmDDA.desktop"
+        "tome4.desktop"
       ];
     };
 
