@@ -146,6 +146,7 @@
         "com.rafaelmardojai.Blanket.desktop"
         "io.github.celluloid_player.Celluloid.desktop"
         "dev.mufeed.Wordbook.desktop"
+        "Fluffychat.desktop"
         "org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop"
         "org.kde.kdenlive.desktop"
         "org.gnome.Papers.desktop"
