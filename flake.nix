@@ -2,7 +2,6 @@
   description = "My NixOS Laptop flake";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    nixpkgs-old.url = "github:NixOS/nixpkgs/a3e67ddfeb2e04ef6ae3fddc8aae678696b08714";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     home-manager = {
@@ -13,7 +12,6 @@
   outputs =
     {
       nixpkgs,
-      nixpkgs-old,
       agenix,
       home-manager,
       ...
@@ -21,12 +19,9 @@
     with nixpkgs.lib;
     let
       system = "x86_64-linux";
-      pkgs-old = import nixpkgs-old { inherit system; };
       pkgs = import nixpkgs {
       inherit system;
-      overlays = (import ./overlays/default.nix) ++ [
-        (final: prev: { fractal = pkgs-old.fractal; })
-      ];
+      overlays = import ./overlays/default.nix;
     };
     in
     {

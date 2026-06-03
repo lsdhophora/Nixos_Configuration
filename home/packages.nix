@@ -30,7 +30,7 @@ in
     wordbook
     blanket
     celluloid
-    fractal
+    fluffychat
     shortwave
     bat
     transmission_4-gtk
