@@ -12,6 +12,14 @@
     (import ../../overlays/gnome-calendar.nix)
     (import ../../overlays/evolution-data-server.nix)
     (import ../../overlays/mutter.nix)
+    (final: prev: {
+      loupe = prev.loupe.overrideAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace src/widgets/image_window.ui \
+            --replace-fail "info-outline-symbolic" "view-more-symbolic"
+        '';
+      });
+    })
   ];
 
   services.displayManager.gdm.enable = true;
