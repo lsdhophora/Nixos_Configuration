@@ -9,6 +9,7 @@ let
         --set QT_SCALE_FACTOR 1.10 \
         --set QT_QPA_PLATFORM xcb \
         --set QT_QPA_PLATFORMTHEME xdgdesktopportal \
+        --set QT_STYLE_OVERRIDE breeze \
         --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
         --add-flags "--stylesheet ${./../assets/themes/kdenlive.qss}"
     '';
@@ -36,5 +37,6 @@ in
     wl-clipboard
     video-trimmer
     kdenlive-wrapped
+    kdePackages.breeze
   ];
 }
