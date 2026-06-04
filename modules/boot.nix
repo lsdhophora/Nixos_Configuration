@@ -26,7 +26,11 @@
       options snd_hda_intel power_save_controller=N
     '';
 
-    loader.systemd-boot.enable = true;
+    loader.grub = {
+      enable = true;
+      device = "nodev";
+      efiSupport = true;
+    };
     loader.efi.canTouchEfiVariables = true;
 
     kernelPackages = pkgs.linuxPackages_zen;
