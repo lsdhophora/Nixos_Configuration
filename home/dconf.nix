@@ -11,6 +11,7 @@
         "app-hider@lynith.dev"
         "openbar@neuromorph"
         "blur-my-shell@aunetx"
+        "runcat@kolesnikov.se"
       ];
       favorite-apps = [
         "firefox.desktop"

@@ -23,6 +23,7 @@ in
     gnomeExtensions.customize-ibus
     gnomeExtensions.app-hider
     gnomeExtensions.blur-my-shell
+    gnomeExtensions.runcat
     gnome-epub-thumbnailer
     gnome-themes-extra
     lxgw-wenkai
