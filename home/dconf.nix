@@ -12,6 +12,7 @@
         "openbar@neuromorph"
         "blur-my-shell@aunetx"
         "runcat@kolesnikov.se"
+        "gjsosk@vishram1123.com"
       ];
       favorite-apps = [
         "firefox.desktop"

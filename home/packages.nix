@@ -29,6 +29,7 @@ in
     gnomeExtensions.app-hider
     gnomeExtensions.blur-my-shell
     gnomeExtensions.customize-ibus
+    gnomeExtensions.gjs-osk
     gnomeExtensions.just-perfection
     gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.run-or-raise
