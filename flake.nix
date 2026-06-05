@@ -8,12 +8,14 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
   };
   outputs =
     {
       nixpkgs,
       agenix,
       home-manager,
+      chaotic,
       ...
     }@inputs:
     with nixpkgs.lib;
@@ -32,6 +34,9 @@
         };
         modules = [
           ./configuration.nix
+          chaotic.nixosModules.nyx-cache
+          chaotic.nixosModules.nyx-overlay
+          chaotic.nixosModules.nyx-registry
           agenix.nixosModules.default
           home-manager.nixosModules.home-manager
           {

@@ -146,5 +146,5 @@ cd /home/lophophora/.config/nixos && nix flake update
 - When hiding desktop entries, search for the exact desktop file name in nix store with `find /nix -name "*.desktop"`
 - Always test build with `nixos-rebuild dry-build` before committing
 - Use LSP (nixd) in editor to catch attribute errors early
-- Use `pkexec` instead of `sudo` for all commands requiring root (e.g., `nixos-rebuild switch`)
+- For **agent-executed** commands requiring root, use `pkexec` instead of `sudo` (e.g., `nixos-rebuild switch`). When manually running commands, use `sudo` as normal.
 - Commit messages must start with a capital letter (e.g., "Switch home-manager to release-26.05", not "switch home-manager...")
