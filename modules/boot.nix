@@ -33,7 +33,12 @@
     };
     loader.efi.canTouchEfiVariables = true;
 
-    kernelPackages = pkgs.linuxPackages_zen;
+    kernelPackages = pkgs.linuxPackages_cachyos;
+  };
+
+  services.scx = {
+    enable = true;
+    scheduler = "scx_rustland";
   };
 
   swapDevices = [
