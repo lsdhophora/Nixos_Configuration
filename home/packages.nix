@@ -33,7 +33,6 @@ in
     celluloid
     fluffychat
     shortwave
-    bat
     transmission_4-gtk
     wl-clipboard
     video-trimmer
