@@ -17,6 +17,7 @@ let
 in
 {
   home.packages = with pkgs; [
+    tmux
     gnomeExtensions.just-perfection
     gnomeExtensions.run-or-raise
     gnomeExtensions.rounded-window-corners-reborn
