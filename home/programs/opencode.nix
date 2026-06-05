@@ -9,6 +9,7 @@
     enable = true;
     settings = {
       "$schema" = "https://opencode.ai/config.json";
+      autoupdate = false;
       default_agent = "plan";
       agent = {
         build.color = "secondary";
