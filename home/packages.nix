@@ -17,27 +17,30 @@ let
 in
 {
   home.packages = with pkgs; [
+    # CLI
     tmux
-    gnomeExtensions.just-perfection
-    gnomeExtensions.run-or-raise
-    gnomeExtensions.rounded-window-corners-reborn
-    gnomeExtensions.customize-ibus
-    gnomeExtensions.app-hider
-    gnomeExtensions.blur-my-shell
-    gnomeExtensions.runcat
-    gnome-epub-thumbnailer
-    gnome-themes-extra
-    lxgw-wenkai
-    localsend
-    wordbook
+    wl-clipboard
+
+    # GUI
     blanket
     celluloid
     fluffychat
+    gnome-epub-thumbnailer
+    gnomeExtensions.app-hider
+    gnomeExtensions.blur-my-shell
+    gnomeExtensions.customize-ibus
+    gnomeExtensions.just-perfection
+    gnomeExtensions.rounded-window-corners-reborn
+    gnomeExtensions.run-or-raise
+    gnomeExtensions.runcat
+    gnome-themes-extra
+    kdePackages.breeze
+    kdenlive-wrapped
+    localsend
+    lxgw-wenkai
     shortwave
     transmission_4-gtk
-    wl-clipboard
     video-trimmer
-    kdenlive-wrapped
-    kdePackages.breeze
+    wordbook
   ];
 }
