@@ -148,3 +148,4 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Use LSP (nixd) in editor to catch attribute errors early
 - For **agent-executed** commands requiring root, use `pkexec` instead of `sudo` (e.g., `nixos-rebuild switch`). When manually running commands, use `sudo` as normal.
 - Commit messages must start with a capital letter (e.g., "Switch home-manager to release-26.05", not "switch home-manager...")
+- After every completed modification, ask the user whether to commit and push. Each commit must be a minimal, independently working unit that solves exactly one problem.
