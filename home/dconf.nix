@@ -50,7 +50,7 @@
       font-name = "Adwaita Sans 11";
       document-font-name = "Adwaita Sans 11";
       accent-color = "purple";
-      cursor-theme = "Bibata-Modern-Classic";
+      cursor-theme = "Adwaita";
       cursor-size = 24;
       color-scheme = "prefer-dark";
       gtk-theme = "Adwaita-dark";
