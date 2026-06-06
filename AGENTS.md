@@ -135,6 +135,16 @@ cd /home/lophophora/.config/nixos && nix flake update
 5. Each commit must be a minimal, independently working unit that solves exactly one problem
 6. After commit, ask whether to push
 
+## Commit Messages
+
+Format: `<type>(<scope>): <subject>`
+
+- **Subject**: imperative mood, max 50 chars, capitalize first word, no period
+- **Types**: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
+- **Body (optional)**: wrap at 72 chars, explain why, not how
+- **One logical change per commit**. If you need "and", split it
+- **Footer (optional)**: `Fixes #123`, `Refs #456`, or `BREAKING CHANGE: ...`
+
 ## Notes
 
 - Hardware config is auto-generated and should not be manually edited
@@ -156,4 +166,3 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Always test build with `nixos-rebuild dry-build` before committing
 - Use LSP (nixd) in editor to catch attribute errors early
 - For **agent-executed** commands requiring root, use `pkexec` instead of `sudo` (e.g., `nixos-rebuild switch`). When manually running commands, use `sudo` as normal.
-- Commit messages must start with a capital letter (e.g., "Switch home-manager to release-26.05", not "switch home-manager...")
