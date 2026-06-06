@@ -28,6 +28,7 @@ in
     gnome-epub-thumbnailer
     gnomeExtensions.app-hider
     gnomeExtensions.blur-my-shell
+    gnomeExtensions.dash-to-panel
     gnomeExtensions.customize-ibus
     gnomeExtensions.gjs-osk
     gnomeExtensions.just-perfection
