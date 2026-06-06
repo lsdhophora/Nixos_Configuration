@@ -15,6 +15,9 @@ final: prev: {
       postPatch = ''
         substituteInPlace extension.js \
           --replace-fail 'emblem-ok-symbolic' 'object-select-symbolic'
+
+        substituteInPlace extension.js \
+          --replace-fail 'input-keyboard-symbolic' 'keyboard-symbolic'
       '';
     });
   };
