@@ -17,7 +17,7 @@ final: prev: {
           --replace-fail 'emblem-ok-symbolic' 'object-select-symbolic'
 
         substituteInPlace extension.js \
-          --replace-fail 'input-keyboard-symbolic' 'keyboard-symbolic'
+          --replace-fail 'input-keyboard-symbolic' 'preferences-desktop-keyboard-symbolic'
       '';
     });
   };
