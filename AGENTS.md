@@ -126,6 +126,15 @@ pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
 cd /home/lophophora/.config/nixos && nix flake update
 ```
 
+## Workflow
+
+1. Make changes to the configuration
+2. Run `nixos-rebuild dry-build --flake .#flowerpot` to verify; fix any errors
+3. When dry-build passes, ask the user whether the result is correct and whether to commit
+4. Only commit when the user confirms, unless they explicitly say it's not needed or the work is unfinished
+5. Each commit must be a minimal, independently working unit that solves exactly one problem
+6. After commit, ask whether to push
+
 ## Notes
 
 - Hardware config is auto-generated and should not be manually edited
@@ -148,4 +157,3 @@ cd /home/lophophora/.config/nixos && nix flake update
 - Use LSP (nixd) in editor to catch attribute errors early
 - For **agent-executed** commands requiring root, use `pkexec` instead of `sudo` (e.g., `nixos-rebuild switch`). When manually running commands, use `sudo` as normal.
 - Commit messages must start with a capital letter (e.g., "Switch home-manager to release-26.05", not "switch home-manager...")
-- After every completed modification, ask the user whether to commit and push. Each commit must be a minimal, independently working unit that solves exactly one problem.
