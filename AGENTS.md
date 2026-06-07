@@ -171,7 +171,7 @@ nixos-rebuild dry-build --flake .#flowerpot
 # Commit after successful dry-build (keep commits small and focused)
 git add -A && git commit && git push
 
-# Build and switch to new system
+# Build and switch: agent uses pkexec, user uses sudo
 pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
 
 # Update flake inputs
@@ -219,6 +219,6 @@ Format: `<type>(<scope>): <subject>`
 - When hiding desktop entries, search for the exact desktop file name in nix store with `find /nix -name "*.desktop"`
 - Always test build with `nixos-rebuild dry-build` before committing
 - Use LSP (nixd) in editor to catch attribute errors early
-- For **agent-executed** commands requiring root, use `pkexec` instead of `sudo` (e.g., `nixos-rebuild switch`). When manually running commands, use `sudo` as normal.
+- Agent uses `pkexec` for root commands (Polkit popup). User runs `sudo` when agent asks them to.
 - Overlay patches go in `overlays/`; patch files go in `patches/` with matching names
 - The 32GB swapfile is defined in `boot.nix` (not `hardware-configuration.nix`)
