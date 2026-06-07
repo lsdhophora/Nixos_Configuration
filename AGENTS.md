@@ -102,7 +102,7 @@ nixos-rebuild dry-build --flake .#flowerpot
 # Commit (keep small and focused)
 git add -A && git commit && git push
 
-# Build and switch: agent uses pkexec, user uses sudo
+# Build and switch (agent runs pkexec; user types password when prompted)
 pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
 
 # Update flake inputs
@@ -113,7 +113,7 @@ cd /home/lophophora/.config/nixos && nix flake update
 
 1. Make changes; verify with `nixos-rebuild dry-build --flake .#flowerpot`
 2. If dry-build passes, ask user whether to rebuild & commit
-3. On confirmation: `pkexec nixos-rebuild switch --flake .#flowerpot`
+3. On confirmation: run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
 4. After successful rebuild, commit
 5. One logical change per commit; ask whether to push
 
@@ -131,7 +131,8 @@ Body (optional): wrap at 72, explain why not how.
 - Package names may differ from expected (e.g. `transmission_4-gtk`)
 - Home Manager git uses `settings` not `config`
 - Use `force = true` on `home.file` to overwrite existing desktop entries
-- Agent uses `pkexec` for root commands; user runs `sudo` when agent asks
+- Agent runs root commands with `pkexec` (password prompt appears, user types it)
+- User runs root commands manually in terminal with `sudo` (e.g. on another machine or when agent isn't involved)
 - Overlay patches in `overlays/`, patch files in `patches/` with matching names
 - 32GB swapfile is in `boot.nix`, not `hardware-configuration.nix`
 - Only declare attributes actually used to avoid "unused argument" warnings
