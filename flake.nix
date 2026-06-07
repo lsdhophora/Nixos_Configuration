@@ -2,54 +2,20 @@
   description = "My NixOS Laptop flake";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    agenix.url = "github:ryantm/agenix";
-    agenix.inputs.nixpkgs.follows = "nixpkgs";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
   };
-  outputs =
-    {
-      nixpkgs,
-      agenix,
-      home-manager,
-      chaotic,
-      ...
-    }@inputs:
-    with nixpkgs.lib;
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-      inherit system;
-      overlays = import ./overlays/default.nix;
-    };
-    in
-    {
-      nixosConfigurations.flowerpot = nixosSystem {
-        inherit system pkgs;
-        specialArgs = {
-          inherit inputs;
-        };
-        modules = [
-          ./configuration.nix
-          chaotic.nixosModules.nyx-cache
-          chaotic.nixosModules.nyx-overlay
-          chaotic.nixosModules.nyx-registry
-          agenix.nixosModules.default
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = {};
-            home-manager.users.lophophora = {
-              imports = [
-                ./home/default.nix
-              ];
-            };
-          }
-        ];
-      };
+  outputs = inputs @ { flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [ "x86_64-linux" ];
+      imports = [ ./flake-modules/default.nix ];
     };
 }

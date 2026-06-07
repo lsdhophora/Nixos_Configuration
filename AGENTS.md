@@ -1,16 +1,27 @@
 # NixOS Laptop Configuration
 
-Flake-based config for laptop "flowerpot". Uses Home Manager, Agenix, Chaotic Nyx, custom overlays for patched GNOME.
+Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Agenix, Chaotic Nyx, custom overlays for patched GNOME.
 
 ## Project Structure
 
 ```
 .
-├── flake.nix                 # Flake entry point
+├── flake.nix                 # Flake entry point (flake-parts)
 ├── flake.lock                # Locked deps
-├── configuration.nix         # Imports all modules
-├── hardware-configuration.nix   # Auto-generated
-├── modules/                  # NixOS modules
+├── flake-modules/            # Flake-parts modules
+│   ├── default.nix           # Module aggregator
+│   └── nixos.nix             # nixosConfigurations.flowerpot
+├── hosts/
+│   └── flowerpot/            # Machine entry point
+│       ├── default.nix       # Host config (imports profiles + logind)
+│       └── hardware-configuration.nix   # Auto-generated
+├── modules/                  # NixOS modules (by type)
+│   ├── profiles/             # Feature bundles (by purpose)
+│   │   ├── core.nix          # Core system: boot, networking, user, nix, i18n, security, zram
+│   │   ├── desktop.nix       # GNOME + PipeWire
+│   │   ├── printing.nix      # CUPS
+│   │   ├── proxying.nix      # DAE
+│   │   └── kmscon.nix        # Kmscon VT
 │   ├── boot.nix              # Plymouth, CachyOS kernel, scx, 32GB swapfile
 │   ├── networking.nix        # Hostname, timezone, NetworkManager, firewall
 │   ├── user.nix              # User creation, system packages, Zsh
@@ -21,30 +32,34 @@ Flake-based config for laptop "flowerpot". Uses Home Manager, Agenix, Chaotic Ny
 │   │   ├── cups.nix          # CUPS printing
 │   │   ├── dae.nix           # DAE transparent proxy (age secret)
 │   │   ├── kmscon.nix        # Kmscon virtual terminal
-│   │   └── pipewire.nix      # PipeWire (no suspend)
+│   │   ├── pipewire.nix      # PipeWire (no suspend)
+│   │   └── zram.nix          # Zram swap
 │   └── security/
 │       ├── age.nix           # Agenix secrets
 │       └── sudo.nix          # sudo pwfeedback
 ├── home/                     # Home Manager configs
 │   ├── default.nix           # Entry point
-│   ├── avatar.nix            # Avatar via AccountsService
-│   ├── game.nix              # Cataclysm DDA, Shattered Pixel Dungeon
+│   ├── profiles/             # Feature bundles
+│   │   ├── development.nix   # git, ssh, direnv, opencode, texlive
+│   │   ├── gaming.nix        # Cataclysm DDA, Shattered Pixel Dungeon
+│   │   └── shell.nix         # Zsh
+│   ├── avatar.nix
 │   ├── packages.nix          # GNOME extensions, media, IM, Kdenlive
 │   ├── dconf.nix             # GNOME dconf (extensions, corners, folders)
 │   ├── housekeeping.nix      # Hidden desktop entries
-│   ├── shell/
-│   │   ├── zsh.nix           # Zsh (aliases, autosuggestions, nix-shell)
-│   │   └── elvish.nix        # Legacy reference
-│   └── programs/
-│       ├── git.nix           # lsdhophora/lsdphophora@proton.me
-│       ├── ssh.nix           # GitHub via ssh.github.com:443
-│       ├── direnv.nix        # nix-direnv
-│       ├── firefox.nix       # Patched, userChrome/userContent
-│       ├── ghostty.nix       # Adwaita Dark, IBM Plex Mono
-│       ├── kvantum.nix       # KvLibadwaitaDark
-│       ├── opencode.nix      # MCP NixOS integration
-│       ├── texlive.nix       # CTEX, LuaLaTeX, texlab
-│       └── emacs.nix         # PGTK, nix-mode, AUCTeX, magit, corfu, eglot, nov
+│   ├── programs/
+│   │   ├── git.nix           # lsdhophora/lsdphophora@proton.me
+│   │   ├── ssh.nix           # GitHub via ssh.github.com:443
+│   │   ├── direnv.nix        # nix-direnv
+│   │   ├── firefox.nix       # Patched, userChrome/userContent
+│   │   ├── ghostty.nix       # Adwaita Dark, IBM Plex Mono
+│   │   ├── kvantum.nix       # KvLibadwaitaDark
+│   │   ├── opencode.nix      # MCP NixOS integration
+│   │   ├── texlive.nix       # CTEX, LuaLaTeX, texlab
+│   │   └── emacs.nix         # PGTK, nix-mode, AUCTeX, magit, corfu, eglot, nov
+│   └── shell/
+│       ├── zsh.nix           # Zsh (aliases, autosuggestions, nix-shell)
+│       └── elvish.nix        # Legacy reference
 ├── assets/                   # Static assets
 │   ├── avatar/face.png
 │   ├── icons/Adwaita-purple/ # Purple icon theme (scalable SVG)
@@ -75,7 +90,6 @@ Flake-based config for laptop "flowerpot". Uses Home Manager, Agenix, Chaotic Ny
 │   ├── config.dae.age
 │   ├── hashed-password.age
 │   └── access-tokens-github.age
-├── nix-build-test/           # Build test results (not committed)
 └── unused/                   # Empty, kept for reference
 ```
 
@@ -121,6 +135,7 @@ Body (optional): wrap at 72, explain why not how.
 - Overlay patches in `overlays/`, patch files in `patches/` with matching names
 - 32GB swapfile is in `boot.nix`, not `hardware-configuration.nix`
 - Only declare attributes actually used to avoid "unused argument" warnings
+- Profiles in `modules/profiles/` and `home/profiles/` group related imports by purpose; the underlying module files stay in their type-based directories
 
 ## Code Style
 

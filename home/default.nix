@@ -9,19 +9,15 @@
 
   imports = [
     ./avatar.nix
-    ./game.nix
     ./housekeeping.nix
     ./packages.nix
     ./dconf.nix
-    ./programs/git.nix
-    ./programs/ssh.nix
-    ./programs/direnv.nix
     ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix
-    ./programs/opencode.nix
-    ./programs/texlive.nix
-    ./shell/zsh.nix
+    ./profiles/gaming.nix
+    ./profiles/development.nix
+    ./profiles/shell.nix
   ];
 }

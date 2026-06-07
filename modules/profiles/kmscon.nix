@@ -1,0 +1,5 @@
+{ ... }: {
+  imports = [
+    ../services/kmscon.nix
+  ];
+}
