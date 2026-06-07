@@ -130,10 +130,11 @@ cd /home/lophophora/.config/nixos && nix flake update
 
 1. Make changes to the configuration
 2. Run `nixos-rebuild dry-build --flake .#flowerpot` to verify; fix any errors
-3. When dry-build passes, ask the user whether the result is correct and whether to commit
-4. Only commit when the user confirms, unless they explicitly say it's not needed or the work is unfinished
-5. Each commit must be a minimal, independently working unit that solves exactly one problem
-6. After commit, ask whether to push
+3. When dry-build passes, ask the user whether the result is correct and whether to rebuild & commit
+4. On confirmation, rebuild: `pkexec nixos-rebuild switch --flake .#flowerpot`
+5. After successful rebuild, commit
+6. Each commit must be a minimal, independently working unit that solves exactly one problem
+7. After commit, ask whether to push
 
 ## Commit Messages
 
