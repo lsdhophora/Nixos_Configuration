@@ -11,6 +11,7 @@
     ./modules/nix-config.nix
     ./modules/services/cups.nix
     ./modules/services/dae.nix
+    ./modules/services/zram.nix
     ./modules/services/kmscon.nix
     ./modules/services/pipewire.nix
     ./modules/security/age.nix
