@@ -9,4 +9,6 @@
     ../security/sudo.nix
     ../services/zram.nix
   ];
+
+  boot.tmp.cleanOnBoot = true;
 }
