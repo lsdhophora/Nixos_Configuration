@@ -41,13 +41,15 @@
          #context-sendimage {
            display: none !important;
          }
-         #spell-check-enabled,
-         #spell-add-to-dictionary,
-         #spell-suggestions-separator,
-         #spell-separator,
-         #context-sep-bidi {
-           display: none !important;
-         }
+           #context-openlinkinusercontext-menu,
+           #context-openlinkincontainertab,
+          #spell-check-enabled,
+          #spell-add-to-dictionary,
+          #spell-suggestions-separator,
+          #spell-separator,
+          #context-sep-bidi {
+            display: none !important;
+          }
 
          /* Override blue group color → purple for drag-to-group highlight */
          :root {
