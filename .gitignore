@@ -14,3 +14,4 @@ nixpkgs/
 
 # nix build result symlinks
 result
+nix-build-test/
