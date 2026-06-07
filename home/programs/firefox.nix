@@ -47,9 +47,10 @@
           #spell-add-to-dictionary,
           #spell-suggestions-separator,
           #spell-separator,
-          #context-sep-bidi {
-            display: none !important;
-          }
+           #context-sep-bidi,
+           [data-l10n-id="places-open-in-container-tab"] {
+             display: none !important;
+           }
 
          /* Override blue group color → purple for drag-to-group highlight */
          :root {
