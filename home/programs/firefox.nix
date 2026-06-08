@@ -161,9 +161,15 @@
               display: none !important;
           }
 
-          #context-inspect-a11y,
-          #frame-sep {
-              display: none !important;
+           #context-inspect-a11y,
+           #frame-sep {
+               display: none !important;
+           }
+
+          /* Hide trailing menu separators */
+          #contentAreaContextMenu menuseparator:last-child,
+          #contentAreaContextMenu menuseparator:only-child {
+            display: none !important;
           }
 
           panel[type="arrow"].panel-no-padding {
