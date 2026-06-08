@@ -111,12 +111,14 @@ cd /home/lophophora/.config/nixos && nix flake update
 
 ## Workflow
 
+⚠ All three asks (rebuild/commit/push) **MUST** use the `question` tool — never plain text.
+
 1. Make changes; verify with `nixos-rebuild dry-build --flake .#flowerpot`
-2. If dry-build passes, use `#Questions` to ask user whether to rebuild
+2. If dry-build passes, use `#Questions` with options `["Yes", "No"]` to ask user whether to rebuild
 3. On confirmation (label matches "Yes"): run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
-4. After successful rebuild, use `#Questions` to ask user whether to commit
+4. After successful rebuild, use `#Questions` with options `["Yes", "No"]` to ask user whether to commit
 5. On confirmation (label matches "Yes"): stage and commit
-6. Use `#Questions` to ask user whether to push
+6. Use `#Questions` with options `["Yes", "No"]` to ask user whether to push
 7. On confirmation (label matches "Yes"): push
 
 > The commit/push `#Questions` apply to **all** changes, including modifications to AGENTS.md itself.
@@ -141,6 +143,7 @@ Body (optional): wrap at 72, explain why not how.
 - 32GB swapfile is in `boot.nix`, not `hardware-configuration.nix`
 - Only declare attributes actually used to avoid "unused argument" warnings
 - Profiles in `modules/profiles/` and `home/profiles/` group related imports by purpose; the underlying module files stay in their type-based directories
+- Always use the `question` tool (not plain text) when asking rebuild/commit/push
 
 ## Code Style
 
