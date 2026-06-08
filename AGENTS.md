@@ -119,6 +119,8 @@ cd /home/lophophora/.config/nixos && nix flake update
 6. Use `#Questions` to ask user whether to push
 7. On confirmation (label matches "Yes"): push
 
+> The commit/push `#Questions` apply to **all** changes, including modifications to AGENTS.md itself.
+
 ## Commit Messages
 
 `<type>(<scope>): <subject>` — imperative mood, max 50 chars, no period.
