@@ -112,12 +112,12 @@ cd /home/lophophora/.config/nixos && nix flake update
 ## Workflow
 
 1. Make changes; verify with `nixos-rebuild dry-build --flake .#flowerpot`
-2. If dry-build passes, ask user whether to rebuild
-3. On confirmation: run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
-4. After successful rebuild, ask user whether to commit
-5. On confirmation: stage and commit
-6. Ask user whether to push
-7. On confirmation: push
+2. If dry-build passes, use `#Questions` to ask user whether to rebuild
+3. On confirmation (label matches "Yes"): run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
+4. After successful rebuild, use `#Questions` to ask user whether to commit
+5. On confirmation (label matches "Yes"): stage and commit
+6. Use `#Questions` to ask user whether to push
+7. On confirmation (label matches "Yes"): push
 
 ## Commit Messages
 
