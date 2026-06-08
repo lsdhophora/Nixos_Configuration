@@ -6,7 +6,6 @@
       enabled-extensions = [
         "just-perfection-desktop@just-perfection"
         "run-or-raise@edvard.cz"
-        "rounded-window-corners@fxgn"
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
         "dash-to-panel@jderose9.github.com"
@@ -209,35 +208,4 @@
       ];
     };
   };
-
-  home.activation.dconfRoundedCorners = lib.hm.dag.entryAfter [ "entryLast" ] ''
-    export PATH="${lib.makeBinPath [ pkgs.dconf ]}:$PATH"
-    dconf write /org/gnome/shell/extensions/rounded-window-corners-reborn/border-width 1
-    dconf write /org/gnome/shell/extensions/rounded-window-corners-reborn/global-rounded-corner-settings '{
-      "padding": <{"left": <uint32 0>, "right": <uint32 0>, "top": <uint32 0>, "bottom": <uint32 0>}>,
-      "keepRoundedCorners": <{"maximized": <false>, "fullscreen": <false>}>,
-      "borderRadius": <uint32 15>,
-      "smoothing": <1.0>,
-      "borderColor": <(0.13333334028720856, 0.13333334028720856, 0.14901961386203766, 1.0)>,
-      "enabled": <true>
-    }'
-    dconf write /org/gnome/shell/extensions/rounded-window-corners-reborn/custom-rounded-corner-settings '{
-      "org.kde.kdenlive": <{
-        "padding": <{"left": <uint32 4>, "right": <uint32 4>, "top": <uint32 4>, "bottom": <uint32 4>}>,
-        "keepRoundedCorners": <{"maximized": <false>, "fullscreen": <false>}>,
-        "borderRadius": <uint32 16>,
-        "smoothing": <1.0>,
-        "borderColor": <(0.13333334028720856, 0.13333334028720856, 0.14901961386203766, 1.0)>,
-        "enabled": <true>
-      }>,
-      "firefox": <{
-        "padding": <{"left": <uint32 0>, "right": <uint32 2>, "top": <uint32 2>, "bottom": <uint32 2>}>,
-        "keepRoundedCorners": <{"maximized": <false>, "fullscreen": <false>}>,
-        "borderRadius": <uint32 15>,
-        "smoothing": <0.8>,
-        "borderColor": <(0.13333334028720856, 0.13333334028720856, 0.14901961386203766, 1.0)>,
-        "enabled": <true>
-      }>
-    }'
-  '';
 }

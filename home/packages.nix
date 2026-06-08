@@ -31,7 +31,6 @@ in
     gnomeExtensions.customize-ibus
     gnomeExtensions.gjs-osk
     gnomeExtensions.just-perfection
-    gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.run-or-raise
     gnomeExtensions.runcat
     gnome-themes-extra
