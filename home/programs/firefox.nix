@@ -43,6 +43,11 @@
             border: 2px solid var(--line_regular) !important;
             background: var(--bg1) !important;
           }
+
+          img.bili-avatar-face {
+            width: 95% !important;
+            height: 95% !important;
+          }
         }
 
         /* Zhihu - search bar, links, global text stroke */
