@@ -125,7 +125,8 @@
               display: none !important;
           }
 
-          #context-inspect-a11y {
+          #context-inspect-a11y,
+          #frame-sep {
               display: none !important;
           }
 
