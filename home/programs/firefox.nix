@@ -25,6 +25,7 @@
         "privacy.userContext.enabled" = false;
         "ui.key.menuAccessKey" = 0;
         "browser.tabs.splitView.enabled" = false;
+        "browser.tabs.groups.enabled" = false;
         "identity.fxaccounts.enabled" = false;
         "svg.context-properties.content.enabled" = true;
       };
