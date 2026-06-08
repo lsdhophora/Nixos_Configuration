@@ -48,6 +48,10 @@
             width: 95% !important;
             height: 95% !important;
           }
+
+          .bpx-player-top-left-title {
+            line-height: 1.4 !important;
+          }
         }
 
         /* Zhihu - search bar, links, global text stroke */
