@@ -36,6 +36,41 @@
             display: none !important;
           }
         }
+
+        /* Bilibili - search bar border */
+        @-moz-document domain("bilibili.com") {
+          .bili-header .mini-header .center-search-container .center-search__bar #nav-searchform {
+            border: 2px solid var(--line_regular) !important;
+            background: var(--bg1) !important;
+          }
+        }
+
+        /* Zhihu - search bar, links, global text stroke */
+        @-moz-document domain("zhihu.com") {
+          [class*="SearchBar-input"] {
+            transform: scale(0.9) !important;
+            transform-origin: left center !important;
+            border: 2px solid var(--MapUIFrame08B) !important;
+          }
+
+          [class*="SearchBar-input"]:focus,
+          [class*="SearchBar-input"]:focus-within {
+            outline: none !important;
+            border: 2px solid !important;
+          }
+
+          a[href="/creator"] {
+            border: 2px solid !important;
+          }
+
+          a[href="/question/waiting"] {
+            border: 2px solid !important;
+          }
+
+          * {
+            -webkit-text-stroke: 0.4px currentColor !important;
+          }
+        }
       '';
       userChrome = ''
          menupopup#context-sendimage,
