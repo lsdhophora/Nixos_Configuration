@@ -122,8 +122,12 @@
         #context-sendaudio,
         #context-sep-setbackground,
          #context-inspect {
-             display: none !important;
-         }
+              display: none !important;
+          }
+
+          #context-inspect-a11y {
+              display: none !important;
+          }
 
           panel[type="arrow"].panel-no-padding {
             transform: translateY(2px) !important;
