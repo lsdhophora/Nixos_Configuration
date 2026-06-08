@@ -100,7 +100,7 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 nixos-rebuild dry-build --flake .#flowerpot
 
 # Commit (keep small and focused)
-git add -A && git commit && git push
+git add -A && git commit
 
 # Build and switch (agent runs pkexec; user types password when prompted)
 pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
@@ -112,10 +112,12 @@ cd /home/lophophora/.config/nixos && nix flake update
 ## Workflow
 
 1. Make changes; verify with `nixos-rebuild dry-build --flake .#flowerpot`
-2. If dry-build passes, ask user whether to rebuild & commit
+2. If dry-build passes, ask user whether to rebuild
 3. On confirmation: run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
-4. After successful rebuild, commit
-5. One logical change per commit; ask whether to push
+4. After successful rebuild, ask user whether to commit
+5. On confirmation: stage and commit
+6. Ask user whether to push
+7. On confirmation: push
 
 ## Commit Messages
 
