@@ -10,7 +10,6 @@
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
         "dash-to-panel@jderose9.github.com"
-        "blur-my-shell@aunetx"
         "runcat@kolesnikov.se"
         "gjsosk@vishram1123.com"
       ];
