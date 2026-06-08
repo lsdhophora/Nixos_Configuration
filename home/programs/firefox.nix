@@ -106,13 +106,6 @@
           #main-window[sizemode="maximized"]::after {
             display: none;
           }
-          /* 2.5px menupopup border color (width patched via overlay) */
-          menupopup {
-            --panel-border-color: #353539 !important;
-          }
-          menupopup:-moz-window-inactive {
-            --panel-border-color: #2a2a2d !important;
-          }
           menupopup#context-sendimage,
           #context-sendimage {
             display: none !important;
