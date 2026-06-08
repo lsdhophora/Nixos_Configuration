@@ -20,6 +20,8 @@
         "IBM Plex Sans SC"
       ];
       "font-size" = "14";
+      "font-style" = "Bold";
+      "font-style-bold" = false;
       "link-url" = false;
       "right-click-action" = "ignore";
       "resize-overlay" = "never";
