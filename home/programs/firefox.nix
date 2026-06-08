@@ -54,6 +54,13 @@
           }
         }
 
+        /* DuckDuckGo - result site name line-height */
+        @-moz-document domain("duckduckgo.com") {
+          article[data-testid="result"] p {
+            line-height: 1.4 !important;
+          }
+        }
+
         /* Zhihu - search bar, links, global text stroke */
         @-moz-document domain("zhihu.com") {
           [class*="SearchBar-input"] {
