@@ -155,8 +155,9 @@
         #context-copyaudiourl,
         #context-sendvideo,
         #context-sendaudio,
-        #context-sep-setbackground,
-         #context-inspect {
+         #context-sep-setbackground,
+          #context-setDesktopBackground,
+          #context-inspect {
               display: none !important;
           }
 
