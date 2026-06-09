@@ -124,6 +124,10 @@
           dialog[sizemode="maximized"]::after {
             display: none;
           }
+          /* Override forced 0px border-radius on Linux non-CSD */
+          menupopup {
+            --panel-border-radius: 6px !important;
+          }
           menupopup#context-sendimage,
           #context-sendimage {
             display: none !important;

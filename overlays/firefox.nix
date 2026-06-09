@@ -73,17 +73,6 @@ final: prev: {
             (cd "$tmpdir" && zip -0DXqr "$out/lib/firefox/browser/omni.ja" .)
             rm -rf "$tmpdir"
 
-            # Patch toolkit/omni.ja - widen menupopup border
-            cd /
-            tmpdir=$(mktemp -d)
-            cd "$tmpdir"
-            unzip -o ${ff}/lib/firefox/omni.ja 2>/dev/null || true
-
-            echo 'menupopup::part(content) { border-width: 2.5px !important; }' >> chrome/toolkit/skin/classic/global/popup.css
-
-            rm -f "$out/lib/firefox/omni.ja"
-            (cd "$tmpdir" && zip -0DXqr "$out/lib/firefox/omni.ja" .)
-            rm -rf "$tmpdir"
           '';
     in
     final.wrapFirefox ff-patched { };
