@@ -124,9 +124,10 @@
           dialog[sizemode="maximized"]::after {
             display: none;
           }
-          /* Override forced 0px border-radius on Linux non-CSD */
+          /* Fix aliased rounded corners for context menus */
           menupopup {
             --panel-border-radius: 6px !important;
+            appearance: none !important;
           }
           menupopup#context-sendimage,
           #context-sendimage {
