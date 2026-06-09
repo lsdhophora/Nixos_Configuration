@@ -89,21 +89,39 @@
         }
       '';
       userChrome = ''
-          #main-window::after {
+          #main-window::after,
+          window:not(#main-window)::after,
+          dialog::after {
             content: "";
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             border: 2.5px solid #353539;
-            border-radius: 6px;
             pointer-events: none;
             z-index: 999999;
           }
-          #main-window:-moz-window-inactive::after {
+          #main-window::after {
+            border-radius: 6px;
+          }
+          window:not(#main-window)::after,
+          dialog::after {
+            border-top: none;
+            border-radius: 0;
+            border-color: #222226;
+          }
+          window:not(#main-window):-moz-window-inactive::after,
+          dialog:-moz-window-inactive::after {
+            border-color: #1a1a1d;
+          }
+          #main-window:-moz-window-inactive::after,
+          window:not(#main-window):-moz-window-inactive::after,
+          dialog:-moz-window-inactive::after {
             border-color: #2a2a2d;
           }
           #main-window[inFullscreen="true"]::after,
           #main-window[inDOMFullscreen="true"]::after,
-          #main-window[sizemode="maximized"]::after {
+          #main-window[sizemode="maximized"]::after,
+          window:not(#main-window)[sizemode="maximized"]::after,
+          dialog[sizemode="maximized"]::after {
             display: none;
           }
           menupopup#context-sendimage,
