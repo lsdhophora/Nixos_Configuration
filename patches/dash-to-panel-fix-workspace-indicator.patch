@@ -1,0 +1,27 @@
+--- a/extension.js
++++ b/extension.js
+@@ -127,6 +127,24 @@
+     let completeEnable = () => {
+       panelManager = new PanelManager.PanelManager()
+       panelManager.enable()
++
++      // Workaround for workspace indicator bug with GNOME 50
++      // https://github.com/home-sweet-gnome/dash-to-panel/issues/2505
++      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
++        global.dashToPanel.panels?.forEach(panel => {
++          const indicators =
++            panel.statusArea.activities?.get_first_child();
++          if (!indicators?._recalculateDots) return;
++
++          indicators._recalculateDots();
++          indicators.get_children().forEach(dot => {
++            if (dot.remove_all_transitions) dot.remove_all_transitions();
++            dot.set({ scale_x: 1.0, scale_y: 1.0 });
++          });
++        });
++        return GLib.SOURCE_REMOVE;
++      });
++
+       ubuntuDockDelayId = 0
+ 
+       return GLib.SOURCE_REMOVE
