@@ -6,6 +6,7 @@ final: prev: {
           ../patches/dash-to-panel-notrans.patch
           ../patches/dash-to-panel-fix-workspace-indicator.patch
           ../patches/dash-to-panel-label-bg.patch
+          ../patches/dash-to-panel-max-indicators.patch
         ];
       });
   };
