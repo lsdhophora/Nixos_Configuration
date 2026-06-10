@@ -20,6 +20,7 @@ in
     # CLI
     tmux
     wl-clipboard
+    gh
 
     # GUI
     blanket
