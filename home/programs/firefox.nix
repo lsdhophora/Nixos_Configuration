@@ -134,7 +134,7 @@
           }
           /* Fix aliased rounded corners for context menus */
           menupopup {
-            --panel-border-radius: 6px !important;
+            --panel-border-radius: 8px !important;
           }
 
           #contentAreaContextMenu::part(content) {
