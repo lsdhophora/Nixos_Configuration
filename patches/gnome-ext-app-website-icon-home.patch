@@ -1,0 +1,11 @@
+--- a/subprojects/extensions-app/data/ui/extension-row.ui
++++ b/subprojects/extensions-app/data/ui/extension-row.ui
+@@ -178,7 +178,7 @@
+                                 <property name="orientation">vertical</property>
+                                 <child>
+                                   <object class="GtkImage">
+-                                    <property name="icon-name">website-symbolic</property>
++                                    <property name="icon-name">go-home-symbolic</property>
+                                     <property name="accessible-role">presentation</property>
+                                   </object>
+                                 </child>

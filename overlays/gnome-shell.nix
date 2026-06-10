@@ -4,7 +4,7 @@ final: prev: {
       ../patches/gnome-shell-fix-a11y-always-show-setting.patch
       ../patches/gnome-hide-app-details.patch
       ../patches/gnome-shell-fix-zero-length-event-time.patch
-      ../patches/gnome-ext-app-remove-website-settings-icons.patch
+      ../patches/gnome-ext-app-website-icon-home.patch
     ];
   });
 }
