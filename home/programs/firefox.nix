@@ -103,6 +103,9 @@
           #main-window::after {
             border-radius: 6px;
           }
+          #main-window[gtktiledwindow]::after {
+            border-radius: 0;
+          }
           window:not(#main-window)::after,
           dialog::after {
             border-top: none;
