@@ -1,0 +1,17 @@
+--- a/appIcons.js	2026-06-09 21:50:11.737444805 +0800
++++ b/appIcons.js	2026-06-09 21:50:11.745444844 +0800
+@@ -1995,6 +1995,14 @@
+ export function ItemShowLabel() {
+   if (!this._labelText) return
+ 
++  if (this._dtpPanel) {
++    let panelStyle = this._dtpPanel.get_style() || ''
++    let match = panelStyle.match(/background-color:\s*([^;]+)/)
++    if (match) {
++      this.label.set_style('background-color: ' + match[1] + ';')
++    }
++  }
++
+   this.label.set_text(this._labelText)
+   this.label.opacity = 0
+   this.label.show()

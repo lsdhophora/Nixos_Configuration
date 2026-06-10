@@ -5,6 +5,7 @@ final: prev: {
         patches = (old.patches or [ ]) ++ [
           ../patches/dash-to-panel-notrans.patch
           ../patches/dash-to-panel-fix-workspace-indicator.patch
+          ../patches/dash-to-panel-label-bg.patch
         ];
       });
   };
