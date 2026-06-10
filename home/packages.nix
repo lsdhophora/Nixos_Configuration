@@ -34,6 +34,7 @@ in
     gnomeExtensions.just-perfection
     gnomeExtensions.run-or-raise
     gnomeExtensions.runcat
+    gnomeExtensions.tiling-shell
     gnome-themes-extra
     kdePackages.breeze
     kdenlive-wrapped
