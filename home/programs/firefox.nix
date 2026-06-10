@@ -53,6 +53,10 @@
           .bpx-player-top-left-title {
             line-height: 1.4 !important;
           }
+
+          a.title.jumpable {
+            line-height: 1.4 !important;
+          }
         }
 
         /* DuckDuckGo - result site name line-height */
