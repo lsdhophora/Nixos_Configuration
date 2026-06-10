@@ -130,8 +130,11 @@
           }
           /* Fix aliased rounded corners for context menus */
           menupopup {
-            --panel-border-radius: 6px !important;
-            appearance: none !important;
+            --panel-border-radius: 12px !important;
+          }
+
+          #contentAreaContextMenu::part(content) {
+            border: 1px solid #3c3c40 !important;
           }
           menupopup#context-sendimage,
           #context-sendimage {
