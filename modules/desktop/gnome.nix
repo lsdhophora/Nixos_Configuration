@@ -11,7 +11,6 @@
     (import ../../overlays/gnome-shell.nix)
     (import ../../overlays/gnome-calendar.nix)
     (import ../../overlays/evolution-data-server.nix)
-    (import ../../overlays/nautilus.nix)
     (import ../../overlays/mutter.nix)
     (final: prev: {
       loupe = prev.loupe.overrideAttrs (old: {

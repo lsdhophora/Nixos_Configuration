@@ -75,7 +75,6 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── gnome-shell.nix       # a11y, zero-length events, hide details
 │   ├── gnome-sound-recorder.nix
 │   ├── mutter.nix            # Wayland cursor override
-│   └── nautilus.nix          # Rename popover autohide
 ├── patches/                  # Referenced by overlays
 │   ├── evolution-data-server/no-contacts-calendar-backend.patch
 │   ├── gnome-calendar-remove-weather.patch
@@ -85,7 +84,6 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── gnome-shell-fix-a11y-always-show-setting.patch
 │   ├── gnome-shell-fix-zero-length-event-time.patch
 │   ├── mutter-fix-wayland-overridden-cursor.patch
-│   └── nautilus-rename-popover-autohide.patch
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix           # Public keys for rekey
 │   ├── config.dae.age
