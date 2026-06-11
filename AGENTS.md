@@ -66,9 +66,8 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── Kuromi-Wallpapers/    # Wallpapers + GNOME XML
 │   └── themes/kdenlive.qss
 ├── overlays/                 # Nixpkgs overlays
-│   ├── default.nix           # Imports firefox, gjs-osk
+│   ├── default.nix           # Imports firefox
 │   ├── firefox.nix           # omni.ja modification
-│   ├── gjs-osk.nix
 │   ├── evolution-data-server.nix  # No contacts/calendar backends
 │   ├── gnome-calendar.nix    # Remove weather
 │   ├── gnome-control-center.nix   # Filter non-25% scales

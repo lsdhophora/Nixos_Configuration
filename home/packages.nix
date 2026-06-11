@@ -30,7 +30,6 @@ in
     gnomeExtensions.app-hider
     gnomeExtensions.dash-to-panel
     gnomeExtensions.customize-ibus
-    gnomeExtensions.gjs-osk
     gnomeExtensions.just-perfection
     gnomeExtensions.run-or-raise
     gnomeExtensions.runcat
