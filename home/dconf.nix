@@ -10,7 +10,7 @@
         "app-hider@lynith.dev"
         "dash-to-panel@jderose9.github.com"
         "runcat@kolesnikov.se"
-        "gjsosk@vishram1123.com"
+        "emoji-copy@felipeftn"
       ];
       favorite-apps = [
         "firefox.desktop"

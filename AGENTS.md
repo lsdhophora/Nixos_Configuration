@@ -66,7 +66,8 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── Kuromi-Wallpapers/    # Wallpapers + GNOME XML
 │   └── themes/kdenlive.qss
 ├── overlays/                 # Nixpkgs overlays
-│   ├── default.nix           # Imports firefox
+│   ├── default.nix           # Imports emoji-copy, firefox
+│   ├── emoji-copy.nix        # Patch word-boundary search in sql.js
 │   ├── firefox.nix           # omni.ja modification
 │   ├── evolution-data-server.nix  # No contacts/calendar backends
 │   ├── gnome-calendar.nix    # Remove weather
@@ -78,6 +79,7 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 ├── patches/                  # Referenced by overlays
 │   ├── evolution-data-server/no-contacts-calendar-backend.patch
 │   ├── gnome-calendar-remove-weather.patch
+│   ├── emoji-copy-word-boundary-search.patch
 │   ├── gnome-filter-non-25-percent-scales.patch
 │   ├── gnome-hide-app-details.patch
 │   ├── gnome-shell-fix-a11y-always-show-setting.patch

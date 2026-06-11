@@ -1,0 +1,17 @@
+--- a/handlers/sql.js
++++ b/handlers/sql.js
+@@ -47,7 +47,13 @@
+   const buildQuery = (pattern) => {
+     const sql_string = search_text
+       .split(" ")
+-      .flatMap((word) => `description LIKE '${pattern.replace('WORD', word)}'`)
++      .flatMap((word) => {
++        if (pattern === '%WORD%') {
++          return `(description LIKE '${word} %' OR description = '${word}'` +
++            ` OR description LIKE '% ${word} %' OR description LIKE '% ${word}')`;
++        }
++        return `description LIKE '${pattern.replace('WORD', word)}'`;
++      })
+       .join(" AND ");
+ 
+     const skin_filter = skin_tone != 0 
