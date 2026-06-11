@@ -1,0 +1,129 @@
+--- a/emojiCategory.js	2026-06-11 19:32:32.781869794 +0800
++++ b/emojiCategory.js	2026-06-11 20:03:32.836640237 +0800
+@@ -21,20 +21,17 @@
+ };
+ 
+ export class EmojiCategory {
+-  /**
+-   * The category and its button have to be built without being loaded, to "avoid"
+-   * memory issues with emojis' image textures.
+-   * PS: For some reason, when we render everything, there is a bunch of Lag...
+-   * I will be using jsdocs on the functions in the future for better documentation & readable code.
+-   */
+   constructor(emojiCopy, categoryName, iconName, id) {
+     this.super_item = new PopupMenu.PopupSubMenuMenuItem(categoryName);
+     this.categoryName = categoryName;
+     this.emojiCopy = emojiCopy;
+     this._settings = this.emojiCopy._settings;
+-    this.emojiButtons = []; // used for searching, and for updating the size/style
+-    this._nbColumns = 10; // some random default value
++    this.emojiButtons = [];
++    this._nbColumns = 10;
+     this.id = id;
++    this._allEmojis = this.emojiCopy.sqlite.select_all_by_group(
++      EMOJIS_CATEGORIES[this.id],
++    );
+     this.emojis = this.emojiCopy.sqlite.select_by_group(
+       EMOJIS_CATEGORIES[this.id],
+     );
+@@ -47,20 +44,12 @@
+     const nbcols = this._nbColumns;
+     this.super_item.label.set_style(`width: ${emoji_size * Math.max(1, nbcols - 3) }px;`);
+ 
+-    // These options bar widgets have the same type for all categories to
+-    // simplify the update method
+-    if ((this.id == 1) || (this.id == 5)) {
++    const hasSkinTones = this._allEmojis.some(e => e.skin_tone && e.skin_tone !== '');
++    if (hasSkinTones) {
+       this.skinTonesBar = new SkinTonesBar(this.emojiCopy, true);
+-    } else {
+-      this.skinTonesBar = new SkinTonesBar(this.emojiCopy, false);
+-    }
+-
+-    // Smileys & body Peoples Activities
+-    if ((this.id == 0) || (this.id == 1) || (this.id == 5)) {
+       this.skinTonesBar.addBar(this.super_item);
+     }
+ 
+-    // Listen for skin tone changes and refresh search results
+     if (this._settings && this._settings.connect) {
+       this._settings.connect('changed::skin-tone', () => {
+         this._onFilterChanged();
+@@ -86,23 +75,15 @@
+     });
+     this.categoryButton.connect("clicked", this._toggle.bind(this));
+ 
+-    this._built = false; // will be true once the user opens the category
+-    this._loaded = false; // will be true once loaded
++    this._built = false;
++    this._loaded = false;
+     this.load();
+   }
+ 
+-  /**
+-   * Called when skin tone or gender is changed in the options bar
+-   * We need to refresh the emojis shown in the category
+-   * PS: We only do this if the category is open, to avoid unnecessary
+-   * memory usage.
+-   * @private
+-   */
+   _onFilterChanged() {
+     if (this.super_item.menu && this.super_item.menu.isOpen) {
+       this.emojiButtons = [];
+       this.clear();
+-      // Get results for selected skin tone and for yellow (no skin tone)
+       const selectedTone = this._settings.get_int("skin-tone");
+       const selectedGender = this._settings.get_int("gender");
+       this.emojis = this.emojiCopy.sqlite.select_by_group(
+@@ -111,7 +92,6 @@
+         selectedGender
+       );
+ 
+-      // Update the emoji buttons list
+       for (let i = 0; i < this.emojis.length; i++) {
+         let button = new EmojiButton(
+           this.emojiCopy,
+@@ -144,11 +124,6 @@
+     this._nbColumns = nbColumns;
+   }
+ 
+-  /**
+-   * EmojiButtons objects are built here and loaded into an array, but not
+-   * packed into a container, thus not added to the Clutter stage and not
+-   * rendered. They will when the user will click on the button.
+-   */
+   load() {
+     if (this._loaded) return;
+ 
+@@ -169,15 +144,10 @@
+     this.emojis = [];
+   }
+ 
+-  /**
+-   * Builds the submenu, and fill it with containers full of previously built
+-   * EmojiButtons objects.
+-   */
+   build() {
+     if (this._built) return;
+     let ln, container;
+     for (let i = 0; i < this.emojiButtons.length; i++) {
+-      // lines of emojis
+       if (i % this._nbColumns === 0) {
+         ln = new PopupMenu.PopupBaseMenuItem({
+           style_class: "EmojisList",
+@@ -212,11 +182,13 @@
+       this.updateStyle();
+     }
+ 
+-    this.skinTonesBar.update();
++    if (this.skinTonesBar) {
++      this.skinTonesBar.update();
++    }
+ 
+     this.categoryButton.set_checked(true);
+     this.super_item.visible = true;
+-    this.super_item.setSubmenuShown(true); // This is causing the Lag!
++    this.super_item.setSubmenuShown(true);
+     this.emojiCopy._onSearchTextChanged();
+   }
+ 

@@ -1,0 +1,15 @@
+--- a/handlers/sql.js	2026-06-11 19:32:32.778588211 +0800
++++ b/handlers/sql.js	2026-06-11 19:32:43.886877626 +0800
+@@ -98,6 +98,12 @@
+     `);
+   }
+ 
++  select_all_by_group(group) {
++    return this.query(`
++      SELECT * FROM emojis WHERE emoji_group='${group}';
++    `);
++  }
++
+   select_all() {
+     return this.query(`
+       SELECT * FROM emojis;

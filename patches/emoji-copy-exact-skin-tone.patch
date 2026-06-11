@@ -1,0 +1,20 @@
+--- a/handlers/sql.js	2026-06-11 19:32:32.778588211 +0800
++++ b/handlers/sql.js	2026-06-11 20:15:14.658452950 +0800
+@@ -51,7 +51,7 @@
+       .join(" AND ");
+ 
+     const skin_filter = skin_tone != 0 
+-      ? ` AND skin_tone LIKE '%${this.get_skin_tone(skin_tone)}%'`
++      ? ` AND skin_tone = '${this.get_skin_tone(skin_tone)} skin tone'`
+       : ` AND skin_tone = ''`;
+ 
+     const gender_filter = this.get_gender_filter(gender);
+@@ -85,7 +85,7 @@
+     let skin_filter = '';
+     if (skin_tone != 0) {
+       // Show emojis that either have no skin tone (objects, etc) or match the selected skin tone
+-      skin_filter = ` AND skin_tone LIKE '%${this.get_skin_tone(skin_tone)}%'`;
++      skin_filter = ` AND skin_tone = '${this.get_skin_tone(skin_tone)} skin tone'`;
+     } else {
+       // Show all emojis in the group
+       skin_filter = ` AND skin_tone = ''`;
