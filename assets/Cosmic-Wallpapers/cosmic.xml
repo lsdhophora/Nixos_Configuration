@@ -2,11 +2,11 @@
 <!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
 <wallpapers>
   <wallpaper deleted="false">
-    <name>Kuromi Aesthetics</name>
-    <filename>/run/current-system/sw/share/backgrounds/gnome/Kuromi Aesthetics.jpg</filename>
+    <name>Orion Nebula</name>
+    <filename>/run/current-system/sw/share/backgrounds/gnome/orion_nebula_nasa_heic0601a.jpg</filename>
     <options>zoom</options>
     <shade_type>solid</shade_type>
-    <pcolor>#8B5CF6</pcolor>
+    <pcolor>#000000</pcolor>
     <scolor>#000000</scolor>
   </wallpaper>
 </wallpapers>

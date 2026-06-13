@@ -45,6 +45,11 @@
       ];
     };
 
+    "org/gnome/desktop/background" = {
+      picture-uri = "file:///run/current-system/sw/share/backgrounds/gnome/orion_nebula_nasa_heic0601a.jpg";
+      picture-uri-dark = "file:///run/current-system/sw/share/backgrounds/gnome/orion_nebula_nasa_heic0601a.jpg";
+    };
+
     "org/gnome/desktop/interface" = {
       font-name = "Adwaita Sans 11";
       document-font-name = "Adwaita Sans 11";
