@@ -110,7 +110,7 @@
           #main-window[gtktiledwindow]::after {
             border-radius: 0;
           }
-          window:not(#main-window)::after,
+          #main-window[chromehidden]::after,
           dialog::after {
             border-top: none;
             border-radius: 0;
