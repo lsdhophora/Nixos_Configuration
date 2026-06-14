@@ -58,6 +58,11 @@
           a.title.jumpable {
             line-height: 1.4 !important;
           }
+
+          body, html {
+            touch-action: pan-x pan-y pinch-zoom !important;
+            overscroll-behavior: auto !important;
+          }
         }
 
         /* DuckDuckGo - result site name line-height */
