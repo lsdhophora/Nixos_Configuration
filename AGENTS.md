@@ -41,10 +41,10 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── default.nix           # Entry point
 │   ├── profiles/             # Feature bundles
 │   │   ├── development.nix   # git, ssh, direnv, opencode, texlive
-│   │   ├── gaming.nix        # Cataclysm DDA, Shattered Pixel Dungeon
-│   │   └── shell.nix         # Zsh
+│   │   └── gaming.nix        # Cataclysm DDA, Shattered Pixel Dungeon
+│   ├── cli.nix               # CLI tools (tmux, wl-clipboard, gh)
+│   ├── gui.nix               # GNOME extensions, media, IM, Kdenlive
 │   ├── avatar.nix
-│   ├── packages.nix          # GNOME extensions, media, IM, Kdenlive
 │   ├── dconf.nix             # GNOME dconf (extensions, corners, folders)
 │   ├── housekeeping.nix      # Hidden desktop entries
 │   ├── programs/
@@ -58,8 +58,7 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   │   ├── texlive.nix       # CTEX, LuaLaTeX, texlab
 │   │   └── emacs.nix         # PGTK, nix-mode, AUCTeX, magit, corfu, eglot, nov
 │   └── shell/
-│       ├── zsh.nix           # Zsh (aliases, autosuggestions, nix-shell)
-│       └── elvish.nix        # Legacy reference
+│       └── zsh.nix           # Zsh (aliases, autosuggestions, nix-shell)
 ├── assets/                   # Static assets
 │   ├── avatar/face.png
 │   ├── icons/Adwaita-purple/ # Purple icon theme (scalable SVG)

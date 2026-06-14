@@ -10,7 +10,8 @@
   imports = [
     ./avatar.nix
     ./housekeeping.nix
-    ./packages.nix
+    ./gui.nix
+    ./cli.nix
     ./dconf.nix
     ./programs/kvantum.nix
     ./programs/firefox.nix
@@ -18,6 +19,6 @@
     ./programs/ghostty.nix
     ./profiles/gaming.nix
     ./profiles/development.nix
-    ./profiles/shell.nix
+    ./shell/zsh.nix
   ];
 }

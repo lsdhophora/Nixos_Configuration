@@ -17,11 +17,6 @@ let
 in
 {
   home.packages = with pkgs; [
-    # CLI
-    tmux
-    wl-clipboard
-    gh
-
     # GUI
     blanket
     celluloid

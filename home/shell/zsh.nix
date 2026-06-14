@@ -1,10 +1,6 @@
 { pkgs, ... }:
 
 {
-  home.packages = with pkgs; [
-    elvish
-  ];
-
   programs.zsh = {
     enable = true;
     enableCompletion = true;
