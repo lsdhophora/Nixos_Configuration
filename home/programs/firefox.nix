@@ -21,6 +21,7 @@
         "layout.spellcheckDefault" = 0;
         "widget.gtk.rounded-bottom-corners.enabled" = true;
         "widget.use-xdg-desktop-portal.file-picker" = 1;
+        "full-screen-api.warning.timeout" = 1000;
         "browser.formfill.enable" = false;
         "privacy.userContext.enabled" = false;
         "ui.key.menuAccessKey" = 0;
