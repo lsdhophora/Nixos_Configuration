@@ -42,6 +42,7 @@
     shellAliases = {
       ls = "ls --color=auto";
       ll = "ls -lah";
+      open = "xdg-open";
       grep = "grep --color=auto";
     };
   };
