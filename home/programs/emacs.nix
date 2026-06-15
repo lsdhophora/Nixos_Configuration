@@ -226,9 +226,121 @@
                          (if (>= target (length nov-documents))
                              (message "Already at the last chapter.")
                            (funcall orig-func (or count 1)))))
-                     (advice-add 'nov-next-document :around #'nov-next-document-last-chapter-guard))
-
-                   (use-package nerd-icons
+                     (advice-add 'nov-next-document :around #'nov-next-document-last-chapter-guard)
+                      (defun nov-occur (regexp)
+                       "Search EPUB content with `occur'.
+                     Searches all chapters and shows clickable results."
+                       (interactive "sNov occur (regexp): ")
+                       (when (string-empty-p regexp)
+                         (user-error "No search query"))
+                       (let ((nov-buffer (current-buffer))
+                             (title-map (make-hash-table :test 'equal))
+                             (results nil))
+                         (let ((toc-dir (file-name-directory
+                                         (cdr (aref nov-documents 0)))))
+                           (dolist (entry (nov-imenu-create-index))
+                             (let* ((file (nth 1 entry))
+                                    (title (nth 0 entry))
+                                    (abs-path (expand-file-name file toc-dir)))
+                               (when (and title file
+                                          (not (string-empty-p title)))
+                                 (dotimes (i (length nov-documents))
+                                   (when (string=
+                                          abs-path
+                                          (cdr (aref nov-documents i)))
+                                     (puthash i title title-map)))))))
+                         (dotimes (i (length nov-documents))
+                           (let* ((path (cdr (aref nov-documents i)))
+                                  (html (nov-slurp path)))
+                             (when html
+                               (with-temp-buffer
+                                 (insert html)
+                                 (let ((dom (libxml-parse-html-region
+                                             (point-min) (point-max))))
+                                   (let ((title (gethash i title-map
+                                                         (file-name-nondirectory path))))
+                                     (erase-buffer)
+                                     (let ((shr-width nil))
+                                       (shr-insert-document dom))
+                                     (goto-char (point-min))
+                                      (while (re-search-forward regexp nil t)
+                                        (let ((line (line-number-at-pos))
+                                              (matched (match-string-no-properties 0))
+                                              (full-line
+                                               (string-trim
+                                                (buffer-substring
+                                                 (line-beginning-position)
+                                                 (line-end-position)))))
+                                          (push (list i title line matched full-line)
+                                               results)))))))))
+                         (if (null results)
+                             (message "No matches for regexp \"%s\"" regexp)
+                           (pop-to-buffer (get-buffer-create "*Nov Occur*"))
+                           (setq buffer-read-only nil)
+                           (erase-buffer)
+                           (let ((seen (make-hash-table :test 'equal))
+                                 (uniq-results nil))
+                             (dolist (r (nreverse results))
+                               (let ((key (cons (nth 0 r) (nth 2 r))))
+                                 (unless (gethash key seen)
+                                   (puthash key t seen)
+                                   (push r uniq-results))))
+                             (let ((count (length uniq-results)))
+                               (insert (format "%d match%s for \"%s\":\n\n"
+                                               count (if (= count 1) "" "es")
+                                               regexp))
+                               (dolist (r (nreverse uniq-results))
+                                 (let* ((doc-index (nth 0 r))
+                                        (title (nth 1 r))
+                                        (line (nth 2 r))
+                                        (matched (nth 3 r))
+                                        (full-line (nth 4 r))
+                                        (p (point)))
+                                   (insert (format "%s:%d: %s\n"
+                                                   title line full-line))
+                                   (add-text-properties
+                                    p (1- (point))
+                                    (list 'mouse-face 'highlight
+                                          'help-echo
+                                          (format "Jump to %s:L%d" title line)
+                                          'nov-doc-index doc-index
+                                          'nov-occur-line line
+                                          'nov-matched matched
+                                          'nov-full-line full-line
+                                          'nov-buffer nov-buffer)))))
+                             (nov-occur-mode)
+                             (setq buffer-read-only t)
+                              (goto-char (point-min)))))
+                     (defun nov-occur-follow ()
+                       (interactive)
+                       (let ((doc-index (get-text-property
+                                         (point) 'nov-doc-index))
+                             (matched (get-text-property
+                                       (point) 'nov-matched))
+                             (full-line (get-text-property
+                                         (point) 'nov-full-line))
+                             (line (get-text-property
+                                    (point) 'nov-occur-line))
+                             (buf (get-text-property
+                                   (point) 'nov-buffer)))
+                         (when (and doc-index matched buf
+                                    (buffer-live-p buf))
+                           (let ((cur (current-buffer)))
+                             (pop-to-buffer buf)
+                             (nov-goto-document doc-index)
+                             (goto-char (point-min))
+                             (cond ((and full-line
+                                         (search-forward full-line nil t))
+                                    (goto-char (match-beginning 0)))
+                                   ((search-forward matched nil t)
+                                    (goto-char (match-beginning 0)))
+                                   (t (forward-line (1- line))))))))
+                     ))  ;; close nov-block + use-package nov
+                   (define-derived-mode nov-occur-mode special-mode "Nov-Occur"
+                     (define-key nov-occur-mode-map (kbd "RET") #'nov-occur-follow)
+                     (define-key nov-occur-mode-map (kbd "<mouse-1>") #'nov-occur-follow)
+                     (define-key nov-occur-mode-map (kbd "q") #'quit-window))
+                    (use-package nerd-icons
                      :ensure t
                      :custom
                      (nerd-icons-font-family "Hack Nerd Font"))
@@ -248,84 +360,6 @@
                            (or (emms-track-get track 'info-title)
                                (file-name-sans-extension 
                                 (file-name-nondirectory (emms-track-get track 'name))))))
-
-            (defun my/center-image ()
-              "在 image-mode 中实现左右 + 上下居中，并隐藏边框"
-              (interactive)
-              (when (eq major-mode 'image-mode)
-                (let* ((img (get-text-property (point-min) 'display))
-                       (img-size (and img (image-size img t))))
-                  (when img-size
-                    (let* ((img-width-px (car img-size))
-                           (char-width-px (frame-char-width))
-                           (img-cols (/ img-width-px char-width-px))
-                           (win-cols (window-body-width))
-                           (margin (max 0 (/ (- win-cols img-cols) 2))))
-                      (set-window-margins (selected-window) margin margin)
-                      (set-window-fringes (selected-window) 0 0)
-                      (setq-local cursor-type nil
-                                  fringe-indicator-alist '((truncation . nil) 
-                                                           (continuation . nil))
-                                  mouse-yank-at-point t)
-                      (dolist (event '(mouse-1 mouse-2 mouse-3))
-                        (local-unset-key (vector event))))
-                    (image-transform-fit-to-window)))))
-
-      (defun my/center-image ()
-        "在 image-mode 中实现左右 + 上下居中，并隐藏边框"
-        (interactive)
-        (when (eq major-mode 'image-mode)
-          (let* ((img (get-text-property (point-min) 'display))
-                 (img-size (and img (image-size img t))))
-            (when img-size
-              (let* ((img-width-px (car img-size))
-                     (char-width-px (frame-char-width))
-                     (img-cols (/ img-width-px char-width-px))
-                     (win-cols (window-body-width))
-                     (margin (max 0 (/ (- win-cols img-cols) 2))))
-                (set-window-margins (selected-window) margin margin)
-                (set-window-fringes (selected-window) 0 0)
-                (setq-local cursor-type nil
-                            fringe-indicator-alist '((truncation . nil) 
-                                                     (continuation . nil))
-                            mouse-yank-at-point t)
-                (dolist (event '(mouse-1 mouse-2 mouse-3))
-                  (local-unset-key (vector event))))
-              (image-transform-fit-to-window)))))
-
-      (with-eval-after-load 'image-mode
-        (define-key image-mode-map (kbd "C-c c") #'my/center-image)
-
-        (add-hook 'image-mode-hook (lambda () (run-at-time 0 nil #'my/center-image)))
-        (add-hook 'image-mode-hook
-                  (lambda ()
-                    (add-hook 'window-configuration-change-hook 
-                              #'my/center-image nil t)
-                    (add-hook 'window-size-change-functions
-                              (lambda (&rest _) (run-at-time 0 nil #'my/center-image))
-                              nil t)
-                    (advice-add 'find-file :after 
-                               (lambda (&rest _) 
-                                 (when (eq major-mode 'image-mode)
-                                   (run-at-time 0 nil #'my/center-image)))
-                               '((name . my/center-image-find-file)))))
-        (add-hook 'image-after-revert-hook 
-                  (lambda () (run-at-time 0 nil #'my/center-image)) nil t))
-
-      (with-eval-after-load 'dired
-        (advice-add 'dired-find-file :after
-                    (lambda (&rest _)
-                      (when (eq major-mode 'image-mode)
-                        (run-at-time 0 nil #'my/center-image)))
-                    '((name . my/center-image-dired-find-file))))
-
-      (add-hook 'find-file-hook
-                (lambda ()
-                  (when (and (buffer-file-name)
-                             (string-match-p "\\.\\(png\\|jpg\\|jpeg\\|gif\\|bmp\\|webp\\)\\'" 
-                                            (downcase (buffer-file-name)))
-                             (eq major-mode 'image-mode))
-                    (run-at-time 0 nil #'my/center-image))))
     '';
   };
 
@@ -567,7 +601,5 @@
         (switch-to-buffer buf)
         (message "Audio Trimmer ready")))
     (provide 'audio-trimmer)
-
-
   '';
 }
