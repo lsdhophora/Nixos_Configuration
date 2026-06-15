@@ -23,7 +23,7 @@
           command nix "$@"
         elif [[ $1 == "shell" ]]; then
           shift
-          command nix shell -s IN_NIX_SHELL nix3 "$@"
+          command nix shell "$@" --command env "IN_NIX_SHELL=nix3" "$SHELL"
         else
           command nix "$@"
         fi
