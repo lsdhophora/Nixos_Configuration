@@ -38,7 +38,7 @@
 
   services.scx = {
     enable = true;
-    scheduler = "scx_rustland";
+    scheduler = "scx_lavd";
   };
 
   swapDevices = [
