@@ -1,0 +1,48 @@
+diff --git a/panels/search/cc-search-panel.c b/panels/search/cc-search-panel.c
+index 2fd222842..d141f9690 100644
+--- a/panels/search/cc-search-panel.c
++++ b/panels/search/cc-search-panel.c
+@@ -40,6 +40,8 @@ struct _CcSearchPanel
+   GHashTable       *sort_order;
+ 
+   CcSearchLocationsPage *locations_page;
++
++  GHashTable       *seen_providers;
+ };
+ 
+ CC_PANEL_REGISTER (CcSearchPanel, cc_search_panel)
+@@ -285,6 +287,7 @@ search_panel_add_one_provider (CcSearchPanel *self,
+   g_autofree gchar *path = NULL;
+   g_autofree gchar *desktop_id = NULL;
+   g_autoptr(GKeyFile) keyfile = NULL;
++  g_autofree gchar *desktop_id_dup = NULL;
+   g_autoptr(GAppInfo) app_info = NULL;
+   g_autoptr(GError) error = NULL;
+   gboolean default_disabled;
+@@ -310,6 +313,18 @@ search_panel_add_one_provider (CcSearchPanel *self,
+       return;
+     }
+ 
++  if (self->seen_providers == NULL)
++    self->seen_providers = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
++
++  if (g_hash_table_contains (self->seen_providers, desktop_id))
++    {
++      g_debug ("Search provider with DesktopId '%s' already added, skipping duplicate", desktop_id);
++      return;
++    }
++  desktop_id_dup = g_strdup (desktop_id);
++  g_hash_table_add (self->seen_providers, desktop_id_dup);
++  desktop_id_dup = NULL;
++
+   app_info = G_APP_INFO (g_desktop_app_info_new (desktop_id));
+ 
+   if (app_info == NULL)
+@@ -379,6 +394,8 @@ cc_search_panel_finalize (GObject *object)
+   g_clear_object (&self->search_settings);
+   g_hash_table_destroy (self->sort_order);
+ 
++  g_clear_pointer (&self->seen_providers, g_hash_table_destroy);
++
+   G_OBJECT_CLASS (cc_search_panel_parent_class)->finalize (object);
+ }
