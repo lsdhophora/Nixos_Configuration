@@ -74,15 +74,34 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   ├── gnome-shell.nix       # a11y, zero-length events, hide details
 │   ├── gnome-sound-recorder.nix
 │   ├── mutter.nix            # Wayland cursor override
-├── patches/                  # Referenced by overlays
-│   ├── evolution-data-server/no-contacts-calendar-backend.patch
-│   ├── gnome-calendar-remove-weather.patch
-│   ├── emoji-copy-word-boundary-search.patch
-│   ├── gnome-filter-non-25-percent-scales.patch
-│   ├── gnome-hide-app-details.patch
-│   ├── gnome-shell-fix-a11y-always-show-setting.patch
-│   ├── gnome-shell-fix-zero-length-event-time.patch
-│   ├── mutter-fix-wayland-overridden-cursor.patch
+├── patches/                  # Referenced by overlays (grouped by package)
+│   ├── dash-to-panel/
+│   │   ├── notrans.patch
+│   │   ├── fix-workspace-indicator.patch
+│   │   ├── label-bg.patch
+│   │   └── max-indicators.patch
+│   ├── emoji-copy/
+│   │   ├── word-boundary-search.patch
+│   │   ├── remove-recents.patch
+│   │   ├── select-all-by-group.patch
+│   │   ├── gender-filter.patch
+│   │   ├── exact-skin-tone.patch
+│   │   ├── options-bar.patch
+│   │   └── category-filter.patch
+│   ├── gnome-shell/
+│   │   ├── fix-a11y-always-show-setting.patch
+│   │   ├── fix-zero-length-event-time.patch
+│   │   ├── hide-app-details.patch
+│   │   └── ext-app-website-icon-home.patch
+│   ├── gnome-control-center/
+│   │   ├── filter-non-25-percent-scales.patch
+│   │   └── search-panel-dedup.patch
+│   ├── gnome-calendar/
+│   │   └── remove-weather.patch
+│   ├── mutter/
+│   │   └── fix-wayland-overridden-cursor.patch
+│   └── evolution-data-server/
+│       └── no-contacts-calendar-backend.patch
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix           # Public keys for rekey
 │   ├── config.dae.age
