@@ -3,7 +3,15 @@
     system = "x86_64-linux";
     pkgs = import inputs.nixpkgs {
       system = "x86_64-linux";
-      overlays = import ../overlays/default.nix;
+      overlays = (import ../overlays/default.nix) ++ [
+        (import ../overlays/cosmic-unstable.nix {
+          nixpkgs-unstable = inputs.nixpkgs-unstable;
+          system = "x86_64-linux";
+          config = { };
+        })
+        (import ../overlays/cosmic-popup-border.nix)
+        (import ../overlays/cosmic-launcher.nix)
+      ];
     };
     specialArgs = { inherit inputs; };
     modules = [

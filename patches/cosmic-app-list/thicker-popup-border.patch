@@ -1,0 +1,13 @@
+diff --git a/cosmic-app-list/src/app.rs b/cosmic-app-list/src/app.rs
+index 5e9fb56..c60acb2 100644
+--- a/cosmic-app-list/src/app.rs
++++ b/cosmic-app-list/src/app.rs
+@@ -2207,7 +2207,7 @@
+                                         background: Some(Background::Color(component.base.into())),
+                                         border: Border {
+                                             radius: cosmic.radius_s().into(),
+-                                            width: 1.0,
++                                            width: 0.0,
+                                             color: component.divider.into(),
+                                         },
+                                         ..Default::default()

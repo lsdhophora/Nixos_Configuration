@@ -1,0 +1,34 @@
+--- a/src/app.rs
++++ b/src/app.rs
+@@ -904,31 +904,2 @@
+                     let mut button_content = Vec::new();
+-                    if !self.alt_tab
+-                        && let Some(source) = item.category_icon.as_ref()
+-                    {
+-                        let icon_handle = match source {
+-                            IconSource::Name(name) => {
+-                                if Path::new(name.as_ref()).exists() {
+-                                    icon::from_path(Path::new(name.as_ref()).into())
+-                                } else {
+-                                    icon::from_name(name.as_ref()).handle()
+-                                }
+-                            }
+-
+-                            IconSource::Mime(mime) => {
+-                                icon::from_name(mime.as_ref().replace('/', "-")).handle()
+-                            }
+-                        };
+-
+-                        button_content.push(
+-                            icon(icon_handle)
+-                                .width(Length::Fixed(16.0))
+-                                .height(Length::Fixed(16.0))
+-                                .class(cosmic::theme::Svg::Custom(Rc::new(|theme| {
+-                                    cosmic::iced::widget::svg::Style {
+-                                        color: Some(theme.cosmic().on_bg_color().into()),
+-                                    }
+-                                })))
+-                                .into(),
+-                        );
+-                    }
+                     if let Some(Some(icon_handle)) = self.launcher_item_icon_handles.get(i) {
