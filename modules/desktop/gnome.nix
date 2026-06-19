@@ -11,6 +11,12 @@
 
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
+
+  i18n.inputMethod = {
+    enable = true;
+    type = "ibus";
+    ibus.engines = with pkgs.ibus-engines; [ rime ];
+  };
   services.desktopManager.gnome.extraGSettingsOverrides = ''
     [org.gnome.mutter]
     experimental-features=['scale-monitor-framebuffer','xwayland-native-scaling']

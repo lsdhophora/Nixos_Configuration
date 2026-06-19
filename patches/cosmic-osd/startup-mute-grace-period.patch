@@ -1,0 +1,37 @@
+diff --git a/src/components/app.rs b/src/components/app.rs
+--- a/src/components/app.rs
++++ b/src/components/app.rs
+@@ -305,6 +305,7 @@
+     wayland_outputs: HashMap<String, (WlOutput, String)>,
+     display_identifier_displays: HashMap<SurfaceId, String>,
+     identifiers_dismissed: bool,
++    startup_time: Instant,
+ }
+ 
+ impl App {
+@@ -455,6 +456,7 @@
+                 wayland_outputs: HashMap::new(),
+                 display_identifier_displays: HashMap::new(),
+                 identifiers_dismissed: false,
++                startup_time: Instant::now(),
+             },
+             Task::none(),
+         )
+@@ -631,6 +633,17 @@
+                 }
+             }
+             Msg::Pulse(evt) => {
++                if self.startup_time.elapsed() < Duration::from_secs(1) {
++                    match evt {
++                        pulse::Event::SinkMute(mute) => self.sink_mute = Some(mute),
++                        pulse::Event::SinkVolume(volume) => self.sink_volume = Some(volume),
++                        pulse::Event::SourceMute(mute) => self.source_mute = Some(mute),
++                        pulse::Event::SourceVolume(volume) => self.source_volume = Some(volume),
++                        _ => {}
++                    }
++                    return Task::none();
++                }
++
+                 match evt {
+                     pulse::Event::SinkMute(mute) => {
+                         if self.sink_mute.is_none() {

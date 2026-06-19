@@ -11,6 +11,7 @@
         })
         (import ../overlays/cosmic-popup-border.nix)
         (import ../overlays/cosmic-launcher.nix)
+        (import ../overlays/cosmic-osd.nix)
       ];
     };
     specialArgs = { inherit inputs; };
