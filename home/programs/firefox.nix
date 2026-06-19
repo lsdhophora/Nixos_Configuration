@@ -41,6 +41,13 @@
 
         /* Bilibili - search bar border */
         @-moz-document domain("bilibili.com") {
+          /* 所有圆形头像加边框 */
+          img[style*="border-radius: 50%"],
+          img.bili-avatar,
+          .bili-avatar img {
+            border: 2px solid #00a1d6 !important;
+          }
+
           .bili-header .mini-header .center-search-container .center-search__bar #nav-searchform {
             border: 2px solid var(--line_regular) !important;
             background: var(--bg1) !important;
