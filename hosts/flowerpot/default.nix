@@ -35,6 +35,7 @@
       enable = lib.mkForce true;
       extraPortals = with pkgs; [
         xdg-desktop-portal-cosmic
+        xdg-desktop-portal-gnome
         xdg-desktop-portal-gtk
       ];
       config = lib.mkForce {
@@ -45,19 +46,12 @@
         };
       };
     };
-    xdg.terminal-exec = {
-      enable = true;
-      settings = {
-        default = [ "ghostty.desktop" ];
-        cosmic = [ "ghostty.desktop" ];
-      };
-    };
     environment.systemPackages = with pkgs; [
       loupe
       adw-gtk3
       glib.bin
     ];
-    home-manager.users.lophophora = {
+    home-manager.users.lophophora = { pkgs, lib, ... }: {
       gtk.theme = {
         name = "adw-gtk3-dark";
         package = pkgs.adw-gtk3;
@@ -66,6 +60,9 @@
       home.sessionVariables = {
         GSETTINGS_SCHEMA_DIR = "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}/glib-2.0/schemas";
       };
+      home.activation.setGhosttyAsDefaultTerminal = lib.hm.dag.entryAfter ["writeBoundary"] ''
+        ${pkgs.xdg-utils}/bin/xdg-mime default com.mitchellh.ghostty.desktop x-scheme-handler/terminal
+      '';
       programs.firefox.package = lib.mkForce pkgs.firefox-no-gtkwrap;
     };
     boot.loader.grub.configurationName = "COSMIC";
