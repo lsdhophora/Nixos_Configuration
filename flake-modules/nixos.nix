@@ -13,6 +13,9 @@
         (import ../overlays/cosmic-launcher.nix)
         (import ../overlays/cosmic-osd.nix)
         (import ../overlays/pop-launcher.nix)
+        (import ../overlays/cosmic-applets-slider.nix)
+        (import ../overlays/cosmic-applets-remove-performance.nix)
+        (import ../overlays/cosmic-settings-remove-performance.nix)
       ];
     };
     specialArgs = { inherit inputs; };

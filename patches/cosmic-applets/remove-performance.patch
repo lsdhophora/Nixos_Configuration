@@ -1,0 +1,32 @@
+diff --git a/cosmic-applet-battery/src/app.rs b/cosmic-applet-battery/src/app.rs
+--- a/cosmic-applet-battery/src/app.rs
++++ b/cosmic-applet-battery/src/app.rs
+@@ -703,27 +703,7 @@
+             )
+             .on_press(Message::SelectProfile(Power::Balanced))
+             .into(),
+-            menu_button(
+-                row![
+-                    column![
+-                        text::body(fl!("performance")),
+-                        text::caption(fl!("performance-desc"))
+-                    ]
+-                    .width(Length::Fill),
+-                    if matches!(self.power_profile, Power::Performance) {
+-                        container(
+-                            icon::from_name("emblem-ok-symbolic")
+-                                .size(12)
+-                                .symbolic(true),
+-                        )
+-                    } else {
+-                        container(space::horizontal().width(1.0))
+-                    }
+-                ]
+-                .align_y(Alignment::Center),
+-            )
+-            .on_press(Message::SelectProfile(Power::Performance))
+-            .into(),
++
+             padded_control(divider::horizontal::default())
+                 .padding([space_xxs, space_s])
+                 .into(),
