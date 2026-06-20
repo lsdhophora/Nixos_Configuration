@@ -1,0 +1,125 @@
+--- a/src/mupdf/mod.rs	2026-06-20 14:37:45.557657790 +0800
++++ b/src/mupdf/mod.rs	2026-06-20 15:01:31.860320865 +0800
+@@ -14,6 +14,7 @@
+ use rayon::prelude::*;
+ use std::any::TypeId;
+ use std::cell::Cell;
++use std::collections::HashMap;
+ use std::sync::Arc;
+ use std::{fmt, hash, process};
+ 
+@@ -101,6 +102,7 @@
+     ModifiersChanged(Modifiers),
+     NavScroll(scrollable::Viewport),
+     NavSelect(Entity),
++    ViewScroll(scrollable::Viewport),
+     Pages(Vec<Page>),
+     SearchActivate,
+     SearchClear,
+@@ -170,6 +172,8 @@
+     nav_model: Model,
+     nav_scroll_id: widget::Id,
+     nav_viewport: Option<scrollable::Viewport>,
++    view_scroll_id: widget::Id,
++    view_scroll_offsets: HashMap<Entity, (f32, f32)>,
+     search_active: bool,
+     search_id: widget::Id,
+     search_term: String,
+@@ -328,6 +332,8 @@
+             nav_model: Model::default(),
+             nav_scroll_id: widget::Id::unique(),
+             nav_viewport: None,
++            view_scroll_id: widget::Id::unique(),
++            view_scroll_offsets: HashMap::new(),
+             search_active: false,
+             search_id: widget::Id::unique(),
+             search_term: String::new(),
+@@ -414,7 +420,18 @@
+ 
+     fn on_nav_select(&mut self, id: widget::nav_bar::Id) -> Task<Message> {
+         self.nav_model.activate(id);
+-        self.update_page()
++        let entity = self.nav_model.active();
++        let offset = self.view_scroll_offsets.get(&entity).copied().unwrap_or((0.0, 0.0));
++        Task::batch(vec![
++            self.update_page(),
++            scrollable::scroll_to(
++                self.view_scroll_id.clone(),
++                scrollable::AbsoluteOffset {
++                    x: Some(offset.0),
++                    y: Some(offset.1),
++                },
++            ),
++        ])
+     }
+ 
+     fn update(&mut self, message: Message) -> Task<Message> {
+@@ -448,6 +465,7 @@
+             }
+             Message::FileLoad(url) => {
+                 self.nav_model.clear();
++                self.view_scroll_offsets.clear();
+                 self.flags.url_opt = Some(url);
+                 return self.set_window_title(self.window_title());
+             }
+@@ -494,7 +512,18 @@
+                     if let Some(new_pos) = pos.checked_sub(1) {
+                         self.nav_model.activate_position(new_pos);
+                     }
+-                    return self.update_page();
++                    let entity = self.nav_model.active();
++                    let offset = self.view_scroll_offsets.get(&entity).copied().unwrap_or((0.0, 0.0));
++                    return Task::batch(vec![
++                        self.update_page(),
++                        scrollable::scroll_to(
++                            self.view_scroll_id.clone(),
++                            scrollable::AbsoluteOffset {
++                                x: Some(offset.0),
++                                y: Some(offset.1),
++                            },
++                        ),
++                    ]);
+                 }
+                 Key::Named(Named::ArrowDown | Named::ArrowRight | Named::PageDown) => {
+                     let pos = self
+@@ -504,7 +533,18 @@
+                     if let Some(new_pos) = pos.checked_add(1) {
+                         self.nav_model.activate_position(new_pos);
+                     }
+-                    return self.update_page();
++                    let entity = self.nav_model.active();
++                    let offset = self.view_scroll_offsets.get(&entity).copied().unwrap_or((0.0, 0.0));
++                    return Task::batch(vec![
++                        self.update_page(),
++                        scrollable::scroll_to(
++                            self.view_scroll_id.clone(),
++                            scrollable::AbsoluteOffset {
++                                x: Some(offset.0),
++                                y: Some(offset.1),
++                            },
++                        ),
++                    ]);
+                 }
+                 Key::Named(Named::Enter) => {
+                     return self.update(Message::Fullscreen);
+@@ -559,6 +599,11 @@
+             Message::NavSelect(entity) => {
+                 return self.on_nav_select(entity);
+             }
++            Message::ViewScroll(viewport) => {
++                let entity = self.nav_model.active();
++                let offset = viewport.absolute_offset();
++                self.view_scroll_offsets.insert(entity, (offset.x, offset.y));
++            }
+             Message::Pages(pages) => {
+                 self.nav_model.clear();
+                 for page in pages {
+@@ -663,6 +708,8 @@
+                     mouse_area = mouse_area.on_scroll(Message::ZoomScroll);
+                 }
+                 scrollable(mouse_area)
++                    .id(self.view_scroll_id.clone())
++                    .on_scroll(Message::ViewScroll)
+                     .direction(scrollable::Direction::Both {
+                         vertical: Default::default(),
+                         horizontal: Default::default(),

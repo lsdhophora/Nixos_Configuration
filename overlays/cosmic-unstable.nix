@@ -23,7 +23,12 @@ final: prev: {
   cosmic-icons = unstable.cosmic-icons;
   cosmic-player = unstable.cosmic-player;
   cosmic-randr = unstable.cosmic-randr;
-  cosmic-reader = unstable.cosmic-reader;
+  cosmic-reader = unstable.cosmic-reader.overrideAttrs (old: {
+    patches = (old.patches or []) ++ [
+      ./../patches/cosmic-reader/window-title.patch
+      ./../patches/cosmic-reader/persist-scroll.patch
+    ];
+  });
   cosmic-screenshot = unstable.cosmic-screenshot;
   cosmic-store = unstable.cosmic-store;
   cosmic-term = unstable.cosmic-term;
