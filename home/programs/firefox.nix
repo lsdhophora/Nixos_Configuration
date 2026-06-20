@@ -166,6 +166,7 @@
         #spell-suggestions-separator,
         #spell-separator,
         #context-sep-bidi,
+        #context-sep-selectall,
         [data-l10n-id="places-open-in-container-tab"] {
           display: none !important;
         }
