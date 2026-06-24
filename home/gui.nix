@@ -23,12 +23,11 @@ in
     fluffychat
     gnome-epub-thumbnailer
     gnomeExtensions.app-hider
-    gnomeExtensions.dash-to-panel
     gnomeExtensions.customize-ibus
+    gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.emoji-copy
     gnomeExtensions.just-perfection
     gnomeExtensions.run-or-raise
-    gnomeExtensions.runcat
     gnome-themes-extra
     kdePackages.breeze
     kdenlive-wrapped

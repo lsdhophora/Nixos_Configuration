@@ -1,0 +1,94 @@
+diff --git a/cosmic-applet-network/src/app.rs b/cosmic-applet-network/src/app.rs
+--- a/cosmic-applet-network/src/app.rs
++++ b/cosmic-applet-network/src/app.rs
+@@ -1377,17 +1377,12 @@
+         let mut known_wifi = Vec::new();
+         for conn in &self.nm_state.nm_state.active_conns {
+             match conn {
+-                ActiveConnectionInfo::Vpn { name, ip_addresses } => {
++                ActiveConnectionInfo::Vpn { name, ip_addresses: _ } => {
+                     if self.active_device.as_ref().is_some_and(|d| {
+                         d.active_connection.as_ref().is_none_or(|a| a.0.id != *name)
+                     }) {
+                         continue;
+                     }
+-                    let mut ipv4 = Vec::with_capacity(ip_addresses.len() + 1);
+-                    ipv4.push(text::body(name).into());
+-                    for addr in ip_addresses {
+-                        ipv4.push(text::caption(format!("{}: {}", fl!("ipv4"), addr)).into());
+-                    }
+                     vpn_ethernet_col = vpn_ethernet_col.push(
+                         column::with_capacity::<Message, cosmic::Theme, _>(2)
+                             .push(
+@@ -1400,7 +1395,7 @@
+                                         )
+                                         .size(40),
+                                     ),
+-                                    column::with_children(ipv4).into(),
++                                    text::body(name).into(),
+                                     text::body(fl!("connected"))
+                                         .width(Length::Fill)
+                                         .align_x(Alignment::End)
+@@ -1420,18 +1415,13 @@
+                     name,
+                     hw_address: _,
+                     speed,
+-                    ip_addresses,
++                    ip_addresses: _,
+                 } => {
+                     if self.active_device.as_ref().is_some_and(|d| {
+                         d.active_connection.as_ref().is_none_or(|a| a.0.id != *name)
+                     }) {
+                         continue;
+                     }
+-                    let mut ipv4 = Vec::with_capacity(ip_addresses.len() + 1);
+-                    ipv4.push(text::body(name).into());
+-                    for addr in ip_addresses {
+-                        ipv4.push(text(format!("{}: {}", fl!("ipv4"), addr)).size(12).into());
+-                    }
+ 
+                     let mut right_column = vec![text::body(fl!("connected")).into()];
+ 
+@@ -1469,7 +1459,7 @@
+                                         )
+                                         .size(40),
+                                     ),
+-                                    column::with_children(ipv4).into(),
++                                    text::body(name).into(),
+                                     column::with_children(right_column)
+                                         .width(Length::Fill)
+                                         .align_x(Alignment::End)
+@@ -1487,7 +1477,7 @@
+                 }
+                 ActiveConnectionInfo::WiFi {
+                     name,
+-                    ip_addresses,
++                    ip_addresses: _,
+                     state,
+                     strength,
+                     hw_address,
+@@ -1497,21 +1487,14 @@
+                     }) {
+                         continue;
+                     }
+-                    let mut ipv4 = Vec::with_capacity(ip_addresses.len());
+-                    for addr in ip_addresses {
+-                        ipv4.push(text(format!("{}: {}", fl!("ipv4"), addr)).size(12).into());
+-                    }
+                     let mut btn_content = vec![
+                         icon::from_name(wifi_icon(*strength))
+                             .size(24)
+                             .symbolic(true)
+                             .into(),
+-                        column::with_children([
+-                            text::body(name).into(),
+-                            column::with_children(ipv4).into(),
+-                        ])
+-                        .width(Length::Fill)
+-                        .into(),
++                        text::body(name)
++                            .width(Length::Fill)
++                            .into(),
+                     ];
+                     match state {
+                         ActiveConnectionState::Activating | ActiveConnectionState::Deactivating => {

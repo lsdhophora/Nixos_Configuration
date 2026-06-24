@@ -65,12 +65,6 @@
       mkdir -p $out/share/icons
       ln -s ${../../assets/icons/Adwaita-purple} $out/share/icons/Adwaita-purple
     '')
-    (pkgs.runCommand "Cosmic-wallpapers" { } ''
-      mkdir -p $out/share/backgrounds/gnome
-      mkdir -p $out/share/gnome-background-properties
-      cp -r ${../../assets/Cosmic-Wallpapers}/*.jpg $out/share/backgrounds/gnome/
-      cp ${../../assets/Cosmic-Wallpapers}/*.xml $out/share/gnome-background-properties/
-    '')
   ];
 
   programs.dconf.profiles.gdm.databases = [

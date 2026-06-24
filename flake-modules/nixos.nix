@@ -15,6 +15,7 @@
         (import ../overlays/pop-launcher.nix)
         (import ../overlays/cosmic-applets-slider.nix)
         (import ../overlays/cosmic-applets-remove-performance.nix)
+        (import ../overlays/cosmic-applets-remove-ipv4-messages.nix)
         (import ../overlays/cosmic-settings-remove-performance.nix)
       ];
     };

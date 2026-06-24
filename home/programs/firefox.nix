@@ -15,7 +15,6 @@
         "browser.tabs.opentabfor.middleclick" = false;
         "browser.tabs.hoverPreview.enabled" = false;
         "middlemouse.openNewWindow" = false;
-        "layout.css.devPixelsPerPx" = "1.40";
         "middlemouse.contentLoadURL" = false;
         "middlemouse.paste" = false;
         "layout.spellcheckDefault" = 0;
@@ -41,13 +40,6 @@
 
         /* Bilibili - search bar border */
         @-moz-document domain("bilibili.com") {
-          /* 所有圆形头像加边框 */
-          img[style*="border-radius: 50%"],
-          img.bili-avatar,
-          .bili-avatar img {
-            border: 2px solid #00a1d6 !important;
-          }
-
           .bili-header .mini-header .center-search-container .center-search__bar #nav-searchform {
             border: 2px solid var(--line_regular) !important;
             background: var(--bg1) !important;
@@ -129,24 +121,25 @@
           display: none;
         }
 
-        /* ── window:not(#main-window) + dialog (弹窗，无圆角) ── */
+        /* ── Sub-windows + dialogs (box-shadow spread 代替边框 + 盖间隙) ── */
         window:not(#main-window)::after,
         dialog::after {
           content: "";
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
-          border: 2.5px solid #353539;
+          box-shadow: 0 0 0 2.5px rgba(53, 53, 57, 0.6);
           pointer-events: none;
           z-index: 999999;
         }
         window:not(#main-window):-moz-window-inactive::after,
         dialog:-moz-window-inactive::after {
-          border-color: #1a1a1d;
+          box-shadow: 0 0 0 2.5px rgba(26, 26, 29, 0.6);
         }
         window:not(#main-window)[sizemode="maximized"]::after,
         dialog[sizemode="maximized"]::after {
           display: none;
         }
+
         /* Fix aliased rounded corners for context menus */
         menupopup {
           --panel-border-radius: 8px !important;
@@ -173,6 +166,7 @@
 
         /* Override blue group color → purple for drag-to-group highlight */
         :root {
+          font-size: 12pt !important;
           --tab-group-color-blue: #9141ac !important;
           --tab-group-color-blue-invert: #e8c7f0 !important;
           --tab-group-color-blue-pale: #f3e0f7 !important;
@@ -240,6 +234,7 @@
         #context-sendaudio,
         #context-sep-sharing,
         #context-sep-setbackground,
+        #context-sep-screenshots
         #context-setDesktopBackground,
         #context-inspect {
           display: none !important;

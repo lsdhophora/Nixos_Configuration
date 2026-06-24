@@ -8,8 +8,6 @@
         "run-or-raise@edvard.cz"
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
-        "dash-to-panel@jderose9.github.com"
-        "runcat@kolesnikov.se"
         "emoji-copy@felipeftn"
       ];
       favorite-apps = [
@@ -42,12 +40,13 @@
         "config-printer.desktop"
         "org.gtk.PrintEditor4.desktop"
         "kvantummanager.desktop"
+        "system-config-printer.desktop"
       ];
     };
 
     "org/gnome/desktop/background" = {
-      picture-uri = "file:///run/current-system/sw/share/backgrounds/gnome/orion_nebula_nasa_heic0601a.jpg";
-      picture-uri-dark = "file:///run/current-system/sw/share/backgrounds/gnome/orion_nebula_nasa_heic0601a.jpg";
+      picture-uri = "file:///run/current-system/sw/share/backgrounds/gnome/tubes-l.jxl";
+      picture-uri-dark = "file:///run/current-system/sw/share/backgrounds/gnome/tubes-d.jxl";
     };
 
     "org/gnome/desktop/interface" = {
@@ -104,16 +103,6 @@
       folder-children = [
         "System"
         "Utilities"
-        "Games"
-      ];
-    };
-
-    "org/gnome/desktop/app-folders/folders/Games" = {
-      name = "Games";
-      translate = true;
-      apps = [
-        "org.cataclysmdda.CataclysmDDA.desktop"
-        "shattered-pixel-dungeon.desktop"
       ];
     };
 
@@ -213,4 +202,5 @@
       ];
     };
   };
+
 }

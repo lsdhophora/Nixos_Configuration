@@ -17,7 +17,6 @@
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix
-    ./profiles/gaming.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];

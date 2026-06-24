@@ -6,7 +6,12 @@ final: prev: {
   cosmic-applets = unstable.cosmic-applets;
   cosmic-applibrary = unstable.cosmic-applibrary;
   cosmic-bg = unstable.cosmic-bg;
-  cosmic-comp = unstable.cosmic-comp;
+  cosmic-comp = unstable.cosmic-comp.overrideAttrs (old: {
+    patches = (old.patches or []) ++ [
+      ../patches/cosmic-comp/respect-client-cursor-hide.patch
+      ../patches/cosmic-comp/dont-clobber-client-cursor.patch
+    ];
+  });
   cosmic-files = unstable.cosmic-files;
   cosmic-greeter = unstable.cosmic-greeter;
   cosmic-idle = unstable.cosmic-idle;
