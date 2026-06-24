@@ -72,7 +72,7 @@
       settings."org/gnome/desktop/interface" = {
         cursor-theme = "Adwaita";
         cursor-size = lib.gvariant.mkInt32 24;
-        text-scaling-factor = 1.20;
+        text-scaling-factor = 1.0;
         accent-color = "purple";
         color-scheme = "prefer-dark";
         icon-theme = "Adwaita-purple";
