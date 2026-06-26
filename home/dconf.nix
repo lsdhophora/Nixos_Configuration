@@ -5,6 +5,7 @@
     "org/gnome/shell" = {
       enabled-extensions = [
         "just-perfection-desktop@just-perfection"
+        "hide-cursor@elcste.com"
         "run-or-raise@edvard.cz"
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"

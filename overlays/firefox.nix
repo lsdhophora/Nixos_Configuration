@@ -85,7 +85,9 @@ in
             ${patch-omni-ja}
           '';
     in
-    final.wrapFirefox ff-patched { };
+    final.wrapFirefox ff-patched {
+      nativeMessagingHosts = [ final.tridactyl-native ];
+    };
 
   firefox-no-gtkwrap =
     let

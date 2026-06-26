@@ -26,6 +26,7 @@ in
     gnomeExtensions.customize-ibus
     gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.emoji-copy
+    gnomeExtensions.hide-cursor
     gnomeExtensions.just-perfection
     gnomeExtensions.run-or-raise
     gnome-themes-extra

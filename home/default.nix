@@ -1,6 +1,4 @@
-{
-  ...
-}:
+{ pkgs, ... }:
 
 {
   home.username = "lophophora";
@@ -20,4 +18,9 @@
     ./profiles/development.nix
     ./shell/zsh.nix
   ];
+
+  home.packages = with pkgs; [
+    tridactyl-native
+  ];
+
 }
