@@ -10,6 +10,8 @@
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
         "emoji-copy@felipeftn"
+        "color-picker@tuberry"
+        "paperwm@paperwm.github.com"
       ];
       favorite-apps = [
         "firefox.desktop"

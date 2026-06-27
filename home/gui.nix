@@ -24,10 +24,11 @@ in
     gnome-epub-thumbnailer
     gnomeExtensions.app-hider
     gnomeExtensions.customize-ibus
-    gnomeExtensions.rounded-window-corners-reborn
     gnomeExtensions.emoji-copy
     gnomeExtensions.hide-cursor
     gnomeExtensions.just-perfection
+    gnomeExtensions.color-picker
+    gnomeExtensions.paperwm
     gnomeExtensions.run-or-raise
     gnome-themes-extra
     kdePackages.breeze
