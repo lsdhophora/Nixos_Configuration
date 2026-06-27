@@ -1,0 +1,10 @@
+--- a/tiling.js
++++ b/tiling.js
+@@ -4659,6 +4659,7 @@
+         }
+ 
+         if (needLayout) {
++            space.selectedWindow = metaWindow;
+             space.layout(false);
+         }
+ 
