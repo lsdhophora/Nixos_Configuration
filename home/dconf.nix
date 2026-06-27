@@ -12,6 +12,7 @@
         "emoji-copy@felipeftn"
         "color-picker@tuberry"
         "paperwm@paperwm.github.com"
+        "touchpad@gpawru"
       ];
       favorite-apps = [
         "firefox.desktop"

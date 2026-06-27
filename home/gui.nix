@@ -30,6 +30,7 @@ in
     gnomeExtensions.color-picker
     gnomeExtensions.paperwm
     gnomeExtensions.run-or-raise
+    gnomeExtensions.touchpad-switcher
     gnome-themes-extra
     kdePackages.breeze
     kdenlive-wrapped
