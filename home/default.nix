@@ -19,8 +19,4 @@
     ./shell/zsh.nix
   ];
 
-  home.packages = with pkgs; [
-    tridactyl-native
-  ];
-
 }

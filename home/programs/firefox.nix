@@ -7,6 +7,7 @@
     configPath = ".mozilla/firefox";
     profiles.default = {
       settings = {
+        "xpinstall.signatures.required" = false;
         "browser.translations.enable" = false;
         "browser.translations.autoTranslate" = false;
         "browser.translations.panel.shown" = false;
@@ -91,6 +92,11 @@
           * {
             -webkit-text-stroke: 0.4px currentColor !important;
           }
+        }
+
+        span.cleanslate.TridactylStatusIndicator {
+          bottom: 8px !important;
+          right: 8px !important;
         }
       '';
       userChrome = ''
@@ -260,5 +266,27 @@
         }
       '';
     };
+    policies = {
+      ExtensionSettings = {
+        "uBlock0@raymondhill.net" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-ublock-origin-latest.xpi";
+          installation_mode = "force_installed";
+        };
+        "addon@darkreader.org" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/darkreader/addon-darkreader-latest.xpi";
+          installation_mode = "force_installed";
+        };
+        "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/stylus/addon-stylus-latest.xpi";
+          installation_mode = "force_installed";
+        };
+        "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = {
+          install_url = "https://addons.mozilla.org/firefox/downloads/latest/violentmonkey/addon-violentmonkey-latest.xpi";
+          installation_mode = "force_installed";
+        };
+      };
+    };
   };
+
 }
+
