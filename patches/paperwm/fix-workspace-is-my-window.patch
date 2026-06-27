@@ -1,0 +1,13 @@
+--- a/patches.js
++++ b/patches.js
+@@ -307,8 +307,8 @@
+         }
+ 
+         const space = Tiling.spaces.spaceOf(this.metaWorkspace);
+-        const onSpace = space.indexOf(window) >= 0;
+-        const onMonitor = this._monitor === space.monitor;
++        const onSpace = space ? space.indexOf(window) >= 0 : false;
++        const onMonitor = space ? (this._monitor?.index === space.monitor?.index) : false;
+         return onSpace && onMonitor;
+     });
+     registerOverridePrototype(WorkspaceThumbnail.WorkspaceThumbnail, '_isMyWindow', function(actor) {
