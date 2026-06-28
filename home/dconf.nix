@@ -42,6 +42,7 @@
     "org/gnome/shell/extensions/app-hider" = {
       hidden-apps = [
         "config-printer.desktop"
+        "cups.desktop"
         "org.gtk.PrintEditor4.desktop"
         "kvantummanager.desktop"
         "system-config-printer.desktop"
