@@ -82,7 +82,16 @@ in {
 
         (deflayermap (mouse)
           caps @go-base
-          lsft (layer-while-held mouse-fast)
+          lsft (tap-hold 200 200 lsft (layer-while-held mouse-fast))
+          tab  _
+          lctl _
+          rctl _
+          lalt _
+          ralt _
+          up    _
+          down  _
+          left  _
+          rght  _
           h    (movemouse-left 10 1)
           j    (movemouse-down 10 1)
           k    (movemouse-up 10 1)
@@ -93,6 +102,16 @@ in {
         )
 
         (deflayermap (mouse-fast)
+          lsft _
+          tab  _
+          lctl _
+          rctl _
+          lalt _
+          ralt _
+          up    _
+          down  _
+          left  _
+          rght  _
           h    (movemouse-left 10 4)
           j    (movemouse-down 10 4)
           k    (movemouse-up 10 4)
