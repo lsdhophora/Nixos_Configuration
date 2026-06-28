@@ -96,8 +96,10 @@ in {
           j    (movemouse-down 10 1)
           k    (movemouse-up 10 1)
           l    (movemouse-right 10 1)
-          n    mltp
-          m    mrtp
+          n    (tap-hold 200 200 mltp mlft)
+          m    (tap-hold 200 200 mrtp mrgt)
+          v    (mwheel-down 50 120)
+          b    (mwheel-up 50 120)
           __   XX
         )
 
@@ -116,6 +118,8 @@ in {
           j    (movemouse-down 10 4)
           k    (movemouse-up 10 4)
           l    (movemouse-right 10 4)
+          v    (mwheel-down 50 480)
+          b    (mwheel-up 50 480)
         )
       '';
     };
