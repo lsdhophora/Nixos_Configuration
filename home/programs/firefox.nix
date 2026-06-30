@@ -98,6 +98,10 @@
           bottom: 8px !important;
           right: 8px !important;
         }
+
+        input#tridactyl-input {
+          margin-bottom: 3px;
+        }
       '';
       userChrome = ''
         /* ── #main-window (主窗口，带圆角) ── */
@@ -127,7 +131,7 @@
           display: none;
         }
 
-        /* ── Sub-windows + dialogs (box-shadow spread 代替边框 + 盖间隙) ── */
+        /* ── Sub-windows + dialogs */
         window:not(#main-window)::after,
         dialog::after {
           content: "";
