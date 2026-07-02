@@ -23,6 +23,7 @@ in
     fluffychat
     gnome-epub-thumbnailer
     gnomeExtensions.app-hider
+    gnomeExtensions.caffeine
     gnomeExtensions.customize-ibus
     gnomeExtensions.emoji-copy
     gnomeExtensions.hide-cursor
