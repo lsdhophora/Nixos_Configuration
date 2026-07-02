@@ -11,6 +11,7 @@
     ./gui.nix
     ./cli.nix
     ./dconf.nix
+    ./rime.nix
     ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
