@@ -4,6 +4,7 @@
     package = pkgs.emacs-pgtk;
     extraPackages =
       epkgs: with epkgs; [
+        meow
         direnv
         auctex
         nix-mode
