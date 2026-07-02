@@ -21,7 +21,7 @@
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (setq use-file-dialog nil)
-(setq initial-major-mode 'text-mode)
+(setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
 (load-theme 'modus-vivendi)
 
