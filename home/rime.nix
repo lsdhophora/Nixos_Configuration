@@ -4,8 +4,13 @@ let
   rimeIceData = "${pkgs.rime-ice}/share/rime-data";
   rimeDir = "${config.xdg.configHome}/ibus/rime";
 
+  patchedSchema = pkgs.runCommand "rime_ice-schema-patched" {} ''
+    cp ${pkgs.rime-ice}/share/rime-data/rime_ice.schema.yaml $out
+    substituteInPlace $out --replace-fail "name: 雾凇拼音" "name: 拼音"
+  '';
+
   topLevelFiles = [
-    "rime_ice.schema.yaml" "rime_ice.dict.yaml" "rime_ice_suggestion.yaml"
+    "rime_ice.dict.yaml" "rime_ice_suggestion.yaml"
     "melt_eng.schema.yaml" "melt_eng.dict.yaml"
     "radical_pinyin.schema.yaml" "radical_pinyin.dict.yaml"
     "t9.schema.yaml"
@@ -52,6 +57,10 @@ in {
       };
       "${rimeDir}/rime_ice.custom.yaml" = {
         source = ./../assets/rime/rime_ice.custom.yaml;
+        force = true;
+      };
+      "${rimeDir}/rime_ice.schema.yaml" = {
+        source = patchedSchema;
         force = true;
       };
     };
