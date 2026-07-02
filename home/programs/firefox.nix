@@ -294,7 +294,8 @@
 
   xdg.configFile."tridactyl/tridactylrc" = {
     text = ''
-      seturl pixiv.net hintPageSelector "div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon, a, button, input, textarea, select, [tabindex]:not([tabindex='-1'])"
+      bindurl pixiv\.net f hint -C div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon
+      bindurl pixiv\.net F hint -bC div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon
     '';
   };
 }
