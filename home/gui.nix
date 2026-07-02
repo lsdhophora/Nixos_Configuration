@@ -25,12 +25,10 @@ in
     gnomeExtensions.app-hider
     gnomeExtensions.caffeine
     gnomeExtensions.customize-ibus
-    gnomeExtensions.emoji-copy
     gnomeExtensions.hide-cursor
     gnomeExtensions.just-perfection
     gnomeExtensions.color-picker
     gnomeExtensions.paperwm
-    gnomeExtensions.run-or-raise
     gnomeExtensions.touchpad-switcher
     gnome-themes-extra
     kdePackages.breeze

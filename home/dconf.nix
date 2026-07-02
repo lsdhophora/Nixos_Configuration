@@ -6,11 +6,9 @@
       enabled-extensions = [
         "just-perfection-desktop@just-perfection"
         "hide-cursor@elcste.com"
-        "run-or-raise@edvard.cz"
         "caffeine@patapon.info"
         "customize-ibus@hollowman.ml"
         "app-hider@lynith.dev"
-        "emoji-copy@felipeftn"
         "color-picker@tuberry"
         "paperwm@paperwm.github.com"
         "touchpad@gpawru"
