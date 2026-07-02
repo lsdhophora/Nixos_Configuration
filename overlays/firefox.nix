@@ -33,7 +33,16 @@ let
     prev.zip
   ];
 in
+let
+  tridactyl-native = prev.tridactyl-native.overrideAttrs (old: {
+    installPhase = old.installPhase + ''
+      sed -i '/"allowed_extensions"/ s/\[/["tridactyl-fixed@lophophora",/' \
+        "$out/lib/mozilla/native-messaging-hosts/tridactyl.json"
+    '';
+  });
+in
 {
+  inherit tridactyl-native;
   firefox-patched =
     let
       ff-patched =
