@@ -178,7 +178,9 @@ Searches all chapters and shows clickable results."
                  (goto-char (match-beginning 0)))
                 ((search-forward matched nil t)
                  (goto-char (match-beginning 0)))
-                (t (forward-line (1- line)))))))))
+                 (t (forward-line (1- line)))))))))
+
+)
 
 (define-derived-mode nov-occur-mode special-mode "Nov-Occur"
   "Major mode for nov-occur results."

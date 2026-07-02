@@ -104,7 +104,7 @@
   (setq dashboard-set-navigator nil)
   (setq dashboard-items '())
   :custom-face
-  ((dashboard-items-face ((t (:height 1.0))))))
+  (dashboard-items-face ((t :height 1.0))))
 
 (defun my/disable-text-scale-commands-in-dashboard ()
   "Disable all text scaling commands in dashboard buffer only, completely silent."
