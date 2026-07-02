@@ -170,6 +170,12 @@
 (use-package meow
   :ensure t
   :config
+  (defun meow-delete-region ()
+    "Delete region without saving to kill-ring."
+    (interactive)
+    (if (region-active-p)
+        (delete-region (region-beginning) (region-end))
+      (call-interactively #'meow-delete)))
   (defun meow-setup ()
     (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
     (meow-motion-define-key
@@ -211,7 +217,7 @@
      '("b" . meow-back-word)
      '("B" . meow-back-symbol)
      '("c" . meow-change)
-     '("d" . meow-delete)
+     '("d" . meow-delete-region)
      '("D" . meow-backward-delete)
      '("e" . meow-next-word)
      '("E" . meow-next-symbol)
