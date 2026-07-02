@@ -21,6 +21,8 @@
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
 (setq use-file-dialog nil)
+(setq initial-major-mode 'text-mode)
+(setq initial-scratch-message nil)
 (load-theme 'modus-vivendi)
 
 (defun my/prevent-empty-tooltip (str &rest _)
@@ -170,6 +172,7 @@
 (use-package meow
   :ensure t
   :config
+  (setq meow-use-clipboard t)
   (defun meow-delete-region ()
     "Delete region without saving to kill-ring."
     (interactive)
