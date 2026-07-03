@@ -263,4 +263,6 @@
   (meow-setup)
   (meow-global-mode 1)
   (add-hook 'magit-mode-hook #'meow-motion-mode)
-  (add-hook 'emms-mode-hook #'meow-motion-mode))
+  (add-hook 'emms-playlist-mode-hook #'meow-motion-mode)
+  (add-hook 'emms-browser-mode-hook #'meow-motion-mode)
+  (add-hook 'emms-stream-mode-hook #'meow-motion-mode))
