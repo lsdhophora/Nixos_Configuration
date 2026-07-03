@@ -262,4 +262,5 @@
      '("<escape>" . ignore)))
   (meow-setup)
   (meow-global-mode 1)
-  (add-hook 'magit-mode-hook #'meow-motion-mode))
+  (add-hook 'magit-mode-hook #'meow-motion-mode)
+  (add-hook 'emms-mode-hook #'meow-motion-mode))
