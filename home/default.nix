@@ -16,6 +16,7 @@
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix
+    ./programs/tmux.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];

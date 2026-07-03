@@ -37,6 +37,14 @@
         PROMPT='%F{green}%B$%b%f '
       fi
       RPROMPT=""
+
+      # auto-start tmux on kmscon or kernel TTY
+      if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
+        if [[ $TERM_SESSION_TYPE == kms ]] || [[ $(tty) == /dev/tty* ]]; then
+          tmux new-session -A -s main
+          echo "tmux exited with code $?"
+        fi
+      fi
     '';
 
     shellAliases = {
