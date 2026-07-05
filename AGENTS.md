@@ -1,6 +1,6 @@
 # NixOS Laptop Configuration
 
-Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Agenix, Chaotic Nyx, custom overlays for patched GNOME.
+Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chaotic Nyx, custom overlays.
 
 ## Project Structure
 
@@ -13,157 +13,76 @@ Flake-based config for laptop "flowerpot". Uses flake-parts, Home Manager, Ageni
 │   └── nixos.nix             # nixosConfigurations.flowerpot
 ├── hosts/
 │   └── flowerpot/            # Machine entry point
-│       ├── default.nix       # Host config (imports profiles + logind)
-│       └── hardware-configuration.nix   # Auto-generated
+│       ├── default.nix       # Host config (imports profiles, Sway, TLP)
+│       └── hardware-configuration.nix
 ├── modules/                  # NixOS modules (by type)
-│   ├── profiles/             # Feature bundles (by purpose)
-│   │   ├── core.nix          # Core system: boot, networking, user, nix, i18n, security, zram
-│   │   ├── desktop.nix       # GNOME + PipeWire
+│   ├── profiles/             # Feature bundles
+│   │   ├── core.nix          # Boot, network, user, nix, i18n, security, zram
+│   │   ├── desktop.nix       # PipeWire, Kanata
 │   │   ├── printing.nix      # CUPS
 │   │   ├── proxying.nix      # DAE
 │   │   └── kmscon.nix        # Kmscon VT
-│   ├── boot.nix              # Plymouth, CachyOS kernel, scx, 32GB swapfile
-│   ├── networking.nix        # Hostname, timezone, NetworkManager, firewall
-│   ├── user.nix              # User creation, system packages, Zsh
-│   ├── nix-config.nix        # Nix settings, flakes, Chaotic cache
-│   ├── i18n.nix              # Fonts (CJK, Plex, Maple Mono), IBus Rime
-│   ├── desktop/gnome.nix     # GNOME (patched overlays, GDM, purple theme)
-│   ├── services/
-│   │   ├── cups.nix          # CUPS printing
-│   │   ├── dae.nix           # DAE transparent proxy (age secret)
-│   │   ├── kmscon.nix        # Kmscon virtual terminal
-│   │   ├── pipewire.nix      # PipeWire (no suspend)
-│   │   └── zram.nix          # Zram swap
-│   └── security/
-│       ├── age.nix           # Agenix secrets
-│       └── sudo.nix          # sudo pwfeedback
+│   ├── boot.nix              # Plymouth, CachyOS kernel, scx, swapfile
+│   ├── desktop/sway.nix      # Sway WM, pantheon-agent-polkit, fcitx5
+│   └── services/
+│       ├── tlp.nix
+│       ├── kanata.nix
+│       └── dae.nix
 ├── home/                     # Home Manager configs
-│   ├── default.nix           # Entry point
-│   ├── profiles/             # Feature bundles
-│   │   ├── development.nix   # git, ssh, direnv, opencode, texlive
-│   │   └── gaming.nix        # Cataclysm DDA, Shattered Pixel Dungeon
-│   ├── cli.nix               # CLI tools (tmux, wl-clipboard, gh)
-│   ├── gui.nix               # GNOME extensions, media, IM, Kdenlive
-│   ├── avatar.nix
-│   ├── dconf.nix             # GNOME dconf (extensions, corners, folders)
-│   ├── housekeeping.nix      # Hidden desktop entries
+│   ├── default.nix
+│   ├── profiles/
+│   │   ├── development.nix
+│   │   └── gaming.nix
 │   ├── programs/
-│   │   ├── git.nix           # lsdhophora/lsdphophora@proton.me
-│   │   ├── ssh.nix           # GitHub via ssh.github.com:443
-│   │   ├── direnv.nix        # nix-direnv
-│   │   ├── firefox.nix       # Patched, userChrome/userContent
-│   │   ├── ghostty.nix       # Adwaita Dark, IBM Plex Mono
-│   │   ├── kvantum.nix       # KvLibadwaitaDark
-│   │   ├── opencode.nix      # MCP NixOS integration
-│   │   ├── texlive.nix       # CTEX, LuaLaTeX, texlab
-│   │   └── emacs.nix         # PGTK, nix-mode, AUCTeX, magit, corfu, eglot, nov
-│   └── shell/
-│       └── zsh.nix           # Zsh (aliases, autosuggestions, nix-shell)
+│   │   ├── git.nix
+│   │   ├── emacs.nix
+│   │   ├── firefox.nix
+│   │   └── ghostty.nix
+│   └── shell/zsh.nix
 ├── assets/                   # Static assets
-│   ├── avatar/face.png
-│   ├── icons/Adwaita-purple/ # Purple icon theme (scalable SVG)
-│   ├── Kuromi-Wallpapers/    # Wallpapers + GNOME XML
-│   └── themes/kdenlive.qss
-├── overlays/                 # Nixpkgs overlays
-│   ├── default.nix           # Imports emoji-copy, firefox
-│   ├── emoji-copy.nix        # Patch word-boundary search in sql.js
-│   ├── firefox.nix           # omni.ja modification
-│   ├── evolution-data-server.nix  # No contacts/calendar backends
-│   ├── gnome-calendar.nix    # Remove weather
-│   ├── gnome-control-center.nix   # Filter non-25% scales
-│   ├── gnome-shell.nix       # a11y, zero-length events, hide details
-│   ├── gnome-sound-recorder.nix
-│   ├── mutter.nix            # Wayland cursor override
-├── patches/                  # Referenced by overlays (grouped by package)
-│   ├── dash-to-panel/
-│   │   ├── notrans.patch
-│   │   ├── fix-workspace-indicator.patch
-│   │   ├── label-bg.patch
-│   │   └── max-indicators.patch
-│   ├── emoji-copy/
-│   │   ├── word-boundary-search.patch
-│   │   ├── remove-recents.patch
-│   │   ├── select-all-by-group.patch
-│   │   ├── gender-filter.patch
-│   │   ├── exact-skin-tone.patch
-│   │   ├── options-bar.patch
-│   │   └── category-filter.patch
-│   ├── gnome-shell/
-│   │   ├── fix-a11y-always-show-setting.patch
-│   │   ├── fix-zero-length-event-time.patch
-│   │   ├── hide-app-details.patch
-│   │   └── ext-app-website-icon-home.patch
-│   ├── gnome-control-center/
-│   │   ├── filter-non-25-percent-scales.patch
-│   │   └── search-panel-dedup.patch
-│   ├── gnome-calendar/
-│   │   └── remove-weather.patch
-│   ├── mutter/
-│   │   └── fix-wayland-overridden-cursor.patch
-│   └── evolution-data-server/
-│       └── no-contacts-calendar-backend.patch
+│   ├── sway/                 # Sway config, i3blocks, scripts
+│   └── icons/Adwaita-purple/
+├── overlays/                 # Nixpkgs overlays (final: prev: { ... })
+│   ├── default.nix           # Aggregator
+│   ├── portal-gtk.nix        # xdg-desktop-portal-gtk: UseIn=sway
+│   ├── granite.nix           # granite7: GNOME named accent-color support
+│   └── firefox.nix           # omni.ja patches
+├── patches/                  # Patch files (grouped by package)
+│   ├── granite/
+│   │   └── gnome-accent-color.patch
+│   └── emoji-copy/
+│       ├── word-boundary-search.patch
+│       └── ...
 ├── secrets/                  # Age-encrypted
-│   ├── secrets.nix           # Public keys for rekey
+│   ├── secrets.nix
 │   ├── config.dae.age
-│   ├── hashed-password.age
-│   └── access-tokens-github.age
-└── unused/                   # Empty, kept for reference
+│   └── hashed-password.age
+└── unused/
 ```
 
-## Common Commands
+## Commands
 
 ```bash
-# Verify config (git add new files first)
-nixos-rebuild dry-build --flake .#flowerpot
-
-# Commit (keep small and focused)
-git add -A && git commit
-
-# Build and switch (agent runs pkexec; user types password when prompted)
-pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot
-
-# Update flake inputs
-cd /home/lophophora/.config/nixos && nix flake update
+nixos-rebuild dry-build --flake .#flowerpot       # verify
+pkexec nixos-rebuild switch --flake .#flowerpot   # rebuild & switch
+nix flake update                                   # update inputs
+git add -A && git commit -m "type(scope): subject" # commit
+git push                                           # push
 ```
 
 ## Workflow
 
-⚠ All three asks (rebuild/commit/push) **MUST** use the `question` tool — never plain text.
+All rebuild/commit/push asks use the `question` tool.
 
-1. Make changes; verify with `nixos-rebuild dry-build --flake .#flowerpot`
-2. If dry-build passes, use `#Questions` with options `["Yes", "No"]` to ask user whether to rebuild
-3. On confirmation (label matches "Yes"): run `pkexec nixos-rebuild switch --flake .#flowerpot` — pkexec prompts for password, user enters it interactively
-4. After successful rebuild, use `#Questions` with options `["Yes", "No"]` to ask user whether to commit
-5. On confirmation (label matches "Yes"): stage and commit
-6. Use `#Questions` with options `["Yes", "No"]` to ask user whether to push
-7. On confirmation (label matches "Yes"): push
+1. Edit → `dry-build` pass
+2. `#Questions` → rebuild
+3. `#Questions` → commit (if success)
+4. `#Questions` → push (if success)
 
-> The commit/push `#Questions` apply to **all** changes, including modifications to AGENTS.md itself.
+## Notes
 
-## Commit Messages
-
-`<type>(<scope>): <subject>` — imperative mood, max 50 chars, no period.
-Types: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
-Body (optional): wrap at 72, explain why not how.
-
-## Notes & Lessons
-
-- Hardware config is auto-generated; don't edit directly
-- `nixpkgs/` is a local clone for AI reference (excluded from git)
-- Dry-build instead of `nixos-rebuild build` (no `result` symlink)
-- Package names may differ from expected (e.g. `transmission_4-gtk`)
-- Home Manager git uses `settings` not `config`
-- Use `force = true` on `home.file` to overwrite existing desktop entries
-- Agent runs root commands with `pkexec` (password prompt appears, user types it)
-- User runs root commands manually in terminal with `sudo` (e.g. on another machine or when agent isn't involved)
-- Overlay patches in `overlays/`, patch files in `patches/` with matching names
-- 32GB swapfile is in `boot.nix`, not `hardware-configuration.nix`
-- Only declare attributes actually used to avoid "unused argument" warnings
-- Profiles in `modules/profiles/` and `home/profiles/` group related imports by purpose; the underlying module files stay in their type-based directories
-- Always use the `question` tool (not plain text) when asking rebuild/commit/push
-
-## Code Style
-
-- Follow NixOS module conventions; use `lib.mkEnableOption`/`lib.mkOption`
-- Overlays: `final: prev: { pkg = prev.pkg.overrideAttrs (...); }`
-- Home Manager: `lib.hm.dag.entryAfter` for ordered activation
+- Hardware config is auto-generated
+- Packge attr path may differ from pname (e.g. `transmission_4-gtk`)
+- Home Manager: git uses `settings` not `config`
+- Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix`
+- Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay

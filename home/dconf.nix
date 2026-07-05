@@ -17,7 +17,6 @@
         "firefox.desktop"
         "emacs.desktop"
         "com.mitchellh.ghostty.desktop"
-        "org.gnome.Nautilus.desktop"
       ];
       always-show-log-out = true;
       disable-user-extensions = false;

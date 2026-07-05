@@ -3,21 +3,7 @@
     system = "x86_64-linux";
     pkgs = import inputs.nixpkgs {
       system = "x86_64-linux";
-      overlays = (import ../overlays/default.nix) ++ [
-        (import ../overlays/cosmic-unstable.nix {
-          nixpkgs-unstable = inputs.nixpkgs-unstable;
-          system = "x86_64-linux";
-          config = { };
-        })
-        (import ../overlays/cosmic-popup-border.nix)
-        (import ../overlays/cosmic-launcher.nix)
-        (import ../overlays/cosmic-osd.nix)
-        (import ../overlays/pop-launcher.nix)
-        (import ../overlays/cosmic-applets-slider.nix)
-        (import ../overlays/cosmic-applets-remove-performance.nix)
-        (import ../overlays/cosmic-applets-remove-ipv4-messages.nix)
-        (import ../overlays/cosmic-settings-remove-performance.nix)
-      ];
+      overlays = (import ../overlays/default.nix);
     };
     specialArgs = { inherit inputs; };
     modules = [
@@ -30,7 +16,7 @@
       {
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
-        home-manager.extraSpecialArgs = {};
+        home-manager.extraSpecialArgs = { inherit inputs; };
         home-manager.users.lophophora = {
           imports = [ ../home/default.nix ];
         };

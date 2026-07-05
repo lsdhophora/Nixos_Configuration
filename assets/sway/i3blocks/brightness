@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+if command -v brightnessctl &>/dev/null; then
+    val=$(brightnessctl get)
+    max=$(brightnessctl max)
+    pct=$((val * 100 / max))
+elif [ -d /sys/class/backlight ]; then
+    dev=$(ls /sys/class/backlight | head -1)
+    [ -z "$dev" ] && exit 0
+    val=$(cat /sys/class/backlight/$dev/brightness)
+    max=$(cat /sys/class/backlight/$dev/max_brightness)
+    pct=$((val * 100 / max))
+else
+    exit 0
+fi
+echo "Bri: ${pct}%"

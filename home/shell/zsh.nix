@@ -38,6 +38,9 @@
       fi
       RPROMPT=""
 
+      # 终端标题栏显示当前目录
+      precmd() { print -Pn "\e]0;%~\a" }
+
       # auto-start tmux on kmscon or kernel TTY
       if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
         if [[ $TERM_SESSION_TYPE == kms ]] || [[ $(tty) == /dev/tty* ]]; then

@@ -10,6 +10,7 @@
 
 (add-to-list 'load-path (expand-file-name "site-lisp" user-emacs-directory))
 (autoload 'audio-trimmer "audio-trimmer" "Audio trimmer with ffplay backend." t)
+(require 'nmcli-wifi nil t)
 
 
 (setq nobreak-char-display nil)

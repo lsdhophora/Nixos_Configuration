@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+bat=/sys/class/power_supply/BAT0
+if [ ! -f "$bat/capacity" ]; then
+    exit 0
+fi
+pct=$(cat "$bat/capacity")
+status=$(cat "$bat/status")
+case "$status" in
+    Charging)     icon="+" ;;
+    Discharging)  icon="-" ;;
+    Full)         icon="=" ;;
+    *)            icon="" ;;
+esac
+echo "Bat: ${pct}%${icon}"

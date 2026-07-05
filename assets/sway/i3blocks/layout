@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+last=""
+print_layout() {
+    layout=$(swaymsg -t get_tree | jq -r '
+        [.. | select(.layout? and .layout != "none" and .layout != "output" and (. | .. | select(.focused? == true))) | .layout][-1]
+    ')
+    if [ -n "$layout" ] && [ "$layout" != "null" ]; then
+        case "$layout" in
+            tabbed)   icon="[T]" ;;
+            stacking) icon="[S]" ;;
+            splith)   icon="[H]" ;;
+            splitv)   icon="[V]" ;;
+            *)        icon="$last" ;;
+        esac
+        last="$icon"
+    fi
+    [ -z "$last" ] && return
+    echo "$last"
+}
+print_layout
+swaymsg -t SUBSCRIBE -m '["window","binding","mode"]' | while read -r; do
+    print_layout
+done

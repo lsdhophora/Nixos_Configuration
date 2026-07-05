@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+case $(fcitx5-remote -n) in
+    keyboard-us) echo "EN" ;;
+    pinyin) echo "CN" ;;
+    *) fcitx5-remote -n ;;
+esac

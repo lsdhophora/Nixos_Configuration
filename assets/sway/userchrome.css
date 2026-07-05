@@ -1,0 +1,20 @@
+:root { font-size: 12pt !important; }
+menupopup { --panel-border-radius: 8px !important; }
+#contentAreaContextMenu::part(content) { border: 1px solid #3c3c40 !important; }
+menupopup#context-sendimage, #context-sendimage { display: none !important; }
+#context-openlinkinusercontext-menu, #context-openlinkincontainertab,
+#spell-check-enabled, #spell-add-to-dictionary, #spell-suggestions-separator,
+#spell-separator, #context-sep-bidi, #context-sep-selectall,
+[data-l10n-id="places-open-in-container-tab"] { display: none !important; }
+:root { --tab-group-color-blue: #9141ac !important; --tab-group-color-blue-invert: #e8c7f0 !important; --tab-group-color-blue-pale: #f3e0f7 !important; }
+#tabbrowser-tabs { --tab-dragover-outline-color: #9141ac !important; }
+#tabbrowser-tabs[movingtab-group] .tab-background[dragover-groupTarget] { outline-width: 3px !important; outline-offset: -3px !important; }
+#tabbrowser-tabs[movingtab-group] tab-split-view-wrapper[dragover-groupTarget] { outline-width: 3px !important; }
+#tabbrowser-tabs[movingtab-group] .tabbrowser-tab[dragtarget] .tab-background { outline-width: 3px !important; }
+.tab-drop-indicator { background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMiIgaGVpZ2h0PSIyOSI+PHBhdGggZD0iTTYgMGE1IDUgMCAwMTUgNSA0Ljg1IDQuODUgMCAwMS0zIDQuNDhWMjZhMSAxIDAgMDEtMSAxSDVhMSAxIDAgMDEtMS0xVjkuNDhDMi4wMiA4LjgxIDEuMiA2LjkzIDEgNWE1IDUgMCAwMTUtNXoiIGZpbGw9IiNmZmYiIGZpbHRlcj0iZHJvcC1zaGFkb3coMCAxcHggMC41cHggcmdiYSgwLDAsMCwwLjQ5NikpIi8+PHBhdGggZD0iTTYgMWE0IDQgMCAwMTQgNGMtLjE3IDIuMjUtMS4wNSAzLjAyLTMgMy44NFYyNkg1VjguODRDMy4xMiA4LjI4IDIuMTkgNi44OSAyIDVhNCA0IDAgMDE0LTR6bTAgMmEyIDIgMCAxMDAgNCAyIDIgMCAwMDAtNHoiIGZpbGw9IiM5MTQxYWMiLz48L3N2Zz4=") no-repeat center !important; }
+#historySwipeAnimationPreviousArrow, #historySwipeAnimationNextArrow { --swipe-nav-icon-primary-color: #9141ac !important; --swipe-nav-icon-accent-color: #2e2e32 !important; }
+#historySwipeAnimationPreviousArrow > svg, #historySwipeAnimationNextArrow > svg { scale: 1.25 !important; }
+#editBMPanel_namePicker { margin-bottom: 8px !important; }
+#contentAreaContextMenu menuseparator:last-child, #contentAreaContextMenu menuseparator:only-child { display: none !important; }
+panel[type="arrow"].panel-no-padding { transform: translateY(2px) !important; }
+#appMenu-empty-profiles-button { display: none !important; }

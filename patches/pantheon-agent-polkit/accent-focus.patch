@@ -1,0 +1,35 @@
+--- a/src/PolkitDialog.vala
++++ b/src/PolkitDialog.vala
+@@ -45,6 +45,7 @@
+     private Gtk.Label password_feedback;
+     private Gtk.PasswordEntry password_entry;
+     private Gtk.ComboBox idents_combo;
++    private static Gtk.CssProvider? accent_css_provider = null;
+ 
+     public PolkitDialog (string message, string icon_name, string _cookie,
+                          List<Polkit.Identity?>? _idents, GLib.Cancellable _cancellable) {
+@@ -66,6 +67,24 @@
+             show_peek_icon = true
+         };
+ 
++        if (accent_css_provider == null) {
++            accent_css_provider = new Gtk.CssProvider ();
++            accent_css_provider.load_from_string (
++                "entry.password:focus-within {"
++                + "  outline: 2px solid #9141ac !important;"
++                + "  outline-offset: -2px !important;"
++                + "}"
++            );
++            var display = Gdk.Display.get_default ();
++            if (display != null) {
++                Gtk.StyleContext.add_provider_for_display (
++                    display,
++                    accent_css_provider,
++                    Gtk.STYLE_PROVIDER_PRIORITY_USER + 1
++                );
++            }
++        }
++
+         password_feedback = new Gtk.Label (null) {
+             justify = RIGHT,
+             max_width_chars = 40,

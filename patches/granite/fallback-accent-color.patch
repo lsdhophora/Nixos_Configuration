@@ -1,0 +1,10 @@
+--- a/lib/Widgets/Settings.vala
++++ b/lib/Widgets/Settings.vala
+@@ -138,7 +138,7 @@
+ 
+                 // Set a default in case we can't get from system
+                 _accent_color = Gdk.RGBA ();
+-                _accent_color.parse ("#3689e6");
++                _accent_color.parse ("#9141ac");
+             }
+         }

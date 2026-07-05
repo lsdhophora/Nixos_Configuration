@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+command -v nmcli &>/dev/null || exit 0
+connected=$(nmcli -t -f DEVICE,TYPE,STATE d 2>/dev/null | grep ':wifi:connected$' | head -1)
+if [ -n "$connected" ]; then
+    echo "WiFi: on"
+else
+    echo "WiFi: off"
+fi
