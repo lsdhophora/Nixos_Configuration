@@ -31,7 +31,7 @@
     };
 
     "org/gnome/shell/extensions/customize-ibus" = {
-      custom-font = "Adwaita Sans Medium 13";
+      custom-font = "IBM Plex Sans Medium 14";
       enable-auto-switch = false;
       use-custom-font = true;
       use-input-indicator = false;
@@ -53,13 +53,7 @@
     };
 
     "org/gnome/desktop/interface" = {
-      font-name = "Adwaita Sans 11";
-      document-font-name = "Adwaita Sans 11";
-      accent-color = "purple";
-      cursor-theme = "Adwaita";
       cursor-size = 24;
-      color-scheme = "prefer-dark";
-      gtk-theme = "Adwaita-dark";
       icon-theme = "Adwaita-purple";
       enable-animations = true;
       font-antialiasing = "rgba";
@@ -84,6 +78,7 @@
     "org/gnome/desktop/wm/preferences" = {
       action-middle-click-titlebar = "none";
       resize-with-right-button = false;
+      button-layout = "appmenu:";
     };
 
     "org/gnome/desktop/peripherals/touchpad" = {

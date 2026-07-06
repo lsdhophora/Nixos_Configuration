@@ -12,11 +12,19 @@
     ./cli.nix
     ./dconf.nix
     ./rime.nix
+    ./packages.nix
+    ./gtk.nix
+    ./dunst.nix
+    ./mime.nix
+    ./sway-config.nix
+    ./session.nix
     ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/ghostty.nix
     ./programs/tmux.nix
+    ./programs/zathura.nix
+    ./programs/swayimg.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];

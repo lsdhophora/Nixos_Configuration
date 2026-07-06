@@ -5,7 +5,7 @@
     enable = true;
     hwRender = true;
     term = "xterm-256color";
-    extraOptions = "--font-size 16";
+    extraOptions = "--font-size 20";
     fonts = [
       {
         name = "Maple Mono NF CN";

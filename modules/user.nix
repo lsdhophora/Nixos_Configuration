@@ -14,17 +14,7 @@
     hashedPasswordFile = config.age.secrets.hashedPassword.path;
     extraGroups = [ "wheel" ];
     shell = pkgs.zsh;
-    packages = with pkgs; [
-      tree
-      ffmpeg
-      fastfetch
-      imagemagick
-      pandoc
-      nixfmt
-      nixd
-      unzip
-      gnome-sound-recorder
-    ];
+    packages = [];
   };
 
   environment.systemPackages = with pkgs; [

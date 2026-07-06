@@ -35,7 +35,6 @@
               (cl-letf (((symbol-function 'display-images-p) (lambda () nil)))
                 (funcall orig))))
 
-(setq shell-file-name (executable-find "bash"))
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
