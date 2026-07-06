@@ -2,6 +2,9 @@
   home.packages = [ pkgs.swayimg ];
 
   xdg.configFile."swayimg/config".text = ''
+    [list]
+    all = yes
+
     [info]
     show = no
 

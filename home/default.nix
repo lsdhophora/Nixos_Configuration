@@ -21,7 +21,6 @@
     ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
-    ./programs/ghostty.nix
     ./programs/tmux.nix
     ./programs/zathura.nix
     ./programs/swayimg.nix

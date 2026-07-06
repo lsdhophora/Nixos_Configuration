@@ -3,7 +3,7 @@ let
   swayAssets = ../../assets/sway;
 
   swayPkg = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.sway;
-  ghosttyPkg = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.ghostty;
+  alacrittyPkg = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.alacritty;
 
   adwPurple = pkgs.runCommand "Adwaita-purple-icon-theme" { } ''
     mkdir -p $out/share/icons
@@ -45,7 +45,7 @@ in {
       export XCURSOR_SIZE=24
     '';
     extraPackages = with pkgs; [
-      alacritty
+      alacrittyPkg
       wmenu
       i3blocks
       brightnessctl

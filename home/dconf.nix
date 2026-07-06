@@ -16,7 +16,6 @@
       favorite-apps = [
         "firefox.desktop"
         "emacs.desktop"
-        "com.mitchellh.ghostty.desktop"
       ];
       always-show-log-out = true;
       disable-user-extensions = false;
