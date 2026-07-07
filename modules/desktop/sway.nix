@@ -28,9 +28,11 @@ let
 in {
   services.displayManager.ly.enable = true;
   services.displayManager.ly.settings = {
-    animation = "doom";
-    doom_fire_height = 6;
-    doom_fire_spread = 2;
+    animation = "gameoflife";
+    hide_borders = true;
+    hide_key_hints = true;
+    hide_version_string = true;
+    initial_info_text = "";
     session_log = "/tmp/ly-session.log";
   };
 
