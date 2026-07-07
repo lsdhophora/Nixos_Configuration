@@ -1,0 +1,18 @@
+--- a/ly-ui/src/components/generic.zig
++++ b/ly-ui/src/components/generic.zig
+@@ -116,15 +116,6 @@
+             if (self.list.items.len == 0) return;
+             if (self.width < 2) return;
+ 
+-            var left_arrow = Cell.init('<', self.fg, self.bg);
+-            var right_arrow = Cell.init('>', self.fg, self.bg);
+-
+-            left_arrow.put(self.component_pos.x, self.component_pos.y);
+-            right_arrow.put(
+-                self.component_pos.x + self.width - 1,
+-                self.component_pos.y,
+-            );
+-
+             const current_item = self.list.items[self.current];
+             const x = self.component_pos.x + 2;
+             const y = self.component_pos.y;
