@@ -34,6 +34,9 @@
   };
 
   xdg.configFile."gtk-3.0/gtk.css".text = ''
+    @define-color accent_bg_color #9141ac;
+    @define-color accent_fg_color white;
+    @define-color accent_color #9141ac;
     decoration, .titlebar, headerbar, window {
       box-shadow: none;
       border-radius: 0;
