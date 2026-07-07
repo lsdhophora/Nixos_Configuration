@@ -12,6 +12,9 @@
     name = IBM Plex Sans
     size = 14
 
+    [viewer]
+    window = #000000
+
     [keys.viewer]
     h = step_left 10
     j = step_down 10
