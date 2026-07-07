@@ -33,7 +33,7 @@ default_floating_border pixel 2
 hide_edge_borders smart_no_gaps
 
 for_window [app_id="(?i)emacs"] border normal 2
-for_window [app_id="mpv"] border normal 2
+for_window [app_id="mpv"] border pixel 2
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+q kill
