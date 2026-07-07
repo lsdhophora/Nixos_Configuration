@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 last=""
 print_layout() {
-    layout=$(swaymsg -t get_tree | jq -r '
-        [.. | select(.layout? and .layout != "none" and .layout != "output" and (. | .. | select(.focused? == true))) | .layout][-1]
+    data=$(swaymsg -t get_tree | jq -r '
+        if ([.. | select(.focused? == true) | select(.type? == "floating_con")] | length) > 0 then "floating" else
+          [.. | select(.layout? and .layout != "none" and .layout != "output" and (. | .. | select(.focused? == true))) | .layout][-1]
+        end
     ')
-    if [ -n "$layout" ] && [ "$layout" != "null" ]; then
-        case "$layout" in
+    if [ -n "$data" ] && [ "$data" != "null" ]; then
+        case "$data" in
+            floating) icon="[F]" ;;
             tabbed)   icon="[T]" ;;
             stacking) icon="[S]" ;;
             splith)   icon="[H]" ;;
@@ -18,6 +21,6 @@ print_layout() {
     echo "$last"
 }
 print_layout
-swaymsg -t SUBSCRIBE -m '["window","binding","mode"]' | while read -r; do
+swaymsg -t SUBSCRIBE -m '["window","binding","mode","focus"]' | while read -r; do
     print_layout
 done
