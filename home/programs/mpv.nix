@@ -1,48 +1,50 @@
 { pkgs, ... }: {
-  home.packages = with pkgs; [
-    mpv
-    mpvScripts.uosc
-  ];
+  programs.mpv = {
+    enable = true;
+    scripts = [ pkgs.mpvScripts.modernz ];
 
-  xdg.configFile."mpv/mpv.conf".text = ''
-    # Window
-    border=no
-    keepaspect-window
+    config = {
+      border = false;
+      keepaspect-window = true;
+      osc = false;
+      osd-bar = false;
+      osd-font = "IBM Plex Sans";
+      osd-font-size = 12;
+      profile = "gpu-hq";
+      hwdec = "auto-safe";
+      video-sync = "display-resample";
+      interpolation = true;
+      tscale = "oversample";
+      save-position-on-quit = true;
+      keep-open = true;
+      screenshot-directory = "~/Pictures/Screenshots/mpv";
+      screenshot-template = "%f-[%T]";
+      screenshot-format = "png";
+    };
 
-    # UI: uosc replaces default OSC
-    osc=no
-    load-scripts=yes
+    scriptOpts = {
+      modernz = {
+        hover_effect_color = "#9141ac";
+        seekbarfg_color = "#9141ac";
+        seek_handle_color = "#77358d";
+        seek_handle_border_color = "#9141ac";
+        nibble_color = "#9141ac";
+      };
+    };
 
-    # Performance
-    profile=gpu-hq
-    hwdec=auto-safe
-    video-sync=display-resample
-    interpolation
-    tscale=oversample
-
-    # General
-    save-position-on-quit=yes
-    keep-open=yes
-  '';
-
-  xdg.configFile."mpv/input.conf".text = ''
-    # uosc toggle
-    TAB script-binding uosc/toggle-ui
-
-    # Navigation
-    RIGHT seek  5
-    LEFT  seek -5
-    UP    add volume 2
-    DOWN  add volume -2
-    [     add speed 0.1
-    ]     add speed -0.1
-    \     set speed 1.0
-
-    # Playback
-    SPACE cycle pause
-    >     playlist-next
-    <     playlist-prev
-    q     quit
-    Q     quit-watch-later
-  '';
+    bindings = {
+      RIGHT = "seek 5";
+      LEFT = "seek -5";
+      UP = "add volume 2";
+      DOWN = "add volume -2";
+      "[" = "add speed 0.1";
+      "]" = "add speed -0.1";
+      "\\" = "set speed 1.0";
+      SPACE = "cycle pause";
+      ">" = "playlist-next";
+      "<" = "playlist-prev";
+      q = "quit";
+      Q = "quit-watch-later";
+    };
+  };
 }

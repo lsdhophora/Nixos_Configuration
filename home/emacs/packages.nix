@@ -3,7 +3,6 @@
     vips
     nerd-fonts.hack
     epub-thumbnailer
-    pkgs.mpv
     mutagen
   ];
 }
