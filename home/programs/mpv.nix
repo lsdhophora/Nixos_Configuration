@@ -8,7 +8,7 @@
       osc = false;
       osd-bar = false;
       osd-font = "IBM Plex Sans";
-      osd-font-size = 12;
+      osd-font-size = 16;
       profile = "gpu-hq";
       hwdec = "auto-safe";
       video-sync = "display-resample";
@@ -29,6 +29,12 @@
         seek_handle_border_color = "#9141ac";
         nibble_color = "#9141ac";
         window_controls = "no";
+        title_font_size = 28;
+        chapter_title_font_size = 20;
+        time_font_size = 20;
+        tooltip_font_size = 18;
+        speed_font_size = 20;
+        cache_info_font_size = 16;
       };
     };
 
