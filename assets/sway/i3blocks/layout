@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
 last=""
 print_layout() {
-    data=$(swaymsg -t get_tree | jq -r '
-        if ([.. | select(.focused? == true) | select(.type? == "floating_con")] | length) > 0 then "floating" else
-          [.. | select(.layout? and .layout != "none" and .layout != "output" and (. | .. | select(.focused? == true))) | .layout][-1]
-        end
-    ')
-    if [ -n "$data" ] && [ "$data" != "null" ]; then
-        case "$data" in
-            floating) icon="[F]" ;;
-            tabbed)   icon="[T]" ;;
-            stacking) icon="[S]" ;;
-            splith)   icon="[H]" ;;
-            splitv)   icon="[V]" ;;
-            *)        icon="$last" ;;
-        esac
-        last="$icon"
+    state=$(swaymsg -t get_tree | jq -r '.. | select(.focused? == true) | .floating')
+    if [ "$state" = "auto_on" ] || [ "$state" = "user_on" ]; then
+        echo "[F]"
+        last="[F]"
+        return
     fi
-    [ -z "$last" ] && return
-    echo "$last"
+    layout=$(swaymsg -t get_tree | jq -r '
+        [.. | select(.layout? and .layout != "none" and .layout != "output" and (. | .. | select(.focused? == true))) | .layout][-1]
+    ')
+    [ -z "$layout" ] || [ "$layout" = "null" ] && layout="$last"
+    case "$layout" in
+        tabbed)   icon="[T]" ;;
+        stacking) icon="[S]" ;;
+        splith)   icon="[H]" ;;
+        splitv)   icon="[V]" ;;
+        *)        icon="$last" ;;
+    esac
+    [ -z "$icon" ] && return
+    echo "$icon"
+    last="$icon"
 }
 print_layout
-swaymsg -t SUBSCRIBE -m '["window","binding","mode","focus"]' | while read -r; do
+swaymsg -t SUBSCRIBE -m '["window","binding","mode"]' | while read -r; do
     print_layout
 done
