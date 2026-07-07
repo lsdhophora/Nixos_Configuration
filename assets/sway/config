@@ -7,6 +7,7 @@ set $term alacritty
 set $menu wmenu-run -f "IBM Plex Sans 12" -N \#323232 -n \#cccccc -M \#9141ac -m \#cccccc -S \#9141ac -s \#000000
 
 exec pantheon-agent-polkit
+output * bg ~/.config/sway/wallpaper.png fill
 exec fcitx5 -d
 exec sh -c 'cp --remove-destination /etc/sway/userchrome.css ~/.mozilla/firefox/default/chrome/userChrome.css'
 exec ~/.config/sway/mpv-border.sh
@@ -147,7 +148,7 @@ bar {
     statusline #ffffff
     background #1a1a1a
     binding_mode #000000 #9141ac #ffffff
-    focused_workspace #9141ac #9141ac #cccccc
+    focused_workspace #9141ac #9141ac #2d0a2e
     inactive_workspace #323232 #323232 #888888
     urgent_workspace #2f343a #900000 #000000
   }

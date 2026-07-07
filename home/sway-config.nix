@@ -11,6 +11,7 @@
     executable = true;
     force = true;
   };
+  xdg.configFile."sway/wallpaper.png".source = ../assets/sway/wallpaper.png;
   xdg.configFile."i3blocks/config".source =
     ../assets/sway/i3blocks/config;
   xdg.configFile."sway/i3blocks/layout".source =
