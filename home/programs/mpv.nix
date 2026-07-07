@@ -4,7 +4,6 @@
     scripts = [ pkgs.mpvScripts.modernz ];
 
     config = {
-      border = false;
       keepaspect-window = true;
       osc = false;
       osd-bar = false;
@@ -29,6 +28,7 @@
         seek_handle_color = "#77358d";
         seek_handle_border_color = "#9141ac";
         nibble_color = "#9141ac";
+        window_controls = "no";
       };
     };
 
