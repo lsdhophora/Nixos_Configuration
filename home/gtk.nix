@@ -37,6 +37,7 @@
     @define-color accent_bg_color #9141ac;
     @define-color accent_fg_color white;
     @define-color accent_color #9141ac;
+    @define-color tr_transfer_down_color #8a47a0;
     decoration, .titlebar, headerbar, window {
       box-shadow: none;
       border-radius: 0;
