@@ -19,7 +19,7 @@ in
   home.packages = with pkgs; [
     # GUI
     blanket
-    celluloid
+    # now managed by programs/mpv.nix
     fluffychat
     gnome-epub-thumbnailer
     gnomeExtensions.app-hider

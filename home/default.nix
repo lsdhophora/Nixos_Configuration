@@ -24,6 +24,7 @@
     ./programs/tmux.nix
     ./programs/zathura.nix
     ./programs/swayimg.nix
+    ./programs/mpv.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];

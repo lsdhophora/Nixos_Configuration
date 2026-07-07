@@ -134,7 +134,7 @@
         "org.gnome.Extensions.desktop"
         "org.gnome.Snapshot.desktop"
         "com.rafaelmardojai.Blanket.desktop"
-        "io.github.celluloid_player.Celluloid.desktop"
+        "mpv.desktop"
         "dev.mufeed.Wordbook.desktop"
         "Fluffychat.desktop"
         "org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop"
