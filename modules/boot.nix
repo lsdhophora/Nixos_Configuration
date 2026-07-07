@@ -6,7 +6,7 @@
       enable = true;
       theme = "bgrt";
     };
-    consoleLogLevel = 3;
+    consoleLogLevel = 0;
     initrd = {
       systemd.enable = true;
       verbose = false;
@@ -17,7 +17,10 @@
       "splash"
       "plymouth.use-simpledrm"
       "udev.log_priority=3"
-      "rd.systemd.show_status=auto"
+      "systemd.show_status=false"
+      "rd.systemd.show_status=false"
+      "systemd.log_level=emerg"
+      "rd.systemd.log_level=emerg"
       "model=dell-headset-multi"
     ];
 
@@ -34,6 +37,11 @@
     loader.efi.canTouchEfiVariables = true;
 
     kernelPackages = pkgs.linuxPackages_cachyos;
+  };
+
+  console = {
+    font = "ter-132n";
+    packages = with pkgs; [ terminus_font ];
   };
 
   services.scx = {
