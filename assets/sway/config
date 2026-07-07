@@ -9,6 +9,7 @@ set $menu wmenu-run -f "IBM Plex Sans 12" -N \#323232 -n \#cccccc -M \#9141ac -m
 exec pantheon-agent-polkit
 exec fcitx5 -d
 exec sh -c 'cp --remove-destination /etc/sway/userchrome.css ~/.mozilla/firefox/default/chrome/userChrome.css'
+exec ~/.config/sway/mpv-border.sh
 seat * hide_cursor 3000
 seat * xcursor_theme Adwaita 24
 

@@ -6,6 +6,11 @@
     executable = true;
     force = true;
   };
+  xdg.configFile."sway/mpv-border.sh" = {
+    source = ../assets/sway/mpv-border.sh;
+    executable = true;
+    force = true;
+  };
   xdg.configFile."i3blocks/config".source =
     ../assets/sway/i3blocks/config;
   xdg.configFile."sway/i3blocks/layout".source =
