@@ -147,7 +147,7 @@ bar {
     statusline #ffffff
     background #1a1a1a
     binding_mode #000000 #9141ac #ffffff
-    focused_workspace #9141ac #9141ac #000000
+    focused_workspace #9141ac #9141ac #cccccc
     inactive_workspace #323232 #323232 #888888
     urgent_workspace #2f343a #900000 #000000
   }
