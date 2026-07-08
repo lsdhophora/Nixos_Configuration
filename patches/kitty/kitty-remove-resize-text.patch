@@ -1,0 +1,12 @@
+diff --git a/kitty/shaders.c b/kitty/shaders.c
+index 8d9913642..cf7d4e731 100644
+--- a/kitty/shaders.c
++++ b/kitty/shaders.c
+@@ -1607,6 +1607,7 @@ draw_centered_alpha_mask(size_t screen_width, size_t screen_height, size_t width
+ 
+ static void
+ draw_resizing_text(OSWindow *w) {
++  return;
+     if (monotonic() - w->created_at > ms_to_monotonic_t(1000) && w->live_resize.num_of_resize_events > 1) {
+         char text[32] = {0};
+         unsigned int width = w->live_resize.width, height = w->live_resize.height;

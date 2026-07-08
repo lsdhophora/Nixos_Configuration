@@ -3,7 +3,7 @@ set $left h
 set $down j
 set $up k
 set $right l
-set $term alacritty
+set $term kitty
 set $menu wmenu-run -f "IBM Plex Sans 12" -N \#323232 -n \#cccccc -M \#9141ac -m \#cccccc -S \#9141ac -s \#000000
 
 exec pantheon-agent-polkit
@@ -40,7 +40,7 @@ bindsym $mod+Shift+q kill
 bindsym $mod+d exec $menu
 bindsym $mod+Shift+x exec swaylock -f -c 000000
 bindsym $mod+Shift+c reload
-bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+bindsym $mod+Shift+e exec swaymsg exit
 
 floating_modifier $mod normal
 
@@ -134,8 +134,8 @@ bindsym Shift+Print exec sh -c 'f=~/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-
 
 for_window [app_id="firefox"] border pixel 2
 for_window [title="Authentication Required"] floating enabled, border pixel 2, move position center
-for_window [app_id="alacritty"] border pixel 2, focus
-for_window [app_id="alacritty-dropdown"] floating enabled, border pixel 2, move position center, sticky enable
+for_window [app_id="kitty"] border pixel 2, focus
+for_window [app_id="kitty-dropdown"] floating enabled, border pixel 2, move position center, sticky enable
 for_window [title="Open File"] floating enabled, border pixel 2, focus
 bindsym $mod+grave exec ~/.config/sway/toggle-dropdown.sh
 

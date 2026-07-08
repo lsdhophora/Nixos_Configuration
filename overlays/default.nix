@@ -5,4 +5,5 @@
   (import ./granite.nix)
   (import ./pantheon-agent-polkit.nix)
   (import ./ly.nix)
+  (import ./kitty.nix)
 ]

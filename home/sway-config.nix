@@ -1,6 +1,6 @@
 { pkgs, ... }: {
-  xdg.configFile."alacritty/alacritty.toml".source =
-    ../assets/sway/alacritty.toml;
+  xdg.configFile."kitty/kitty.conf".source =
+    ../assets/kitty/kitty.conf;
   xdg.configFile."sway/toggle-dropdown.sh" = {
     source = ../assets/sway/toggle-dropdown.sh;
     executable = true;

@@ -9,5 +9,6 @@
     nixd
     unzip
     gnome-sound-recorder
+    kitty
   ];
 }

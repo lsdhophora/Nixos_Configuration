@@ -25,6 +25,8 @@
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
 (load-theme 'modus-vivendi)
+(unless (display-graphic-p)
+  (set-face-attribute 'default nil :background 'unspecified))
 
 (defun my/prevent-empty-tooltip (str &rest _)
   (string-blank-p str))
