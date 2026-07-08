@@ -36,23 +36,29 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   ├── programs/
 │   │   ├── git.nix
 │   │   ├── emacs.nix
-│   │   ├── firefox.nix
-│   │   └── ghostty.nix
+│   │   └── firefox.nix
 │   └── shell/zsh.nix
 ├── assets/                   # Static assets
 │   ├── sway/                 # Sway config, i3blocks, scripts
+│   ├── kitty/                # Kitty terminal config
 │   └── icons/Adwaita-purple/
 ├── overlays/                 # Nixpkgs overlays (final: prev: { ... })
 │   ├── default.nix           # Aggregator
 │   ├── portal-gtk.nix        # xdg-desktop-portal-gtk: UseIn=sway
 │   ├── granite.nix           # granite7: GNOME named accent-color support
-│   └── firefox.nix           # omni.ja patches
+│   ├── firefox.nix           # omni.ja patches
+│   └── kitty.nix             # Patched: remove resize text overlay
 ├── patches/                  # Patch files (grouped by package)
 │   ├── granite/
-│   │   └── gnome-accent-color.patch
-│   └── emoji-copy/
-│       ├── word-boundary-search.patch
-│       └── ...
+│   │   └── fallback-accent-color.patch
+│   ├── kitty/
+│   │   └── kitty-remove-resize-text.patch
+│   ├── ly/
+│   │   ├── remove-arrows.patch
+│   │   └── suppress-startup-messages.patch
+│   └── pantheon-agent-polkit/
+│       ├── accent-focus.css
+│       └── accent-focus.patch
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix
 │   ├── config.dae.age
