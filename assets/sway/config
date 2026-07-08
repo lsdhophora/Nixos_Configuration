@@ -20,7 +20,7 @@ input type:touchpad {
 exec swayidle -w \
   timeout 300 'playerctl status 2>/dev/null | grep -q Playing || swaylock -f -c 000000' \
   timeout 600 'playerctl status 2>/dev/null | grep -q Playing || swaymsg "output * power off"' resume 'swaymsg "output * power on"' \
-  before-sleep 'playerctl status 2>/dev/null | grep -q Playing || swaylock -f -c 000000'
+  before-sleep 'swaylock -f -c 000000'
 
 gaps inner 5
 gaps horizontal -5
