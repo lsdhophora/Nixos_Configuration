@@ -34,3 +34,6 @@ decorations = "Full"
 [window.padding]
 x = 8
 y = 8
+
+[debug]
+renderer = "gles2pure"
