@@ -16,6 +16,7 @@
       tscale = "oversample";
       save-position-on-quit = true;
       keep-open = true;
+      pause = true;
       screenshot-directory = "~/Pictures/Screenshots/mpv";
       screenshot-template = "%f-[%T]";
       screenshot-format = "png";
