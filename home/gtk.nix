@@ -61,6 +61,9 @@
     button.suggested-action:active {
       background-color: #7d3694;
     }
+    window.csd.dialog, messagedialog {
+      border-radius: 0;
+    }
   '';
   xdg.configFile."gtk-4.0/gtk.css".text = ''
     @define-color accent_color #9141ac;
