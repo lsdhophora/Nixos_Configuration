@@ -11,6 +11,11 @@ interval=30
 command=volume
 interval=1
 
+[touchpad]
+command=touchpad
+interval=once
+signal=11
+
 [brightness]
 command=brightness
 interval=1

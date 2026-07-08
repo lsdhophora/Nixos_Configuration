@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+case $BLOCK_BUTTON in
+  1)
+    swaymsg input type:touchpad events toggle enabled disabled > /dev/null 2>&1
+    pkill -RTMIN+11 i3blocks > /dev/null 2>&1
+    ;;
+esac
+
+state=$(swaymsg -t get_inputs | jq -r '.[] | select(.type == "touchpad") | .libinput.send_events // "unknown"' | head -1)
+case $state in
+  enabled)  echo "TP: ON"; echo "TP: ON" ;;
+  disabled) echo "TP: OFF"; echo "TP: OFF" ;;
+  *)        echo "TP: -"; echo "TP: -" ;;
+esac

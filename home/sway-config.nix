@@ -22,6 +22,8 @@
     ../assets/sway/i3blocks/brightness;
   xdg.configFile."sway/i3blocks/datetime".source =
     ../assets/sway/i3blocks/datetime;
+  xdg.configFile."sway/i3blocks/touchpad".source =
+    ../assets/sway/i3blocks/touchpad;
   xdg.configFile."sway/i3blocks/volume".source =
     ../assets/sway/i3blocks/volume;
   xdg.configFile."sway/i3blocks/wifi".source =
