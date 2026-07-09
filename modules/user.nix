@@ -14,7 +14,7 @@
     hashedPasswordFile = config.age.secrets.hashedPassword.path;
     extraGroups = [ "wheel" ];
     shell = pkgs.zsh;
-    packages = [];
+    packages = [ ];
   };
 
   environment.systemPackages = with pkgs; [
