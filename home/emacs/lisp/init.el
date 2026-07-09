@@ -1,8 +1,7 @@
 ;;; init.el -- Main Emacs configuration -*- lexical-binding: t -*-
-
-(unless (display-graphic-p)
-  (define-key key-translation-map (kbd "ESC <up>") (kbd "M-<up>"))
-  (define-key key-translation-map (kbd "ESC <down>") (kbd "M-<down>")))
+(setq package-enable-at-startup nil)
+(require 'straight)
+(straight-use-package-mode +1)
 
 (setq custom-file "~/.config/emacs/custom.el")
 (when (file-exists-p custom-file)
@@ -25,8 +24,11 @@
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
 (load-theme 'modus-vivendi)
-(unless (display-graphic-p)
-  (set-face-attribute 'default nil :background 'unspecified))
+(defun on-after-init ()
+  (unless (display-graphic-p (selected-frame))
+    (set-face-background 'default "unspecified-bg" (selected-frame))))
+(add-hook 'window-setup-hook 'on-after-init)
+
 
 (defun my/prevent-empty-tooltip (str &rest _)
   (string-blank-p str))
@@ -36,10 +38,6 @@
             (lambda (orig)
               (cl-letf (((symbol-function 'display-images-p) (lambda () nil)))
                 (funcall orig))))
-
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
 
 (use-package eglot
   :ensure t
@@ -268,3 +266,7 @@
   (add-hook 'emms-playlist-mode-hook #'meow-motion-mode)
   (add-hook 'emms-browser-mode-hook #'meow-motion-mode)
   (add-hook 'emms-stream-mode-hook #'meow-motion-mode))
+
+ (use-package kkp
+   :straight (:host github :repo "benotn/kkp" :branch "master")
+   :hook (tty-setup . global-kkp-mode))

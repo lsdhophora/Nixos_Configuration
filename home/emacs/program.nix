@@ -14,6 +14,7 @@
         dashboard
         trashed
         emms
+        straight
       ];
     extraConfig = ''
       (add-to-list 'load-path
