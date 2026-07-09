@@ -34,6 +34,7 @@ hide_edge_borders smart_no_gaps
 
 for_window [app_id="(?i)emacs"] border normal 2
 for_window [app_id="mpv"] border pixel 2
+for_window [app_id="swayimg"] border pixel 2
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+q kill
@@ -94,6 +95,7 @@ bindsym $mod+e layout toggle split
 bindsym $mod+f fullscreen
 bindsym $mod+space exec "fcitx5-remote -t; pkill -RTMIN+10 i3blocks"
 bindsym $mod+Shift+space floating toggle
+bindsym $mod+Shift+f focus mode_toggle
 bindsym $mod+a focus parent
 
 bindsym $mod+Shift+minus move scratchpad
