@@ -31,6 +31,7 @@
         "identity.fxaccounts.enabled" = false;
         "svg.context-properties.content.enabled" = true;
         "browser.fullscreen.autohide" = false;
+        "browser.ml.linkPreview.enabled" = false;
       };
       userContent = ''
         @-moz-document url(about:home) {
