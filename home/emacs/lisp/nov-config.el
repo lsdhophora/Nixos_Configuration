@@ -189,15 +189,18 @@ Searches all chapters and shows clickable results."
   (define-key nov-occur-mode-map (kbd "q") #'quit-window))
 
 (defun my/nov-open-image-at-point ()
-  "Open image at point with swayimg."
+  "Open image at point with swayimg, showing only that single image."
   (interactive)
   (let ((file (get-text-property (point) 'nov-image-file)))
     (if (and file (file-exists-p file))
-        (start-process "swayimg" nil "swayimg" file)
+        (start-process "swayimg" nil "swayimg"
+                       "--config=list.all=no"
+                       file)
       (message "No image at point"))))
 
 (with-eval-after-load 'nov
   (define-key nov-mode-map (kbd "C-c C-o") #'my/nov-open-image-at-point))
+
 (defun my/nov-record-image-path (orig-fun path &optional alt)
   (let ((start (point)))
     (funcall orig-fun path alt)
