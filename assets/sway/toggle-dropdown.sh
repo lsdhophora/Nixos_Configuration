@@ -8,6 +8,7 @@ elif swaymsg -t get_tree | jq -e 'any(..; .app_id? == "kitty-dropdown")' > /dev/
     swaymsg '[app_id="kitty-dropdown"]' focus
     swaymsg '[app_id="kitty-dropdown"]' border pixel 2
     swaymsg '[app_id="kitty-dropdown"]' move position center
+    swaymsg '[app_id="kitty-dropdown"]' resize set 800 800
 else
     kitty --class kitty-dropdown -e tmux new-session -A -s ScratchPad &
     for _ in 1 2 3 4 5 6 7 8 9 10; do
@@ -18,4 +19,5 @@ else
     swaymsg '[app_id="kitty-dropdown"]' focus
     swaymsg '[app_id="kitty-dropdown"]' border pixel 2
     swaymsg '[app_id="kitty-dropdown"]' move position center
+    swaymsg '[app_id="kitty-dropdown"]' resize set 800 800
 fi
