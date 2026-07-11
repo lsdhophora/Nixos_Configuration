@@ -42,6 +42,7 @@ let
     output * bg ~/.config/sway/wallpaper.png fill
     exec fcitx5 -d
     exec ~/.config/sway/mpv-border.sh
+    exec ~/.config/sway/low-battery-notify.sh
   '';
 
   swayInput = ''

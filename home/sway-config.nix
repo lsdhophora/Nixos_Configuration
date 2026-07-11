@@ -1,4 +1,9 @@
 { pkgs, ... }: {
+  xdg.configFile."sway/low-battery-notify.sh" = {
+    source = ../assets/sway/low-battery-notify.sh;
+    executable = true;
+    force = true;
+  };
   xdg.configFile."sway/toggle-dropdown.sh" = {
     source = ../assets/sway/toggle-dropdown.sh;
     executable = true;
