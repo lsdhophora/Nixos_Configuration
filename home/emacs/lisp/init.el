@@ -24,11 +24,13 @@
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
 (load-theme 'modus-vivendi)
+
 (defun on-after-init ()
   (unless (display-graphic-p (selected-frame))
-    (set-face-background 'default "unspecified-bg" (selected-frame))))
-(add-hook 'window-setup-hook 'on-after-init)
+    (set-face-background 'default "unspecified-bg" (selected-frame))
+    (set-face-background 'header-line "#7a358f" (selected-frame))))
 
+(add-hook 'window-setup-hook 'on-after-init)
 
 (defun my/prevent-empty-tooltip (str &rest _)
   (string-blank-p str))

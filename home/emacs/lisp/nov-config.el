@@ -182,33 +182,70 @@ Searches all chapters and shows clickable results."
 
 )
 
-(define-derived-mode nov-occur-mode special-mode "Nov-Occur"
-  "Major mode for nov-occur results."
-  (define-key nov-occur-mode-map (kbd "RET") #'nov-occur-follow)
-  (define-key nov-occur-mode-map (kbd "<mouse-1>") #'nov-occur-follow)
-  (define-key nov-occur-mode-map (kbd "q") #'quit-window))
 
-(defun my/nov-open-image-at-point ()
-  "Open image at point with swayimg, showing only that single image."
-  (interactive)
-  (let ((file (get-text-property (point) 'nov-image-file)))
-    (if (and file (file-exists-p file))
-        (start-process "swayimg" nil "swayimg"
-                       "--config=list.all=no"
-                       file)
-      (message "No image at point"))))
+  (define-derived-mode nov-occur-mode special-mode "Nov-Occur"
+    "Major mode for nov-occur results."
+    (define-key nov-occur-mode-map (kbd "RET") #'nov-occur-follow)
+    (define-key nov-occur-mode-map (kbd "<mouse-1>") #'nov-occur-follow)
+    (define-key nov-occur-mode-map (kbd "q") #'quit-window))
 
-(with-eval-after-load 'nov
-  (define-key nov-mode-map (kbd "C-c C-o") #'my/nov-open-image-at-point))
+  (defun my/nov-open-image-at-point ()
+    "Open image at point with swayimg, showing only that single image."
+    (interactive)
+    (let ((file (get-text-property (point) 'nov-image-file)))
+      (if (and file (file-exists-p file))
+	  (start-process "swayimg" nil "swayimg"
+			 "--config=list.all=no"
+			 file)
+	(message "No image at point"))))
 
-(defun my/nov-record-image-path (orig-fun path &optional alt)
-  (let ((start (point)))
-    (funcall orig-fun path alt)
-    (add-text-properties start (point)
-                         `(nov-image-file ,path
-                           help-echo ,(format "Image: %s (C-c C-o to open)" path)))))
+  (with-eval-after-load 'nov
+    (define-key nov-mode-map (kbd "C-c C-o") #'my/nov-open-image-at-point))
 
-(with-eval-after-load 'nov
-  (advice-add 'nov-insert-image :around #'my/nov-record-image-path))
+  (defun my/nov-record-image-path (orig-fun path &optional alt)
+    (let ((start (point)))
+      (funcall orig-fun path alt)
+      (add-text-properties start (point)
+			   `(nov-image-file ,path
+			     help-echo ,(format "Image: %s (C-c C-o to open)" path)))))
 
-(provide 'nov-config)
+  (with-eval-after-load 'nov
+    (advice-add 'nov-insert-image :around #'my/nov-record-image-path))
+
+  (defun my-nov-fix-missing-img-alt ()
+    "Before nov renders HTML, add alt='image' to any <img> without an alt attribute."
+    (when (and (boundp 'nov-work-dir) nov-work-dir)
+      (let ((dom (libxml-parse-html-region (point-min) (point-max))))
+	(when dom
+	  (dolist (img (dom-by-tag dom 'img))
+	    (unless (dom-attr img 'alt)
+	      (dom-set-attribute img 'alt "image")))
+	  (erase-buffer)
+	  (dom-print dom (current-buffer))
+	  (goto-char (point-min))))))
+
+  (add-hook 'nov-pre-html-render-hook #'my-nov-fix-missing-img-alt)
+
+  ;; Fix: shr--remove-blank-lines-at-the-end in Emacs 30.2 deletes image
+  ;; characters (spaces with display properties) at the end of the buffer.
+  (defun my-shr--remove-blank-lines-at-the-end (start end)
+    "Like `shr--remove-blank-lines-at-the-end' but protects image chars."
+    (save-restriction
+      (save-excursion
+        (narrow-to-region start end)
+        (goto-char end)
+        (let ((pos (re-search-backward "[^ \n]" nil t)))
+          (when pos
+            (goto-char pos)
+            (while (< (point) end)
+              (when (get-text-property (point) 'display)
+                (setq pos (point)))
+              (forward-char)))
+          (when pos
+            (goto-char pos)
+            (forward-line 1)
+            (delete-region (point) (point-max)))))))
+  (advice-add 'shr--remove-blank-lines-at-the-end :override
+              #'my-shr--remove-blank-lines-at-the-end)
+
+  (provide 'nov-config)

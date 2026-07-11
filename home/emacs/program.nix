@@ -1,9 +1,9 @@
-{ pkgs, ... }: {
+{ pkgs, inputs, ... }: {
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs-pgtk;
+    package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.emacs-pgtk;
     extraPackages =
-      epkgs: with epkgs; [
+      _: with inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.emacs-pgtk.pkgs; [
         meow
         direnv
         auctex
