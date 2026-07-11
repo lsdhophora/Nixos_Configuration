@@ -11,13 +11,13 @@
     ./gui.nix
     ./cli.nix
     ./dconf.nix
-    ./rime.nix
     ./packages.nix
     ./gtk.nix
     ./dunst.nix
     ./mime.nix
     ./sway-config.nix
     ./session.nix
+    ./programs/kitty.nix
     ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix

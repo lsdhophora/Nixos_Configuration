@@ -17,10 +17,6 @@
           "xkb"
           "us"
         ])
-        (pkgs.lib.gvariant.mkTuple [
-          "ibus"
-          "rime"
-        ])
       ];
       xkb-options = [ "terminate:ctrl_alt_bksp" ];
     };
