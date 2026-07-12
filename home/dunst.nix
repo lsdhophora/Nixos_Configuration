@@ -16,6 +16,7 @@
         highlight = "#9141ac";
         timeout = 5;
         icon_theme = "Adwaita-purple";
+        fullscreen = "show";
       };
     };
   };
