@@ -3,7 +3,7 @@
 {
   programs.firefox = {
     enable = true;
-    package = pkgs.firefox-sway;
+    package = pkgs.firefox-patched;
     configPath = ".mozilla/firefox";
     profiles.default = {
       settings = {
