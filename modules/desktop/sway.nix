@@ -85,6 +85,7 @@ let
     for_window [app_id="kitty"] border pixel 2, focus
     for_window [app_id="kitty-dropdown"] floating enabled, border pixel 2, move position center, sticky enable
     for_window [title="Open File"] floating enabled, border pixel 2, focus
+    for_window [app_id="xdg-desktop-portal-gtk"] border pixel 3
   '';
 
   swayKeybindings = ''
