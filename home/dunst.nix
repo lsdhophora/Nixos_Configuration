@@ -14,9 +14,17 @@
         frame_color = "#9141ac";
         separator_color = "#9141ac";
         highlight = "#9141ac";
-        timeout = 5;
         icon_theme = "Adwaita-purple";
         fullscreen = "show";
+      };
+      urgency_low = {
+        timeout = 10;
+      };
+      urgency_normal = {
+        timeout = 5;
+      };
+      urgency_critical = {
+        timeout = 0;
       };
     };
   };

@@ -9,7 +9,6 @@ while true; do
     pct=$(cat "$bat/capacity")
     status=$(cat "$bat/status")
 
-    # 重置标志：如果正在充电，或者电量回升到阈值以上，就允许下次再提醒
     if [ "$status" != "Discharging" ]; then
       warned_15=0
       warned_5=0
@@ -23,7 +22,7 @@ while true; do
         notify-send -u critical -h string:x-dunst-stack-tag:low-battery \
           "Battery Critical" "Battery at ${pct}% — plug in now"
         warned_5=1
-        warned_15=1   # 5% 提醒时也标记 15% 已提醒，避免重复
+        warned_15=1
       elif [ "$pct" -le 15 ] && [ "$warned_15" -eq 0 ]; then
         notify-send -u critical -h string:x-dunst-stack-tag:low-battery \
           "Battery Low" "Battery at ${pct}% — consider plugging in"
