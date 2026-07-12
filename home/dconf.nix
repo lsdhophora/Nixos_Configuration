@@ -41,6 +41,11 @@
       default-folder-viewer = "icon-view";
       migrated-gtk-settings = true;
     };
+
+    "org/gtk/Settings/FileChooser" = {
+      sort-directories-first = true;
+      startup-mode = "cwd";
+    };
   };
 
 }

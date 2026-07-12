@@ -1,8 +1,50 @@
-diff --git a/src/filechooser.c b/src/filechooser.c
-index 1a5de18..b3f2c71 100644
 --- a/src/filechooser.c
 +++ b/src/filechooser.c
-@@ -427,7 +427,6 @@ handle_open (XdpImplFileChooser *object,
+@@ -399,6 +399,43 @@
+ }
+ 
+ static gboolean
++suppress_right_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer data)
++{
++  return event->button == 3;
++}
++
++static void
++suppress_right_click_in_widget (GtkWidget *widget, gpointer data)
++{
++  if (GTK_IS_TREE_VIEW (widget))
++    {
++      guint signal_id = g_signal_lookup ("button-press-event",
++                                          GTK_TYPE_WIDGET);
++      g_signal_handlers_disconnect_matched (widget,
++                                            G_SIGNAL_MATCH_ID,
++                                            signal_id,
++                                            0, NULL, NULL, NULL);
++      g_signal_connect (widget, "button-press-event",
++                        G_CALLBACK (suppress_right_click_cb), NULL);
++    }
++  if (GTK_IS_CONTAINER (widget))
++    gtk_container_forall (GTK_CONTAINER (widget),
++                          suppress_right_click_in_widget, data);
++}
++
++static void
++hide_recent_recursive (GtkWidget *widget, gpointer data)
++{
++  if (GTK_IS_PLACES_SIDEBAR (widget))
++    {
++      gtk_places_sidebar_set_show_recent (GTK_PLACES_SIDEBAR (widget), FALSE);
++      return;
++    }
++  if (GTK_IS_CONTAINER (widget))
++    gtk_container_forall (GTK_CONTAINER (widget), hide_recent_recursive, data);
++}
++
++static gboolean
+ handle_open (XdpImplFileChooser *object,
+              GDBusMethodInvocation *invocation,
+              const char *arg_handle,
+@@ -546,7 +583,6 @@
  
            filter = gtk_file_filter_new_from_gvariant (variant);
            filters = g_slist_append (filters, g_object_ref (filter));
@@ -10,7 +52,7 @@ index 1a5de18..b3f2c71 100644
            g_variant_unref (variant);
          }
        g_variant_iter_free (iter);
-@@ -520,6 +519,7 @@ handle_open (XdpImplFileChooser *object,
+@@ -639,6 +675,7 @@
  
    if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
      {
@@ -18,11 +60,19 @@ index 1a5de18..b3f2c71 100644
        GtkWidget *readonly;
        GtkWidget *extra;
  
-@@ -535,6 +535,7 @@ handle_open (XdpImplFileChooser *object,
+@@ -654,8 +691,15 @@
          gtk_container_add (GTK_CONTAINER (extra), readonly);
        else
          gtk_file_chooser_set_extra_widget (GTK_FILE_CHOOSER (dialog), readonly);
 +#endif
      }
  
++  /* Hide Recent in sidebar */
++  hide_recent_recursive (GTK_WIDGET (dialog), NULL);
++
++  /* Suppress right-click context menu */
++  suppress_right_click_in_widget (GTK_WIDGET (dialog), NULL);
++
    gtk_widget_show (dialog);
+   gtk_window_present (GTK_WINDOW (dialog));
+ 
