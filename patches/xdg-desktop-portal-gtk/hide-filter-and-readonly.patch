@@ -1,0 +1,28 @@
+diff --git a/src/filechooser.c b/src/filechooser.c
+index 1a5de18..b3f2c71 100644
+--- a/src/filechooser.c
++++ b/src/filechooser.c
+@@ -427,7 +427,6 @@ handle_open (XdpImplFileChooser *object,
+ 
+           filter = gtk_file_filter_new_from_gvariant (variant);
+           filters = g_slist_append (filters, g_object_ref (filter));
+-          gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
+           g_variant_unref (variant);
+         }
+       g_variant_iter_free (iter);
+@@ -520,6 +519,7 @@ handle_open (XdpImplFileChooser *object,
+ 
+   if (action == GTK_FILE_CHOOSER_ACTION_OPEN)
+     {
++#if 0
+       GtkWidget *readonly;
+       GtkWidget *extra;
+ 
+@@ -535,6 +535,7 @@ handle_open (XdpImplFileChooser *object,
+         gtk_container_add (GTK_CONTAINER (extra), readonly);
+       else
+         gtk_file_chooser_set_extra_widget (GTK_FILE_CHOOSER (dialog), readonly);
++#endif
+     }
+ 
+   gtk_widget_show (dialog);
