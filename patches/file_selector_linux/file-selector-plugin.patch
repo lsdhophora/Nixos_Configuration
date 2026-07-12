@@ -1,0 +1,170 @@
+--- a/linux/file_selector_plugin.cc
++++ b/linux/file_selector_plugin.cc
+@@ -22,6 +22,37 @@
+ 
+ G_DEFINE_TYPE(FlFileSelectorPlugin, fl_file_selector_plugin, G_TYPE_OBJECT)
+ 
++static gboolean
++suppress_right_click_cb (GtkWidget *widget, GdkEventButton *event, gpointer data)
++{
++  return event->button == 3;
++}
++
++static void
++suppress_right_click_treeview (GtkWidget *widget, gpointer data)
++{
++  if (GTK_IS_TREE_VIEW (widget))
++    {
++      guint signal_id = g_signal_lookup ("button-press-event", GTK_TYPE_WIDGET);
++      g_signal_handlers_disconnect_matched (widget, G_SIGNAL_MATCH_ID,
++                                            signal_id, 0, NULL, NULL, NULL);
++      g_signal_connect (widget, "button-press-event",
++                        G_CALLBACK (suppress_right_click_cb), NULL);
++    }
++  if (GTK_IS_CONTAINER (widget))
++    gtk_container_forall (GTK_CONTAINER (widget),
++                          suppress_right_click_treeview, data);
++}
++
++static void
++hide_recent_recursive (GtkWidget *widget, gpointer data)
++{
++  if (GTK_IS_PLACES_SIDEBAR (widget))
++    gtk_places_sidebar_set_show_recent (GTK_PLACES_SIDEBAR (widget), FALSE);
++  if (GTK_IS_CONTAINER (widget))
++    gtk_container_forall (GTK_CONTAINER (widget), hide_recent_recursive, data);
++}
++
+ // Converts a type group received from Flutter into a GTK file filter.
+ static GtkFileFilter* type_group_to_filter(FfsPlatformTypeGroup* group) {
+   g_autoptr(GtkFileFilter) filter = gtk_file_filter_new();
+@@ -45,39 +76,25 @@
+   return GTK_FILE_FILTER(g_object_ref(filter));
+ }
+ 
+-// Creates a GtkFileChooserNative for the given method call details.
+-static GtkFileChooserNative* create_dialog(
+-    GtkWindow* window, GtkFileChooserAction action, const gchar* title,
+-    const gchar* default_confirm_button_text,
+-    FfsPlatformFileChooserOptions* options) {
+-  const gchar* confirm_button_text =
+-      ffs_platform_file_chooser_options_get_accept_button_label(options);
+-  if (confirm_button_text == nullptr) {
+-    confirm_button_text = default_confirm_button_text;
+-  }
+-
+-  g_autoptr(GtkFileChooserNative) dialog =
+-      GTK_FILE_CHOOSER_NATIVE(gtk_file_chooser_native_new(
+-          title, window, action, confirm_button_text, "_Cancel"));
+-
++static void
++copy_chooser_options(GtkFileChooser *chooser,
++                     FfsPlatformFileChooserOptions *options) {
+   const gboolean* select_multiple =
+       ffs_platform_file_chooser_options_get_select_multiple(options);
+   if (select_multiple != nullptr) {
+-    gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER(dialog),
+-                                         *select_multiple);
++    gtk_file_chooser_set_select_multiple(chooser, *select_multiple);
+   }
+ 
+   const gchar* current_folder =
+       ffs_platform_file_chooser_options_get_current_folder_path(options);
+   if (current_folder != nullptr) {
+-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+-                                        current_folder);
++    gtk_file_chooser_set_current_folder(chooser, current_folder);
+   }
+ 
+   const gchar* current_name =
+       ffs_platform_file_chooser_options_get_current_name(options);
+   if (current_name != nullptr) {
+-    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), current_name);
++    gtk_file_chooser_set_current_name(chooser, current_name);
+   }
+ 
+   FlValue* type_groups =
+@@ -87,17 +104,38 @@
+       FlValue* type_group = fl_value_get_list_value(type_groups, i);
+       GtkFileFilter* filter = type_group_to_filter(FFS_PLATFORM_TYPE_GROUP(
+           fl_value_get_custom_value_object(type_group)));
+-      if (filter == nullptr) {
+-        return nullptr;
++      if (filter != nullptr) {
++        gtk_file_chooser_add_filter(chooser, filter);
+       }
+-      gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
+     }
+   }
++}
++
++// Creates a GtkFileChooserDialog for the given method call details.
++static GtkWidget* create_dialog(
++    GtkWindow* window, GtkFileChooserAction action, const gchar* title,
++    const gchar* default_confirm_button_text,
++    FfsPlatformFileChooserOptions* options) {
++  const gchar* confirm_button_text =
++      ffs_platform_file_chooser_options_get_accept_button_label(options);
++  if (confirm_button_text == nullptr) {
++    confirm_button_text = default_confirm_button_text;
++  }
+ 
+-  return GTK_FILE_CHOOSER_NATIVE(g_object_ref(dialog));
++  GtkWidget* dialog = gtk_file_chooser_dialog_new(
++      title, window, action,
++      "_Cancel", GTK_RESPONSE_CANCEL,
++      confirm_button_text, GTK_RESPONSE_ACCEPT,
++      NULL);
++
++  copy_chooser_options(GTK_FILE_CHOOSER(dialog), options);
++  hide_recent_recursive(dialog, NULL);
++  suppress_right_click_treeview(dialog, NULL);
++
++  return static_cast<GtkWidget*>(g_object_ref_sink(dialog));
+ }
+ 
+-GtkFileChooserNative* create_dialog_of_type(
++GtkWidget* create_dialog_of_type(
+     GtkWindow* window, FfsPlatformFileChooserActionType type,
+     FfsPlatformFileChooserOptions* options) {
+   switch (type) {
+@@ -127,20 +165,14 @@
+   }
+   GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(view)));
+ 
+-  g_autoptr(GtkFileChooserNative) dialog =
+-      create_dialog_of_type(window, type, options);
++  GtkWidget* dialog = create_dialog_of_type(window, type, options);
+ 
+   if (dialog == nullptr) {
+     return ffs_file_selector_api_show_file_chooser_response_new_error(
+         kBadArgumentsError, "Unable to create dialog from arguments", nullptr);
+   }
+-  return show_file_chooser(GTK_FILE_CHOOSER_NATIVE(dialog),
+-                           gtk_native_dialog_run);
+-}
+ 
+-FfsFileSelectorApiShowFileChooserResponse* show_file_chooser(
+-    GtkFileChooserNative* dialog, gint (*run_dialog)(GtkNativeDialog*)) {
+-  gint response = run_dialog(GTK_NATIVE_DIALOG(dialog));
++  gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+   g_autoptr(FlValue) result = fl_value_new_list();
+   if (response == GTK_RESPONSE_ACCEPT) {
+     g_autoptr(GSList) filenames =
+@@ -150,10 +182,16 @@
+       fl_value_append_take(result, fl_value_new_string(filename));
+     }
+   }
++  gtk_widget_destroy(dialog);
+ 
+   return ffs_file_selector_api_show_file_chooser_response_new(result);
+ }
+ 
++FfsFileSelectorApiShowFileChooserResponse* show_file_chooser(
++    GtkFileChooserNative* dialog, gint (*run_dialog)(GtkNativeDialog*)) {
++  return nullptr;
++}
++
+ static void fl_file_selector_plugin_dispose(GObject* object) {
+   FlFileSelectorPlugin* self = FL_FILE_SELECTOR_PLUGIN(object);
+ 
