@@ -70,7 +70,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 
 ```bash
 nixos-rebuild dry-build --flake .#flowerpot       # verify
-pkexec nixos-rebuild switch --flake .#flowerpot   # rebuild & switch
+pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot   # rebuild & switch (absolute path — pkexec runs as root)
 nix flake update                                   # update inputs
 git add -A && git commit -m "type(scope): subject" # commit
 git push                                           # push
