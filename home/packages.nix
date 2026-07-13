@@ -10,5 +10,6 @@
     unzip
     kitty
     bluetui
+    pulsemixer
   ];
 }
