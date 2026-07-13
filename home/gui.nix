@@ -21,7 +21,6 @@ in
     blanket
     # now managed by programs/mpv.nix
     fluffychat
-    gnome-epub-thumbnailer
     gnomeExtensions.app-hider
     gnomeExtensions.caffeine
     gnomeExtensions.customize-ibus
