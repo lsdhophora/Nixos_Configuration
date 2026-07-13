@@ -4,7 +4,6 @@
     package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.emacs-pgtk;
     extraPackages =
       _: with inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.emacs-pgtk.pkgs; [
-        meow
         direnv
         auctex
         nix-mode
@@ -15,6 +14,7 @@
         trashed
         emms
         straight
+        hydra
       ];
     extraConfig = ''
       (add-to-list 'load-path

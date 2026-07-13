@@ -171,104 +171,60 @@
             (file-name-sans-extension
              (file-name-nondirectory (emms-track-get track 'name))))))
 
-(use-package meow
-  :ensure t
-  :config
-  (setq meow-use-clipboard t)
-  (defun meow-delete-region ()
-    "Delete region without saving to kill-ring."
-    (interactive)
-    (if (region-active-p)
-        (delete-region (region-beginning) (region-end))
-      (call-interactively #'meow-delete)))
-  (defun meow-setup ()
-    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-    (meow-motion-define-key
-     '("j" . meow-next)
-     '("k" . meow-prev)
-     '("<escape>" . ignore))
-    (meow-leader-define-key
-     '("1" . meow-digit-argument)
-     '("2" . meow-digit-argument)
-     '("3" . meow-digit-argument)
-     '("4" . meow-digit-argument)
-     '("5" . meow-digit-argument)
-     '("6" . meow-digit-argument)
-     '("7" . meow-digit-argument)
-     '("8" . meow-digit-argument)
-     '("9" . meow-digit-argument)
-     '("0" . meow-digit-argument)
-     '("/" . meow-keypad-describe-key)
-     '("?" . meow-cheatsheet))
-    (meow-normal-define-key
-     '("0" . meow-expand-0)
-     '("9" . meow-expand-9)
-     '("8" . meow-expand-8)
-     '("7" . meow-expand-7)
-     '("6" . meow-expand-6)
-     '("5" . meow-expand-5)
-     '("4" . meow-expand-4)
-     '("3" . meow-expand-3)
-     '("2" . meow-expand-2)
-     '("1" . meow-expand-1)
-     '("-" . negative-argument)
-     '(";" . meow-reverse)
-     '("," . meow-inner-of-thing)
-     '("." . meow-bounds-of-thing)
-     '("[" . meow-beginning-of-thing)
-     '("]" . meow-end-of-thing)
-     '("a" . meow-append)
-     '("A" . meow-open-below)
-     '("b" . meow-back-word)
-     '("B" . meow-back-symbol)
-     '("c" . meow-change)
-     '("d" . meow-delete-region)
-     '("D" . meow-backward-delete)
-     '("e" . meow-next-word)
-     '("E" . meow-next-symbol)
-     '("f" . meow-find)
-     '("g" . meow-cancel-selection)
-     '("G" . meow-grab)
-     '("h" . meow-left)
-     '("H" . meow-left-expand)
-     '("i" . meow-insert)
-     '("I" . meow-open-above)
-     '("j" . meow-next)
-     '("J" . meow-next-expand)
-     '("k" . meow-prev)
-     '("K" . meow-prev-expand)
-     '("l" . meow-right)
-     '("L" . meow-right-expand)
-     '("m" . meow-join)
-     '("n" . meow-search)
-     '("o" . meow-block)
-     '("O" . meow-to-block)
-     '("p" . meow-yank)
-     '("q" . meow-quit)
-     '("Q" . meow-goto-line)
-     '("r" . meow-replace)
-     '("R" . meow-swap-grab)
-     '("s" . meow-kill)
-     '("t" . meow-till)
-     '("u" . meow-undo)
-     '("U" . meow-undo-in-selection)
-     '("v" . meow-visit)
-     '("w" . meow-mark-word)
-     '("W" . meow-mark-symbol)
-     '("x" . meow-line)
-     '("X" . meow-goto-line)
-     '("y" . meow-save)
-     '("Y" . meow-sync-grab)
-     '("z" . meow-pop-selection)
-     '("'" . repeat)
-     '("<escape>" . ignore)))
-  (meow-setup)
-  (meow-global-mode 1)
-  (add-hook 'magit-mode-hook #'meow-motion-mode)
-  (add-hook 'emms-playlist-mode-hook #'meow-motion-mode)
-  (add-hook 'emms-browser-mode-hook #'meow-motion-mode)
-  (add-hook 'emms-stream-mode-hook #'meow-motion-mode))
 
  (use-package kkp
    :straight (:host github :repo "benotn/kkp" :branch "master")
    :hook (tty-setup . global-kkp-mode))
+
+(use-package hydra
+  :ensure t)
+
+(defhydra hydra-window (:color teal :hint nil)
+  "
+  ^Window^           ^Navigation^
+ ══════════════════════════════════
+  _0_ delete          _h_←  _j_↓  _k_↑  _l_→
+  _v_ split vert      _H_⟺  _J_⇣  _K_⇡  _L_⟹
+  _x_ split horiz
+  _=_ balance         _q_ quit
+"
+  ("0" delete-window)
+  ("v" split-window-right)
+  ("x" split-window-below)
+  ("=" balance-windows)
+  ("h" windmove-left)
+  ("j" windmove-down)
+  ("k" windmove-up)
+  ("l" windmove-right)
+  ("H" enlarge-window-horizontally)
+  ("J" enlarge-window)
+  ("K" shrink-window)
+  ("L" shrink-window-horizontally)
+  ("q" nil :color blue))
+
+(defhydra hydra-move (:color red :hint nil)
+  "
+  ^Move^
+ ═══════════════════════
+  _j_↓  _k_↑  _h_←  _l_→
+  _w_ word  _b_ back-word
+  _t_ bol   _e_ eol   _n_ next  _p_ prev
+  _g_ top  _G_ bottom
+  _q_ quit
+"
+  ("j" next-line)
+  ("k" previous-line)
+  ("h" backward-char)
+  ("l" forward-char)
+  ("w" forward-word)
+  ("b" backward-word)
+  ("t" beginning-of-line)
+  ("e" move-end-of-line)
+  ("n" scroll-up-command)
+  ("p" scroll-down-command)
+  ("g" beginning-of-buffer)
+  ("G" end-of-buffer)
+  ("q" nil :color blue))
+
+(global-set-key (kbd "C-c w") #'hydra-window/body)
+(global-set-key (kbd "C-c m") #'hydra-move/body)
