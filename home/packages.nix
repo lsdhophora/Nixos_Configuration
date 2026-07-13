@@ -9,5 +9,6 @@
     nixd
     unzip
     kitty
+    bluetui
   ];
 }

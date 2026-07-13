@@ -12,6 +12,11 @@
     ../../modules/services/tlp.nix
   ];
 
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+
   services.logind.settings.Login = {
     HandleLidSwitch = "lock";
     HandleLidSwitchExternalPower = "lock";
