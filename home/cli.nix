@@ -3,5 +3,6 @@
     wl-clipboard
     gh
     at
+    nnn
   ];
 }
