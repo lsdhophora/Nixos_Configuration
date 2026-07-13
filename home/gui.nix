@@ -19,16 +19,7 @@ in
   home.packages = with pkgs; [
     # GUI
     blanket
-    # now managed by programs/mpv.nix
     fluffychat
-    gnomeExtensions.app-hider
-    gnomeExtensions.caffeine
-    gnomeExtensions.customize-ibus
-    gnomeExtensions.hide-cursor
-    gnomeExtensions.just-perfection
-    gnomeExtensions.color-picker
-    gnomeExtensions.paperwm
-    gnomeExtensions.touchpad-switcher
     gnome-themes-extra
     kdePackages.breeze
     kdenlive-wrapped
