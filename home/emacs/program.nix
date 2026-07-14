@@ -15,6 +15,7 @@
         emms
         straight
         hydra
+
       ];
     extraConfig = ''
       (add-to-list 'load-path
