@@ -180,58 +180,7 @@
    :straight (:host github :repo "benotn/kkp" :branch "master")
    :hook (tty-setup . global-kkp-mode))
 
-(use-package hydra
-  :ensure t)
-
-(defhydra hydra-window (:color teal :hint nil)
-  "
-  ^Window^           ^Navigation^
- ══════════════════════════════════
-  _0_ delete          _h_←  _j_↓  _k_↑  _l_→
-  _v_ split vert      _H_⟺  _J_⇣  _K_⇡  _L_⟹
-  _x_ split horiz
-  _=_ balance         _q_ quit
-"
-  ("0" delete-window)
-  ("v" split-window-right)
-  ("x" split-window-below)
-  ("=" balance-windows)
-  ("h" windmove-left)
-  ("j" windmove-down)
-  ("k" windmove-up)
-  ("l" windmove-right)
-  ("H" enlarge-window-horizontally)
-  ("J" enlarge-window)
-  ("K" shrink-window)
-  ("L" shrink-window-horizontally)
-  ("q" nil :color blue))
-
-(defhydra hydra-move (:color red :hint nil)
-  "
-  ^Move^
- ═══════════════════════
-  _j_↓  _k_↑  _h_←  _l_→
-  _w_ word  _b_ back-word
-  _t_ bol   _e_ eol   _n_ next  _p_ prev
-  _g_ top  _G_ bottom
-  _q_ quit
-"
-  ("j" next-line)
-  ("k" previous-line)
-  ("h" backward-char)
-  ("l" forward-char)
-  ("w" forward-word)
-  ("b" backward-word)
-  ("t" beginning-of-line)
-  ("e" move-end-of-line)
-  ("n" scroll-up-command)
-  ("p" scroll-down-command)
-  ("g" beginning-of-buffer)
-  ("G" end-of-buffer)
-  ("q" nil :color blue))
-
-(global-set-key (kbd "C-c w") #'hydra-window/body)
-(global-set-key (kbd "C-c m") #'hydra-move/body)
+;; hydra removed
 
 (when (file-exists-p "/run/agenix/deepseekKey")
   (setenv "DEEPSEEK_API_KEY"

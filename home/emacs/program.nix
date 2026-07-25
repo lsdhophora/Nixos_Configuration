@@ -14,9 +14,7 @@
         trashed
         emms
         straight
-        hydra
         eca
-
       ];
     extraConfig = ''
       (add-to-list 'load-path
