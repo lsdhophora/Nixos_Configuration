@@ -3,7 +3,11 @@
     system = "x86_64-linux";
     pkgs = import inputs.nixpkgs {
       system = "x86_64-linux";
-      overlays = (import ../overlays/default.nix);
+      overlays = (import ../overlays/default.nix) ++ [
+        (final: prev: {
+          eca-server = inputs.eca.packages.${final.system}.default;
+        })
+      ];
     };
     specialArgs = { inherit inputs; };
     modules = [

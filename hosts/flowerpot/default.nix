@@ -12,8 +12,6 @@
     ../../modules/services/tlp.nix
   ];
 
-  services.udisks2.enable = true;
-
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
