@@ -23,6 +23,13 @@
     mode = "600";
   };
 
+  age.secrets.deepseekKey = {
+    file = ../../secrets/deepseek-key.age;
+    owner = "lophophora";
+    group = "users";
+    mode = "400";
+  };
+
   age.identityPaths = [ "/home/lophophora/.ssh/lysergic" ];
 
   nix.extraOptions = ''

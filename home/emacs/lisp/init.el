@@ -183,9 +183,6 @@
 (use-package hydra
   :ensure t)
 
-(require 'helm-linux-disks)
-(global-set-key (kbd "C-c d") #'helm-linux-disks)
-
 (defhydra hydra-window (:color teal :hint nil)
   "
   ^Window^           ^Navigation^
@@ -235,3 +232,24 @@
 
 (global-set-key (kbd "C-c w") #'hydra-window/body)
 (global-set-key (kbd "C-c m") #'hydra-move/body)
+
+(when (file-exists-p "/run/agenix/deepseekKey")
+  (setenv "DEEPSEEK_API_KEY"
+          (with-temp-buffer
+            (insert-file-contents "/run/agenix/deepseekKey")
+            (string-trim (buffer-string)))))
+
+(use-package eca
+  :bind
+  (("C-c e" . eca)
+   :map eca-chat-mode-map
+   ("C-c ." . eca-transient-menu))
+  :custom
+  (eca-custom-command '("eca" "server"))
+  (eca-completion-idle-delay 0.2)
+  (eca-chat-window-side 'right)
+  (eca-chat-window-width 56)
+  (eca-chat-auto-add-cursor t)
+  (eca-chat-auto-add-repomap t)
+  :config
+  (add-hook 'prog-mode-hook #'eca-completion-mode))

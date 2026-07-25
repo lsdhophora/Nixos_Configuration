@@ -11,5 +11,6 @@
     kitty
     bluetui
     pulsemixer
+    eca-server
   ];
 }

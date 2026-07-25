@@ -15,7 +15,7 @@
         emms
         straight
         hydra
-        helm
+        eca
 
       ];
     extraConfig = ''

@@ -4,8 +4,20 @@
     ".config/emacs/lisp/init.el".source = ./lisp/init.el;
     ".config/emacs/lisp/nov-config.el".source = ./lisp/nov-config.el;
     ".config/emacs/site-lisp/audio-trimmer.el".source = ./lisp/audio-trimmer.el;
-    ".config/emacs/site-lisp/helm-linux-disks.el".source = ./lisp/helm-linux-disks.el;
-    ".config/emacs/site-lisp/linux-disk.el".source = ./lisp/linux-disk.el;
+    ".config/eca/config.json".text = ''
+      {
+        "providers": {
+          "deepseek": {
+            "api": "openai-chat",
+            "url": "https://api.deepseek.com",
+            "key": "''${env:DEEPSEEK_API_KEY}",
+            "models": {
+              "deepseek-v4-flash": {}
+            }
+          }
+        }
+      }
+    '';
     ".config/emacs/init.el".text = "";
     ".local/share/applications/emacsclient-mail.desktop".text = "";
     ".local/share/applications/emacs-mail.desktop".text = "";
