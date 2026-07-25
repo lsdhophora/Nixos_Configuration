@@ -183,6 +183,9 @@
 (use-package hydra
   :ensure t)
 
+(require 'helm-linux-disks)
+(global-set-key (kbd "C-c d") #'helm-linux-disks)
+
 (defhydra hydra-window (:color teal :hint nil)
   "
   ^Window^           ^Navigation^

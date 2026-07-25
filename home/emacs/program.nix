@@ -15,6 +15,7 @@
         emms
         straight
         hydra
+        helm
 
       ];
     extraConfig = ''
