@@ -13,7 +13,7 @@ print_layout() {
     [ -z "$layout" ] || [ "$layout" = "null" ] && layout="$last"
     case "$layout" in
         tabbed)   icon="[T]" ;;
-        stacking) icon="[S]" ;;
+        stacked) icon="[S]" ;;
         splith)   icon="[H]" ;;
         splitv)   icon="[V]" ;;
         *)        icon="$last" ;;
