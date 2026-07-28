@@ -182,10 +182,10 @@
 
 ;; hydra removed
 
-(when (file-exists-p "/run/agenix/deepseekKey")
+(when (file-exists-p "~/.config/eca/deepseek-key")
   (setenv "DEEPSEEK_API_KEY"
           (with-temp-buffer
-            (insert-file-contents "/run/agenix/deepseekKey")
+            (insert-file-contents "~/.config/eca/deepseek-key")
             (string-trim (buffer-string)))))
 
 (use-package eca

@@ -5,5 +5,5 @@ in
   "access-tokens-github.age".publicKeys = [ lysergic ];
   "config.dae.age".publicKeys = [ lysergic ];
   "hashed-password.age".publicKeys = [ lysergic ];
-  "deepseek-key.age".publicKeys = [ lysergic ];
+
 }
