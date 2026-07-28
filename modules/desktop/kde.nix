@@ -11,6 +11,11 @@ in {
   # Disable power-profiles-daemon (conflicts with TLP)
   services.power-profiles-daemon.enable = false;
 
+  qt = {
+    enable = true;
+    platformTheme = "kde";
+  };
+
   nixpkgs.overlays = [
     (final: prev: {
       kdePackages = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.kdePackages;
