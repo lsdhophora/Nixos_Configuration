@@ -1,6 +1,10 @@
 { pkgs, ... }:
 
 {
+  home.sessionVariables = {
+    PI_SKIP_VERSION_CHECK = "1";
+  };
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
