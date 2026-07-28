@@ -2,7 +2,7 @@
 let
   swayAssets = ../../assets/sway;
 
-  swayPkg = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.sway;
+  swayPkg = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.sway;
 
   adwPurple = pkgs.runCommand "Adwaita-purple-icon-theme" { } ''
     mkdir -p $out/share/icons

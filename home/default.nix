@@ -15,7 +15,6 @@
     ./gtk.nix
     ./dunst.nix
     ./mime.nix
-    ./sway-config.nix
     ./session.nix
     ./programs/kitty.nix
     ./programs/kvantum.nix

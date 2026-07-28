@@ -5,7 +5,7 @@
       system = "x86_64-linux";
       overlays = (import ../overlays/default.nix) ++ [
         (final: prev: {
-          eca-server = inputs.eca.packages.${final.system}.default;
+          eca-server = inputs.eca.packages.${final.stdenv.hostPlatform.system}.default;
         })
       ];
     };
