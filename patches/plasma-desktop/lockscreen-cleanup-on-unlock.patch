@@ -1,0 +1,11 @@
+--- a/desktoppackage/contents/lockscreen/LockScreenUi.qml
++++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
+@@ -57,6 +57,8 @@
+ 
+         function onSucceeded() {
+             if (authenticator.hadPrompt) {
++                mainStack.clear();
++                lockScreenRoot.uiVisible = false;
+                 Qt.quit();
+             } else {
+                 mainStack.replace(null, Qt.resolvedUrl("NoPasswordUnlock.qml"),
