@@ -12,8 +12,19 @@ in {
   services.power-profiles-daemon.enable = false;
 
   nixpkgs.overlays = [
+    # Replace kdePackages with unstable
     (final: prev: {
       kdePackages = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.kdePackages;
+    })
+    # Patch plasma-workspace: fix accent color radio button border clipping
+    (final: prev: {
+      kdePackages = prev.kdePackages // {
+        plasma-workspace = prev.kdePackages.plasma-workspace.overrideAttrs (oldAttrs: {
+          patches = (oldAttrs.patches or []) ++ [
+            ./../../patches/plasma-workspace/accent-color-clip.patch
+          ];
+        });
+      };
     })
   ];
 
