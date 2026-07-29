@@ -1,6 +1,6 @@
 # NixOS Laptop Configuration
 
-Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chaotic Nyx, custom overlays.
+Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chaotic Nyx, custom overlays, Plasma 6.
 
 ## Project Structure
 
@@ -13,7 +13,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   └── nixos.nix             # nixosConfigurations.flowerpot
 ├── hosts/
 │   └── flowerpot/            # Machine entry point
-│       ├── default.nix       # Host config (imports profiles, Sway, TLP)
+│       ├── default.nix       # Host config (imports profiles, KDE, TLP)
 │       └── hardware-configuration.nix
 ├── modules/                  # NixOS modules (by type)
 │   ├── profiles/             # Feature bundles
@@ -21,9 +21,10 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   ├── desktop.nix       # PipeWire, Kanata
 │   │   ├── printing.nix      # CUPS
 │   │   ├── proxying.nix      # DAE
-│   │   └── kmscon.nix        # Kmscon VT
+│   │   └── kmscon.nix        # Kmscon VT (disabled)
 │   ├── boot.nix              # Plymouth, CachyOS kernel, scx, swapfile
-│   ├── desktop/sway.nix      # Sway WM, fcitx5
+│   ├── desktop/
+│   │   └── kde.nix           # Plasma 6 desktop, SDDM login, fcitx5
 │   └── services/
 │       ├── tlp.nix
 │       ├── kanata.nix
@@ -39,12 +40,10 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   └── firefox.nix
 │   └── shell/zsh.nix
 ├── assets/                   # Static assets
-│   ├── sway/                 # Sway config, i3blocks, scripts
 │   ├── kitty/                # Kitty terminal config
 │   └── icons/Adwaita-purple/
 ├── overlays/                 # Nixpkgs overlays (final: prev: { ... })
 │   ├── default.nix           # Aggregator
-│   ├── portal-gtk.nix        # xdg-desktop-portal-gtk: UseIn=sway
 │   ├── granite.nix           # granite7: GNOME named accent-color support
 │   ├── firefox.nix           # omni.ja patches
 │   └── kitty.nix             # Patched: remove resize text overlay
@@ -52,8 +51,13 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   ├── granite/
 │   │   └── fallback-accent-color.patch
 │   ├── kitty/
-│   │   └── kitty-remove-resize-text.patch
-│   └── ly/
+│   │   ├── kitty-remove-resize-text.patch
+│   │   └── kitty-fix-panel-position.patch
+│   ├── plasma-desktop/
+│   │   ├── lookandfeelbox-highlight-border.patch
+│   │   └── hide-virtual-keyboard-button.patch
+│   └── plasma-workspace/
+│       └── accent-color-clip.patch
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix
 │   ├── config.dae.age
@@ -73,17 +77,16 @@ git push                                           # push
 
 ## Workflow
 
-All rebuild/commit/push asks use the `question` tool.
-
 1. Edit → `dry-build` pass
-2. `#Questions` → rebuild
-3. `#Questions` → commit (if success)
-4. `#Questions` → push (if success)
+2. Rebuild
+3. Commit (if success)
+4. Push (if success)
 
 ## Notes
 
 - Hardware config is auto-generated
-- Packge attr path may differ from pname (e.g. `transmission_4-gtk`)
+- Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix`
+- Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay

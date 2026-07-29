@@ -14,14 +14,12 @@
     ./packages.nix
     ./gtk.nix
     ./dunst.nix
-    ./mime.nix
     ./session.nix
     ./programs/kitty.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/tmux.nix
     ./programs/zathura.nix
-    ./programs/swayimg.nix
     ./programs/mpv.nix
     ./profiles/development.nix
     ./shell/zsh.nix
