@@ -7,7 +7,7 @@
     ../../modules/profiles/desktop.nix
     ../../modules/profiles/printing.nix
     ../../modules/profiles/proxying.nix
-    ../../modules/profiles/kmscon.nix
+    #../../modules/profiles/kmscon.nix  # conflicts with plasma-login-manager VT handling
     ../../modules/desktop/kde.nix
     ../../modules/services/tlp.nix
   ];
