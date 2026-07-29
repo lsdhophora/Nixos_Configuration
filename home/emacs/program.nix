@@ -14,7 +14,6 @@
         trashed
         emms
         straight
-        eca
       ];
     extraConfig = ''
       (add-to-list 'load-path

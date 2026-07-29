@@ -13,7 +13,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-    eca.url = "github:editor-code-assistant/eca/9d8f4849153f634f4e2c4268af576c73dad8934d";
   };
   outputs =
     inputs@{ flake-parts, ... }:

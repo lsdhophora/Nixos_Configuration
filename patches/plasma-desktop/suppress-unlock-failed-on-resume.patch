@@ -1,0 +1,60 @@
+--- a/desktoppackage/contents/lockscreen/LockScreenUi.qml
++++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
+@@ -26,6 +26,8 @@
+     // See https://bugs.kde.org/show_bug.cgi?id=398317
+     readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
+ 
++    property bool suppressNextFailure: false
++
+     function handleMessage(msg) {
+         if (!root.notification) {
+             root.notification += msg;
+@@ -45,6 +47,11 @@
+             if (kind != 0) { // if this is coming from the noninteractive authenticators
+                 return;
+             }
++            if (lockScreenUi.suppressNextFailure) {
++                lockScreenUi.suppressNextFailure = false;
++                graceLockTimer.restart();
++                return;
++            }
+             const msg = i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Unlocking failed");
+             lockScreenUi.handleMessage(msg);
+             graceLockTimer.restart();
+@@ -67,15 +74,21 @@
+         }
+ 
+         function onInfoMessageChanged() {
+-            lockScreenUi.handleMessage(authenticator.infoMessage);
++            if (!lockScreenUi.suppressNextFailure) {
++                lockScreenUi.handleMessage(authenticator.infoMessage);
++            }
+         }
+ 
+         function onErrorMessageChanged() {
+-            lockScreenUi.handleMessage(authenticator.errorMessage);
++            if (!lockScreenUi.suppressNextFailure) {
++                lockScreenUi.handleMessage(authenticator.errorMessage);
++            }
+         }
+ 
+         function onPromptChanged(msg) {
+-            lockScreenUi.handleMessage(authenticator.prompt);
++            if (!lockScreenUi.suppressNextFailure) {
++                lockScreenUi.handleMessage(authenticator.prompt);
++            }
+         }
+         function onPromptForSecretChanged(msg) {
+             mainBlock.showPassword = false;
+@@ -97,6 +110,11 @@
+         function onAboutToSuspend() {
+             root.clearPassword();
+         }
++        function onResumingFromSuspend() {
++            root.clearPassword();
++            lockScreenUi.suppressNextFailure = true;
++            authenticator.cancel();
++        }
+     }
+ 
+     RejectPasswordAnimation {

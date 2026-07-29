@@ -23,7 +23,12 @@ in {
           patches = (oldAttrs.patches or []) ++ [
             ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
             ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
-            ./../../patches/plasma-desktop/lockscreen-cleanup-on-unlock.patch
+            ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
+          ];
+        });
+        kscreenlocker = prev.kdePackages.kscreenlocker.overrideAttrs (oldAttrs: {
+          patches = (oldAttrs.patches or []) ++ [
+            ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
           ];
         });
       };

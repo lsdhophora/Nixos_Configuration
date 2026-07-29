@@ -1,7 +1,23 @@
 --- a/desktoppackage/contents/lockscreen/LockScreenUi.qml
 +++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
-@@ -55,9 +55,11 @@
- 
+@@ -44,11 +44,13 @@
+     Connections {
+         target: authenticator
+         function onFailed(kind) {
+-            if (kind != 0) { // if this is coming from the noninteractive authenticators
++            if (kind != 0) {
+                 return;
+             }
+-            const msg = i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Unlocking failed");
+-            lockScreenUi.handleMessage(msg);
++            // notify the RejectPasswordAnimation to play
++            // but do NOT show "Unlocking failed" message — it can flash on
++            // wake-from-sleep when PAM transiently fails then succeeds
++            // on the retry that follows immediately.
+             graceLockTimer.restart();
+             notificationRemoveTimer.restart();
+             rejectPasswordAnimation.start();
+@@ -57,6 +59,8 @@
          function onSucceeded() {
              if (authenticator.hadPrompt) {
 +                mainStack.clear();
@@ -9,23 +25,3 @@
                  Qt.quit();
              } else {
                  mainStack.replace(null, Qt.resolvedUrl("NoPasswordUnlock.qml"),
-                     {
-                         userListModel: users
-                     },
-@@ -134,7 +136,6 @@
-             } else if (uiVisible) {
-                 fadeoutTimer.restart();
-             }
--            authenticator.startAuthenticating();
-         }
-         onBlockUIChanged: {
-             if (blockUI) {
-@@ -195,7 +196,7 @@
-             duration: Kirigami.Units.veryLongDuration * 2
-         }
- 
--        Component.onCompleted: launchAnimation.start();
-+        Component.onCompleted: { launchAnimation.start(); authenticator.startAuthenticating(); }
- 
-         WallpaperFader {
-             anchors.fill: parent

@@ -4,20 +4,6 @@
     ".config/emacs/lisp/init.el".source = ./lisp/init.el;
     ".config/emacs/lisp/nov-config.el".source = ./lisp/nov-config.el;
     ".config/emacs/site-lisp/audio-trimmer.el".source = ./lisp/audio-trimmer.el;
-    ".config/eca/config.json".text = ''
-      {
-        "providers": {
-          "deepseek": {
-            "api": "openai-chat",
-            "url": "https://api.deepseek.com",
-            "key": "''${env:DEEPSEEK_API_KEY}",
-            "models": {
-              "deepseek-v4-flash": {}
-            }
-          }
-        }
-      }
-    '';
     ".config/emacs/init.el".text = "";
     ".local/share/applications/emacsclient-mail.desktop".text = "";
     ".local/share/applications/emacs-mail.desktop".text = "";
