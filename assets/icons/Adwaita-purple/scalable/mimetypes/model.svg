@@ -45,7 +45,7 @@
      id="path4"
      sodipodi:nodetypes="sssssssss"
      transform="matrix(0.25,0,0,-0.25,40.543896,20.679901)"
-     style="stroke:#9141ac;stroke-opacity:1" />
+     style="stroke:#3584e4;stroke-opacity:1" />
   <path
      d="m 120 86.125 h -22 c -4.433594 0 -8 3.570312 -8 8 v 21.875 z m 0 0"
      fill="#deddda"
@@ -59,14 +59,14 @@
        stroke-dasharray="2 2"
        stroke-width="2"
        id="path8"
-       style="stroke:#9141ac;stroke-opacity:0.4955537" />
+       style="stroke:#3584e4;stroke-opacity:0.4955537" />
     <path
        d="m 49.00000025 46 v 51"
        stroke="#99c1f1"
        stroke-dasharray="2 2"
        stroke-width="2"
        id="path10"
-       style="stroke:#9141ac;stroke-opacity:0.4955537" />
+       style="stroke:#3584e4;stroke-opacity:0.4955537" />
     <path
        d="m 31.636917 -181.280396 h 140.375 c 23.09375 0 41.8125 18.71875 41.8125 41.8125 v 12.5 c 0 23.109375 -18.71875 41.828125 -41.8125 41.828125 h -140.375 c -23.09375 0 -41.8125 -18.71875 -41.8125 -41.828125 v -12.5 c 0 -23.09375 18.71875 -41.8125 41.8125 -41.8125 z m 0 0"
        stroke="#3584e4"
@@ -75,7 +75,7 @@
        stroke-width="16"
        id="path12"
        transform="matrix(0.25 0 0 -0.25 40.543896 20.679901)"
-       style="stroke:#9141ac;stroke-opacity:1" />
+       style="stroke:#3584e4;stroke-opacity:1" />
     <path
        d="M 91.941406,74.058594 C 90.4375,75.75 88.246094,76.816406 85.796875,76.816406 h -39.59375 c -2.511719,0 -4.75,-1.117187 -6.253906,-2.886719"
        stroke="#99c1f1"
@@ -83,6 +83,6 @@
        stroke-dashoffset="2.2"
        stroke-width="2"
        id="path14"
-       style="stroke:#9141ac;stroke-opacity:0.4955537" />
+       style="stroke:#3584e4;stroke-opacity:0.4955537" />
   </g>
 </svg>

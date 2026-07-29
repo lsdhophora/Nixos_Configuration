@@ -23,7 +23,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   ├── proxying.nix      # DAE
 │   │   └── kmscon.nix        # Kmscon VT
 │   ├── boot.nix              # Plymouth, CachyOS kernel, scx, swapfile
-│   ├── desktop/sway.nix      # Sway WM, pantheon-agent-polkit, fcitx5
+│   ├── desktop/sway.nix      # Sway WM, fcitx5
 │   └── services/
 │       ├── tlp.nix
 │       ├── kanata.nix
@@ -53,12 +53,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   └── fallback-accent-color.patch
 │   ├── kitty/
 │   │   └── kitty-remove-resize-text.patch
-│   ├── ly/
-│   │   ├── remove-arrows.patch
-│   │   └── suppress-startup-messages.patch
-│   └── pantheon-agent-polkit/
-│       ├── accent-focus.css
-│       └── accent-focus.patch
+│   └── ly/
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix
 │   ├── config.dae.age

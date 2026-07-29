@@ -24,11 +24,7 @@
 
     scriptOpts = {
       modernz = {
-        hover_effect_color = "#9141ac";
-        seekbarfg_color = "#9141ac";
-        seek_handle_color = "#77358d";
-        seek_handle_border_color = "#9141ac";
-        nibble_color = "#9141ac";
+
         window_controls = "no";
         title_font_size = 28;
         chapter_title_font_size = 20;

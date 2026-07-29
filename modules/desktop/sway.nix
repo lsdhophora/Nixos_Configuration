@@ -34,7 +34,7 @@ let
     set $up k
     set $right l
     set $term kitty
-    set $menu wmenu-run -f "IBM Plex Sans 12" -N \#323232 -n \#cccccc -M \#9141ac -m \#cccccc -S \#9141ac -s \#000000
+    set $menu wmenu-run -f "IBM Plex Sans 12" -N \#323232 -n \#cccccc -m \#cccccc -s \#000000
   '';
 
   swayStartup = ''
@@ -66,7 +66,7 @@ let
     gaps vertical 5
     font pango:Adwaita Sans Medium 11
 
-    client.focused          #9141ac #9141ac #ffffff #9141ac #9141ac
+    client.focused          #4c7899 #285577 #ffffff #2e9ef4 #285577
     client.focused_inactive #333333 #5f676a #888888 #484e50 #5f676a
     client.unfocused        #333333 #222222 #888888 #292d2e #222222
     client.urgent           #2f343a #900000 #ffffff #900000 #900000
@@ -191,8 +191,8 @@ let
       colors {
         statusline #ffffff
         background #1a1a1a
-        binding_mode #000000 #9141ac #ffffff
-        focused_workspace #9141ac #9141ac #2d0a2e
+        binding_mode #000000 #5f676a #ffffff
+        focused_workspace #4c7899 #285577 #ffffff
         inactive_workspace #323232 #323232 #888888
         urgent_workspace #2f343a #900000 #000000
       }
@@ -279,13 +279,11 @@ in {
   xdg.portal = {
     enable = true;
     extraPortals = with pkgs; [
-      xdg-desktop-portal-gnome
       xdg-desktop-portal-gtk
     ];
     config = lib.mkForce {
       common = {
         default = [ "gtk" ];
-        "org.freedesktop.impl.portal.Settings" = [ "gnome" ];
       };
     };
   };

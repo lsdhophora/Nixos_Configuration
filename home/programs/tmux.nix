@@ -64,7 +64,7 @@
       setw -g window-status-format " #I:#W "
       setw -g window-status-current-format " #I:#W "
       setw -g window-status-style 'fg=#ffffff bg=#111111'
-      setw -g window-status-current-style 'fg=#000000 bg=#9141ac'
+      setw -g window-status-current-style 'fg=#000000 bg=#ffffff'
       setw -g window-status-bell-style 'fg=yellow bg=red bold'
 
       # battery on kmscon or TTY only

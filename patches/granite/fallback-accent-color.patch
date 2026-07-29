@@ -5,6 +5,6 @@
                  // Set a default in case we can't get from system
                  _accent_color = Gdk.RGBA ();
 -                _accent_color.parse ("#3689e6");
-+                _accent_color.parse ("#9141ac");
++                _accent_color.parse ("#3689e6");
              }
          }

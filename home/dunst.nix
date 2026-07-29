@@ -11,9 +11,7 @@
         corner_radius = 0;
         background = "#1a1a1a";
         foreground = "#cccccc";
-        frame_color = "#9141ac";
-        separator_color = "#9141ac";
-        highlight = "#9141ac";
+
         fullscreen = "show";
       };
       urgency_low = {
