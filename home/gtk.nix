@@ -18,3 +18,4 @@
     '';
     ".config/gtk-4.0/gtk.css".source = ./../assets/gtk/gtk4.css;
   };
+}
