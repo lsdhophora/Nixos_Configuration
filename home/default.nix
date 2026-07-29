@@ -13,7 +13,6 @@
     ./dconf.nix
     ./packages.nix
     ./gtk.nix
-    ./dunst.nix
     ./session.nix
     ./programs/kitty.nix
     ./programs/firefox.nix
