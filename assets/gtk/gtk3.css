@@ -1,0 +1,30 @@
+@define-color accent_bg_color #9141ac;
+@define-color accent_fg_color white;
+@define-color accent_color #9141ac;
+@define-color tr_transfer_down_color #8a47a0;
+decoration, .titlebar, headerbar, window {
+  box-shadow: none;
+  border-radius: 0;
+}
+.view:selected, .view:selected:focus,
+row:selected, row:selected:focus,
+flowboxchild:selected, flowboxchild:selected:focus {
+  background-color: #9141ac;
+}
+selection {
+  background-color: #9141ac;
+  color: white;
+}
+button.suggested-action {
+  background-color: #9141ac;
+  color: white;
+}
+button.suggested-action:hover {
+  background-color: #a34ec0;
+}
+button.suggested-action:active {
+  background-color: #7d3694;
+}
+window.csd.dialog, messagedialog {
+  border-radius: 0;
+}
