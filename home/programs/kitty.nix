@@ -26,6 +26,8 @@
       confirm_os_window_close = 0;
       placement_strategy = "top-left";
       tab_bar_style = "hidden";
+      selection_foreground = "#ffffff";
+      selection_background = "#3a4b6b";
     };
   };
 }
