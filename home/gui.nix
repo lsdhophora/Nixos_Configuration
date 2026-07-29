@@ -23,6 +23,5 @@ in
     shortwave
     transmission_4-gtk
     video-trimmer
-    wordbook
   ];
 }
