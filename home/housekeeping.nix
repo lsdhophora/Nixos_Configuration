@@ -10,5 +10,4 @@
     force = true;
   };
 
-  home.file.".local/share/applications/kvantummanager.desktop".text = "";
 }

@@ -10,6 +10,19 @@
         --add-flags "--stylesheet ${./../assets/themes/kdenlive.qss}"
     '';
   };
+  localsend-wrapped = pkgs.symlinkJoin {
+    name = "localsend";
+    paths = [ pkgs.localsend ];
+    postBuild = ''
+      rm $out/bin/localsend_app
+      cat > $out/bin/localsend_app <<'SCRIPT'
+#!/bin/sh
+export GTK_THEME=Breeze:dark
+exec ${pkgs.localsend}/bin/localsend_app "$@"
+SCRIPT
+      chmod +x $out/bin/localsend_app
+    '';
+  };
 in
 {
   home.packages = with pkgs; [
@@ -18,7 +31,7 @@ in
     fluffychat
     gnome-themes-extra
     kdenlive-wrapped
-    localsend
+    localsend-wrapped
     lxgw-wenkai
     shortwave
     transmission_4-gtk

@@ -17,13 +17,13 @@
     ./mime.nix
     ./session.nix
     ./programs/kitty.nix
-    ./programs/kvantum.nix
     ./programs/firefox.nix
     ./programs/emacs.nix
     ./programs/tmux.nix
     ./programs/zathura.nix
     ./programs/swayimg.nix
     ./programs/mpv.nix
+    ./programs/plasma.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];
