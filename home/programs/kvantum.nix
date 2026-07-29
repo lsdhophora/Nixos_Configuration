@@ -22,9 +22,4 @@ in
       theme=KvLibadwaitaDark
     '';
   };
-
-  home.sessionVariables = {
-    QT_STYLE_OVERRIDE = "kvantum";
-    QT_WAYLAND_DECORATION = "adwaita";
-  };
 }
