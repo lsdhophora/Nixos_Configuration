@@ -1,5 +1,6 @@
 { pkgs, ... }: {
   home.packages = with pkgs; [
+    ibm-plex
     tree
     ffmpeg
     fastfetch
