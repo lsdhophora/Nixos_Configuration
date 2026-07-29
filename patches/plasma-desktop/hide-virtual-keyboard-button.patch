@@ -1,8 +1,9 @@
---- a/sddm-theme/Main.qml
-+++ b/sddm-theme/Main.qml
-@@ -454,7 +454,7 @@
+--- a/desktoppackage/contents/lockscreen/LockScreenUi.qml
++++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
+@@ -378,7 +378,7 @@
                      inputPanel.showHide()
                  }
+ 
 -                visible: inputPanel.status === Loader.Ready
 +                visible: false
  
