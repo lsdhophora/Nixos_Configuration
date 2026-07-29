@@ -1,0 +1,10 @@
+--- a/sddm-theme/Main.qml
++++ b/sddm-theme/Main.qml
+@@ -454,7 +454,7 @@
+                     inputPanel.showHide()
+                 }
+-                visible: inputPanel.status === Loader.Ready
++                visible: false
+ 
+                 Layout.fillHeight: true
+                 containmentMask: Item {

@@ -23,7 +23,6 @@
     ./programs/zathura.nix
     ./programs/swayimg.nix
     ./programs/mpv.nix
-    ./programs/plasma.nix
     ./profiles/development.nix
     ./shell/zsh.nix
   ];
