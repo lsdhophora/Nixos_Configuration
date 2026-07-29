@@ -32,9 +32,9 @@ in
     gnome-themes-extra
     kdenlive-wrapped
     localsend-wrapped
+    pkgs.kdePackages.ktorrent
     lxgw-wenkai
     shortwave
-    transmission_4-gtk
     video-trimmer
   ];
 }

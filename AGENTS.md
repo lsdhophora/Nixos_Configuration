@@ -18,7 +18,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 ├── modules/                  # NixOS modules (by type)
 │   ├── profiles/             # Feature bundles
 │   │   ├── core.nix          # Boot, network, user, nix, i18n, security, zram
-│   │   ├── desktop.nix       # PipeWire, Kanata
+│   │   ├── desktop.nix       # PipeWire
 │   │   ├── printing.nix      # CUPS
 │   │   ├── proxying.nix      # DAE
 │   │   └── kmscon.nix        # Kmscon VT (disabled)
@@ -27,7 +27,6 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   └── kde.nix           # Plasma 6 desktop, SDDM login, fcitx5
 │   └── services/
 │       ├── tlp.nix
-│       ├── kanata.nix
 │       └── dae.nix
 ├── home/                     # Home Manager configs
 │   ├── default.nix
