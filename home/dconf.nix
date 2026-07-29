@@ -4,7 +4,6 @@
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       cursor-size = 24;
-      icon-theme = "Adwaita-purple";
       enable-animations = true;
       font-antialiasing = "rgba";
       font-hinting = "full";

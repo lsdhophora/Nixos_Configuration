@@ -1,36 +1,15 @@
 { lib, pkgs, ... }: {
   gtk = {
     enable = true;
-    gtk4.theme = null;
     font = {
       name = "IBM Plex Sans";
       size = 14;
       package = pkgs.ibm-plex;
     };
-    theme = {
-      name = "adw-gtk3-dark";
-      package = pkgs.adw-gtk3;
-    };
-    iconTheme = {
-      name = "Adwaita-purple";
-    };
     cursorTheme = {
       name = "Adwaita";
       size = 24;
     };
-  };
-
-  dconf.settings."org/gnome/desktop/interface" = {
-    "accent-color" = "purple";
-    "color-scheme" = "prefer-dark";
-    "gtk-theme" = lib.mkForce "adw-gtk3-dark";
-    "cursor-theme" = "Adwaita";
-    "document-font-name" = lib.mkForce "IBM Plex Sans 14";
-    "monospace-font-name" = lib.mkForce "IBM Plex Mono 14";
-  };
-
-  dconf.settings."org/gnome/desktop/wm/preferences" = {
-    "button-layout" = "appmenu:";
   };
 
   xdg.configFile."gtk-3.0/gtk.css".text = ''

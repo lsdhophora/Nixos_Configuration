@@ -14,7 +14,6 @@
         frame_color = "#9141ac";
         separator_color = "#9141ac";
         highlight = "#9141ac";
-        icon_theme = "Adwaita-purple";
         fullscreen = "show";
       };
       urgency_low = {
