@@ -3,7 +3,7 @@
     enable = true;
     package = pkgs.kitty;
     settings = {
-      font_family = "IBM Plex Mono";
+      font_family = "Maple Mono NF CN";
       font_size = 14.0;
       foreground = "#ffffff";
       background = "#1e1e1e";

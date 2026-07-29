@@ -16,12 +16,12 @@ in {
     (final: prev: {
       kdePackages = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.kdePackages;
     })
-    # Patch plasma-workspace: fix accent color radio button border clipping
+    # Patch plasma-desktop: fix LookAndFeelBox highlight border clipping
     (final: prev: {
       kdePackages = prev.kdePackages // {
-        plasma-workspace = prev.kdePackages.plasma-workspace.overrideAttrs (oldAttrs: {
+        plasma-desktop = prev.kdePackages.plasma-desktop.overrideAttrs (oldAttrs: {
           patches = (oldAttrs.patches or []) ++ [
-            ./../../patches/plasma-workspace/accent-color-clip.patch
+            ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
           ];
         });
       };
