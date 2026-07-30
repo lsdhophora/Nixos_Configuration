@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    pkgs.klassy  # overridden to git master in overlay below
+    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.klassy
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -36,19 +36,6 @@ in {
           ];
         });
       };
-    })
-
-    # Use Klassy git master (newer than nixpkgs v6.5.3)
-    (final: prev: {
-      klassy = prev.klassy.overrideAttrs (oldAttrs: {
-        version = "6.5.3-git";
-        src = prev.fetchFromGitHub {
-          owner = "paulmcauley";
-          repo = "klassy";
-          rev = "3fe6e7e39a9330dcb5803bb5d622eb31b19b215f";
-          hash = "sha256-0nzb/oUMj6Toe8ZSdfZfuE/yPAHGHUE9gShXGMS7v9k=";
-        };
-      });
     })
   ];
 
