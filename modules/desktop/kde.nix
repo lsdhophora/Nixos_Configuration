@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.darkly
+    pkgs.darkly  # overridden to latest version in overlay below
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -36,6 +36,19 @@ in {
           ];
         });
       };
+    })
+
+    # Use latest Darkly (nixpkgs has 0.5.32 but upstream has 0.5.38)
+    (final: prev: {
+      darkly = prev.darkly.overrideAttrs (oldAttrs: {
+        version = "0.5.38";
+        src = prev.fetchFromGitHub {
+          owner = "Bali10050";
+          repo = "Darkly";
+          rev = "v0.5.38";
+          hash = "sha256-b/spO5sQn+Sk+KrSACfttkDwY/vF57NiHsWHYuQvS7s=";
+        };
+      });
     })
   ];
 
