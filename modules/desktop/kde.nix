@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    pkgs.darkly
+    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.darkly
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
