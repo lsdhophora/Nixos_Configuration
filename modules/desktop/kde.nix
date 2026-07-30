@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.klassy
+    pkgs.klassy  # overridden in overlay below to remove Type=Application from .desktop
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -36,6 +36,17 @@ in {
           ];
         });
       };
+    })
+
+    # Remove Klassy .desktop Type=Application so KService doesn't index it,
+    # preventing it from appearing on the Most Used page.
+    # The KCM can still be configured via kwin's window decoration settings.
+    (final: prev: {
+      klassy = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs (oldAttrs: {
+        postInstall = (oldAttrs.postInstall or "") + ''
+          sed -i '/^Type=Application$/d' "$out/share/applications/kcm_klassydecoration.desktop"
+        '';
+      });
     })
   ];
 
