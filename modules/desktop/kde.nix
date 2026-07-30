@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    pkgs.darkly  # overridden to latest version in overlay below
+    pkgs.klassy  # overridden to git master in overlay below
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -38,15 +38,15 @@ in {
       };
     })
 
-    # Use latest Darkly (nixpkgs has 0.5.32 but upstream has 0.5.38)
+    # Use Klassy git master (newer than nixpkgs v6.5.3)
     (final: prev: {
-      darkly = prev.darkly.overrideAttrs (oldAttrs: {
-        version = "0.5.38";
+      klassy = prev.klassy.overrideAttrs (oldAttrs: {
+        version = "6.5.3-git";
         src = prev.fetchFromGitHub {
-          owner = "Bali10050";
-          repo = "Darkly";
-          rev = "v0.5.38";
-          hash = "sha256-b/spO5sQn+Sk+KrSACfttkDwY/vF57NiHsWHYuQvS7s=";
+          owner = "paulmcauley";
+          repo = "klassy";
+          rev = "3fe6e7e39a9330dcb5803bb5d622eb31b19b215f";
+          hash = "sha256-0nzb/oUMj6Toe8ZSdfZfuE/yPAHGHUE9gShXGMS7v9k=";
         };
       });
     })
