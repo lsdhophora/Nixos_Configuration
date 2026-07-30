@@ -1,11 +1,18 @@
-{ config, lib, pkgs, inputs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  inputs,
+  ...
+}:
 let
   unstable = inputs.nixpkgs-unstable;
-in {
+in
+{
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    pkgs.klassy  # overridden in overlay below to remove Type=Application from .desktop
+    pkgs.klassy # overridden in overlay below to remove Type=Application from .desktop
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -24,14 +31,14 @@ in {
     (final: prev: {
       kdePackages = prev.kdePackages // {
         plasma-desktop = prev.kdePackages.plasma-desktop.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or []) ++ [
+          patches = (oldAttrs.patches or [ ]) ++ [
             ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
             ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
             ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
           ];
         });
         kscreenlocker = prev.kdePackages.kscreenlocker.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or []) ++ [
+          patches = (oldAttrs.patches or [ ]) ++ [
             ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
           ];
         });
@@ -41,11 +48,13 @@ in {
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
     (final: prev: {
-      klassy = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs (oldAttrs: {
-        postInstall = (oldAttrs.postInstall or "") + ''
-          rm -f "$out/share/applications/kcm_klassydecoration.desktop"
-        '';
-      });
+      klassy =
+        unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs
+          (oldAttrs: {
+            postInstall = (oldAttrs.postInstall or "") + ''
+              rm -f "$out/share/applications/kcm_klassydecoration.desktop"
+            '';
+          });
     })
   ];
 
@@ -55,6 +64,7 @@ in {
     fcitx5.addons = with pkgs; [
       kdePackages.fcitx5-chinese-addons
       fcitx5-gtk
+      kdePackages.fcitx5-qt
     ];
     fcitx5.waylandFrontend = true;
   };
