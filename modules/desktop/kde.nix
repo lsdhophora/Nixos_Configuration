@@ -4,6 +4,10 @@ let
 in {
   services.desktopManager.plasma6.enable = true;
 
+  environment.systemPackages = [
+    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.klassy
+  ];
+
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
     discover
   ];

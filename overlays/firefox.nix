@@ -63,6 +63,6 @@ in
   inherit tridactyl-native;
 
   firefox-patched = final.wrapFirefox (mkPkg "") {
-    nativeMessagingHosts = [ final.tridactyl-native ];
+    nativeMessagingHosts = [ final.tridactyl-native final.kdePackages.plasma-browser-integration ];
   };
 }
