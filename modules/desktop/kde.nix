@@ -42,12 +42,10 @@ in {
     # but klassy installs its KCM to org.kde.kdecoration3.kcm/.
     # Symlink it so systemsettings can discover and launch it from the sidebar.
     # Also remove X-KDE-AliasFor from the desktop file to prevent it from
-    # appearing on the Most Used landing page (now redundant with the symlink).
+    # appearing on the Most Used landing page (the symlink above makes
+    # systemsettings discover the KCM directly).
     (final: prev: {
       klassy = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs (oldAttrs: {
-        patches = (oldAttrs.patches or []) ++ [
-          ./../../patches/klassy/kcm-systemsettings-category.patch
-        ];
         postInstall = (oldAttrs.postInstall or "") + ''
           pluginDir="$out/lib/qt-6/plugins"
           mkdir -p "$pluginDir/plasma/kcms/systemsettings"
