@@ -5,7 +5,7 @@ in {
   services.desktopManager.plasma6.enable = true;
 
   environment.systemPackages = [
-    unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.klassy
+    pkgs.klassy  # overridden above to add plasma/kcms symlink
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -36,6 +36,25 @@ in {
           ];
         });
       };
+    })
+
+    # systemsettings sidebar requires KCMs under plasma/kcms/systemsettings/,
+    # but klassy installs its KCM to org.kde.kdecoration3.kcm/.
+    # Symlink it so systemsettings can discover and launch it from the sidebar.
+    # Also remove X-KDE-AliasFor from the desktop file to prevent it from
+    # appearing on the Most Used landing page (now redundant with the symlink).
+    (final: prev: {
+      klassy = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs (oldAttrs: {
+        patches = (oldAttrs.patches or []) ++ [
+          ./../../patches/klassy/kcm-systemsettings-category.patch
+        ];
+        postInstall = (oldAttrs.postInstall or "") + ''
+          pluginDir="$out/lib/qt-6/plugins"
+          mkdir -p "$pluginDir/plasma/kcms/systemsettings"
+          ln -sf "../../../org.kde.kdecoration3.kcm/kcm_klassydecoration.so" "$pluginDir/plasma/kcms/systemsettings/kcm_klassydecoration.so"
+          sed -i '/^X-KDE-AliasFor=/d' "$out/share/applications/kcm_klassydecoration.desktop"
+        '';
+      });
     })
   ];
 
