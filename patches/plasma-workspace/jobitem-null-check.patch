@@ -1,0 +1,108 @@
+diff -ruN pw-orig2/applets/notifications/components/JobItem.qml pw-patched2/applets/notifications/components/JobItem.qml
+--- pw-orig2/applets/notifications/components/JobItem.qml	2026-07-14 19:00:12.000000000 +0800
++++ pw-patched2/applets/notifications/components/JobItem.qml	2026-07-31 18:44:24.063123748 +0800
+@@ -31,7 +31,7 @@
+ 
+     Notifications.FileInfo {
+         id: fileInfo
+-        url: jobItem.totalFiles === 1 ? jobItem.modelInterface.jobDetails.effectiveDestUrl : ""
++        url: jobItem.totalFiles === 1 ? (jobItem.modelInterface.jobDetails?.effectiveDestUrl ?? "") : ""
+     }
+ 
+     SpeedChart {
+@@ -114,7 +114,7 @@
+         // We want the actions to be right-aligned but Row also reverses
+         // the order of items, so we put them in reverse order
+         layoutDirection: Qt.RightToLeft
+-        visible: jobItem.modelInterface.jobDetails.effectiveDestUrl.toString() !== "" && !fileInfo.error
++        visible: (jobItem.modelInterface.jobDetails?.effectiveDestUrl?.toString() ?? "") !== "" && !fileInfo.error
+ 
+         PlasmaComponents3.Button {
+             id: otherFileActionsButton
+@@ -141,7 +141,7 @@
+ 
+             Notifications.FileMenu {
+                 id: otherFileActionsMenu
+-                url: jobItem.modelInterface.jobDetails.effectiveDestUrl
++                url: jobItem.modelInterface.jobDetails?.effectiveDestUrl ?? ""
+                 onActionTriggered: action => jobItem.modelInterface.fileActionInvoked(action)
+             }
+         }
+@@ -151,7 +151,11 @@
+             width: Math.min(implicitWidth, jobItem.width - otherFileActionsButton.width - fileActionsRow.spacing)
+             height: Math.max(implicitHeight, otherFileActionsButton.implicitHeight)
+             text: i18nd("plasma_applet_org.kde.plasma.notifications", "Open")
+-            onClicked: jobItem.modelInterface.openUrl(jobItem.modelInterface.jobDetails.effectiveDestUrl)
++            onClicked: {
++                const u = jobItem.modelInterface.jobDetails?.effectiveDestUrl ?? "";
++                console.log("JobItem open button clicked, url:", u, "jobDetails:", jobItem.modelInterface.jobDetails);
++                jobItem.modelInterface.openUrl(u);
++            }
+ 
+             states: [
+                 State {
+diff -ruN pw-orig2/applets/notifications/FullRepresentation.qml pw-patched2/applets/notifications/FullRepresentation.qml
+--- pw-orig2/applets/notifications/FullRepresentation.qml	2026-07-14 19:00:12.000000000 +0800
++++ pw-patched2/applets/notifications/FullRepresentation.qml	2026-07-31 18:44:24.068531265 +0800
+@@ -552,7 +552,12 @@
+                             }
+                         }
+                         onOpenUrl: url => {
+-                            Qt.openUrlExternally(url);
++                            console.log("HISTORY openUrl handler called, url:", url, "jobDetails:", jobDetails);
++                            jobDetails?.openFolder(url);
+                             delegateLoader.expire();
+                         }
+                         onFileActionInvoked: action => {
+diff -ruN pw-orig2/applets/notifications/global/Globals.qml pw-patched2/applets/notifications/global/Globals.qml
+--- pw-orig2/applets/notifications/global/Globals.qml	2026-07-14 19:00:12.000000000 +0800
++++ pw-patched2/applets/notifications/global/Globals.qml	2026-07-31 18:44:24.065816671 +0800
+@@ -643,7 +643,12 @@
+                     globals.popupNotificationsModel.reply(globals.popupNotificationsModel.index(index, 0), text, behavior);
+                 }
+                 onOpenUrl: url => {
+-                    Qt.openUrlExternally(url);
++                    console.log("NOTIFICATION openUrl handler called, url:", url, "jobDetails:", jobDetails);
++                    jobDetails?.openFolder(url);
+                     // Client isn't informed of this action, so we always hide the popup
+                     if (resident) {
+                         model.expired = true;
+diff -ruN pw-orig2/libnotificationmanager/job.cpp pw-patched2/libnotificationmanager/job.cpp
+--- pw-orig2/libnotificationmanager/job.cpp	2026-07-14 19:00:12.000000000 +0800
++++ pw-patched2/libnotificationmanager/job.cpp	2026-07-31 18:44:24.050085958 +0800
+@@ -8,6 +8,7 @@
+ #include "job_p.h"
+ 
+ #include <QDebug>
++#include <QProcess>
+ 
+ using namespace NotificationManager;
+ 
+@@ -323,4 +324,15 @@
+     d->kill();
+ }
+ 
++void Job::openFolder(const QUrl &url)
++{
++    qDebug() << "Job::openFolder called, url:" << url << "valid:" << url.isValid() << "empty:" << url.isEmpty();
++    if (url.isValid() && !url.isEmpty()) {
++        const bool ok = QProcess::startDetached(QStringLiteral("kioclient"), {QStringLiteral("exec"), url.toString()});
++        qDebug() << "Job::openFolder: QProcess::startDetached returned:" << ok;
++    } else {
++        qDebug() << "Job::openFolder: url invalid or empty, skipping";
++    }
++}
++
+ #include "moc_job.cpp"
+diff -ruN pw-orig2/libnotificationmanager/job.h pw-patched2/libnotificationmanager/job.h
+--- pw-orig2/libnotificationmanager/job.h	2026-07-14 19:00:12.000000000 +0800
++++ pw-patched2/libnotificationmanager/job.h	2026-07-31 18:44:24.044368555 +0800
+@@ -220,6 +220,8 @@
+     Q_INVOKABLE void resume();
+     Q_INVOKABLE void kill();
+ 
++    Q_INVOKABLE void openFolder(const QUrl &url);
++
+ Q_SIGNALS:
+     void updatedChanged();
+     void summaryChanged();

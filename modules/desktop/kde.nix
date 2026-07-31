@@ -42,6 +42,16 @@ in
             ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
           ];
         });
+        plasma-workspace = prev.kdePackages.plasma-workspace.overrideAttrs (oldAttrs: {
+          patches = (oldAttrs.patches or [ ]) ++ [
+            ./../../patches/plasma-workspace/jobitem-null-check.patch
+          ];
+        });
+        ark = prev.kdePackages.ark.overrideAttrs (oldAttrs: {
+          patches = (oldAttrs.patches or [ ]) ++ [
+            ./../../patches/ark/batchextract-desturl.patch
+          ];
+        });
       };
     })
 

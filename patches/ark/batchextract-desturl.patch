@@ -1,0 +1,23 @@
+diff --git a/kerfuffle/jobs.cpp b/kerfuffle/jobs.cpp
+index dcce87b..d52e3a2 100644
+--- a/kerfuffle/jobs.cpp
++++ b/kerfuffle/jobs.cpp
+@@ -352,6 +352,8 @@ BatchExtractJob::BatchExtractJob(LoadJob *loadJob, const QString &destination, b
+     , m_preservePaths(preservePaths)
+ {
+     qCDebug(ARK_LOG) << "Created job instance";
++    // Propagate destUrl to notification system (like ExtractJob does)
++    setProperty("destUrl", QUrl::fromLocalFile(destination).toString());
+ }
+ 
+ void BatchExtractJob::doWork()
+@@ -414,6 +416,9 @@ void BatchExtractJob::slotLoadingFinished(KJob *job)
+     // Now we can start extraction.
+     setupDestination();
+ 
++    // Update destUrl in case setupDestination appended a subfolder
++    setProperty("destUrl", QUrl::fromLocalFile(m_destination).toString());
++
+     Kerfuffle::ExtractionOptions options;
+     options.setPreservePaths(m_preservePaths);
+ 
