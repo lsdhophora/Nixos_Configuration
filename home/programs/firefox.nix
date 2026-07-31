@@ -109,6 +109,8 @@
         :root { font-size: 12pt !important; }
         menupopup { --panel-border-radius: 8px !important; }
         #contentAreaContextMenu::part(content) { border: 1px solid #3c3c40 !important; }
+        #plasma-browser-integration_kde_org-menuitem-_purpose_share,              
+        #context-sep-sendpagetodevice { display: none !important; }
         menupopup#context-sendimage, #context-sendimage { display: none !important; }
         #context-openlinkinusercontext-menu, #context-openlinkincontainertab,
         #spell-check-enabled, #spell-add-to-dictionary, #spell-suggestions-separator,
