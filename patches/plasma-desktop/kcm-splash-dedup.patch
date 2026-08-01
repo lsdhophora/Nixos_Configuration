@@ -1,0 +1,29 @@
+--- a/kcms/ksplash/kcm.cpp
++++ b/kcms/ksplash/kcm.cpp
+@@ -20,6 +20,7 @@
+ #include <QSortFilterProxyModel>
+ #include <QStandardItemModel>
+ #include <QStandardPaths>
++#include <QSet>
+ 
+ #include <KPackage/PackageJob>
+ #include <KPackage/PackageLoader>
+@@ -100,7 +101,17 @@
+         }
+     }
+ 
+-    return packages;
++    // Deduplicate: same plugin may be found via multiple XDG_DATA_DIRS entries.
++    QSet<QString> seenPluginIds;
++    QList<KPackage::Package> dedupedPkgs;
++    dedupedPkgs.reserve(packages.size());
++    for (const auto &pkg : std::as_const(packages)) {
++        if (!seenPluginIds.contains(pkg.metadata().pluginId())) {
++            seenPluginIds.insert(pkg.metadata().pluginId());
++            dedupedPkgs << pkg;
++        }
++    }
++    return dedupedPkgs;
+ }
+ 
+ SplashScreenSettings *KCMSplashScreen::splashScreenSettings() const

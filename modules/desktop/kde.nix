@@ -35,6 +35,7 @@ in
             ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
             ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
             ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
+            ./../../patches/plasma-desktop/kcm-splash-dedup.patch
           ];
         });
         kscreenlocker = prev.kdePackages.kscreenlocker.overrideAttrs (oldAttrs: {
