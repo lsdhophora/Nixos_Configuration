@@ -13,6 +13,7 @@ in
 
   environment.systemPackages = [
     pkgs.klassy # overridden in overlay below to remove Type=Application from .desktop
+    pkgs.kwin-renumber-desktops # auto-renumbers virtual desktops from 1
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [

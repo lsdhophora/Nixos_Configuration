@@ -1,0 +1,18 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "X-Plasma-API": "javascript",
+    "KPlugin": {
+        "Name": "Renumber Desktops",
+        "Description": "Renumber virtual desktops sequentially from 1",
+        "Icon": "preferences-desktop-virtual",
+        "Authors": [
+            {
+                "Name": "lophophora"
+            }
+        ],
+        "Id": "renumber-desktops",
+        "Version": "1.0.0",
+        "License": "MIT",
+        "EnabledByDefault": true
+    }
+}
