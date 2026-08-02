@@ -5,22 +5,40 @@
   home.homeDirectory = "/home/lophophora";
   home.stateVersion = "25.05";
 
+  # ============================================================
+  #  Home configuration menu.
+  #  Enable or disable modules here (comment out to disable).
+  # ============================================================
   imports = [
-    ./avatar.nix
-    ./housekeeping.nix
-    ./gui.nix
-    ./cli.nix
-    ./dconf.nix
+    # ---- Misc ----
+    ./misc/avatar.nix
+    ./misc/housekeeping.nix
+    ./misc/cli.nix
+    ./misc/gui.nix
     ./packages.nix
-    ./gtk.nix
-    ./session.nix
-    ./programs/kitty.nix
+
+    # ---- Desktop ----
+    ./desktop/dconf.nix
+    ./desktop/gtk.nix
+    ./desktop/session.nix
+
+    # ---- Programs ----
+    ./programs/emacs
     ./programs/firefox.nix
-    ./programs/emacs.nix
+    ./programs/kitty.nix
+    ./programs/mpv.nix
     ./programs/tmux.nix
     ./programs/zathura.nix
-    ./programs/mpv.nix
-    ./profiles/development.nix
+
+    # ---- Dev ----
+    ./dev/direnv.nix
+    ./dev/git.nix
+    ./dev/opencode.nix
+    ./dev/pi-agent.nix
+    ./dev/ssh.nix
+    ./dev/texlive.nix
+
+    # ---- Shell ----
     ./shell/zsh.nix
   ];
 

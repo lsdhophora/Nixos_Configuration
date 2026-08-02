@@ -1,7 +1,1 @@
-decoration, .titlebar, headerbar, window {
-  box-shadow: none;
-  border-radius: 0;
-}
-window.csd.dialog, messagedialog {
-  border-radius: 0;
-}
+/* GTK 3 overrides — theme defaults for decorations, shadows, and radius are preserved */

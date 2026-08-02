@@ -7,7 +7,7 @@
       wrapProgram $out/bin/kdenlive \
         --set QT_SCALE_FACTOR 1.10 \
         --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
-        --add-flags "--stylesheet ${./../assets/themes/kdenlive.qss}"
+        --add-flags "--stylesheet ${./../../assets/themes/kdenlive.qss}"
     '';
   };
   localsend-wrapped = pkgs.symlinkJoin {
@@ -18,7 +18,6 @@
       cat > $out/bin/localsend_app <<'SCRIPT'
 #!/bin/sh
 export GTK_THEME=Breeze:dark
-export GTK_CSD=0
 exec ${pkgs.localsend}/bin/localsend_app "$@"
 SCRIPT
       chmod +x $out/bin/localsend_app

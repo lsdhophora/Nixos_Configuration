@@ -13,45 +13,73 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   └── nixos.nix             # nixosConfigurations.flowerpot
 ├── hosts/
 │   └── flowerpot/            # Machine entry point
-│       ├── default.nix       # Host config (imports profiles, KDE, TLP)
+│       ├── default.nix       # Host config menu (imports modules directly)
 │       └── hardware-configuration.nix
-├── modules/                  # NixOS modules (by type)
-│   ├── profiles/             # Feature bundles
-│   │   ├── core.nix          # Boot, network, user, nix, i18n, security, zram
-│   │   ├── desktop.nix       # PipeWire
-│   │   ├── printing.nix      # CUPS
-│   │   ├── proxying.nix      # DAE
-│   │   └── kmscon.nix        # Kmscon VT (disabled)
-│   ├── boot.nix              # Plymouth, CachyOS kernel, scx, swapfile
+├── modules/                  # NixOS modules (flat, imported by host menu)
+│   ├── boot.nix              # Plymouth, CachyOS kernel, scx, swapfile, cleanOnBoot
+│   ├── networking.nix
+│   ├── i18n.nix
+│   ├── nix-config.nix
+│   ├── user.nix
 │   ├── desktop/
 │   │   └── kde.nix           # Plasma 6 desktop, SDDM login, fcitx5
+│   ├── security/
+│   │   ├── age.nix
+│   │   └── sudo.nix
 │   └── services/
+│       ├── atd.nix
+│       ├── cups.nix
+│       ├── dae.nix
+│       ├── kmscon.nix        # Kmscon VT (disabled in host menu)
+│       ├── pipewire.nix
 │       ├── tlp.nix
-│       └── dae.nix
-├── home/                     # Home Manager configs
-│   ├── default.nix
-│   ├── profiles/
-│   │   ├── development.nix
-│   │   └── gaming.nix
+│       └── zram.nix
+├── home/                     # Home Manager configs (flat, imported by home menu)
+│   ├── default.nix           # Home config menu (username, stateVersion, imports)
+│   ├── packages.nix
+│   ├── desktop/
+│   │   ├── dconf.nix
+│   │   ├── gtk.nix
+│   │   └── session.nix
 │   ├── programs/
+│   │   ├── emacs/            # elisp files symlinked out of store (editable directly)
+│   │   ├── firefox.nix
+│   │   ├── kitty.nix
+│   │   ├── mpv.nix
+│   │   ├── tmux.nix
+│   │   └── zathura.nix
+│   ├── dev/
+│   │   ├── direnv.nix
 │   │   ├── git.nix
-│   │   ├── emacs.nix
-│   │   └── firefox.nix
-│   └── shell/zsh.nix
+│   │   ├── opencode.nix
+│   │   ├── pi-agent.nix
+│   │   ├── ssh.nix
+│   │   └── texlive.nix
+│   ├── misc/
+│   │   ├── avatar.nix
+│   │   ├── cli.nix
+│   │   ├── gui.nix
+│   │   └── housekeeping.nix
+│   └── shell/
+│       └── zsh.nix
 ├── assets/                   # Static assets
-│   ├── kitty/                # Kitty terminal config
-│   └── icons/Adwaita-purple/
-├── overlays/                 # Nixpkgs overlays (final: prev: { ... })
-│   ├── default.nix           # Aggregator
+│   ├── avatar/
+│   ├── gtk/
+│   ├── icons/Adwaita-purple/
+│   └── themes/
+├── overlays/                 # Nixpkgs overlays (auto-discovered from this dir)
+│   ├── default.nix           # Auto-discovery aggregator
 │   ├── granite.nix           # granite7: GNOME named accent-color support
 │   ├── firefox.nix           # omni.ja patches
 │   └── kitty.nix             # Patched: remove resize text overlay
 ├── patches/                  # Patch files (grouped by package)
+│   ├── ark/
 │   ├── granite/
 │   │   └── fallback-accent-color.patch
 │   ├── kitty/
 │   │   ├── kitty-remove-resize-text.patch
 │   │   └── kitty-fix-panel-position.patch
+│   ├── kscreenlocker/
 │   ├── plasma-desktop/
 │   │   ├── lookandfeelbox-highlight-border.patch
 │   │   └── hide-virtual-keyboard-button.patch
@@ -86,6 +114,8 @@ git push                                           # push
 - Hardware config is auto-generated
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
-- Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix`
+- Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
+- Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
+- Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`

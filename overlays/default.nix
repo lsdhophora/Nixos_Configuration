@@ -1,5 +1,9 @@
-[
-  (import ./firefox.nix)
-  (import ./granite.nix)
-  (import ./kitty.nix)
-]
+# Auto-discover all overlay files in this directory.
+# Add a new .nix file here and it is applied automatically.
+let
+  files = builtins.readDir ./.;
+  nixFiles = builtins.filter
+    (name: name != "default.nix" && builtins.match ".*\\.nix" name != null)
+    (builtins.attrNames files);
+in
+  map (name: import (./. + "/${name}")) (builtins.sort (a: b: a < b) nixFiles)

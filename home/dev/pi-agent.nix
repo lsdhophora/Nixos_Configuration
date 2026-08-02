@@ -7,6 +7,9 @@
     text = builtins.toJSON {
       defaultProvider = "deepseek";
       defaultModel = "deepseek-chat";
+      packages = [
+        "git:github.com/Fletcher-Alderton/exa-pi"
+      ];
     };
   };
 }

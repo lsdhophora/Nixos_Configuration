@@ -2,7 +2,25 @@
   programs.kitty = {
     enable = true;
     package = pkgs.kitty;
+    keybindings = {
+      # Split panes
+      "ctrl+shift+enter" = "launch --location=hsplit";
+      "ctrl+shift+backslash" = "launch --location=vsplit";
+      # Focus adjacent pane
+      "ctrl+shift+h" = "neighboring_window left";
+      "ctrl+shift+l" = "neighboring_window right";
+      "ctrl+shift+k" = "neighboring_window up";
+      "ctrl+shift+j" = "neighboring_window down";
+      # Resize panes
+      "ctrl+shift+left" = "resize_window narrower";
+      "ctrl+shift+right" = "resize_window wider";
+      "ctrl+shift+up" = "resize_window taller";
+      "ctrl+shift+down" = "resize_window shorter";
+      # Close pane
+      "ctrl+shift+w" = "close_window";
+    };
     settings = {
+      enabled_layouts = "splits,stack,tall,fat,grid,horizontal,vertical";
       font_family = "Maple Mono NF CN";
       font_size = 14.0;
       foreground = "#ffffff";

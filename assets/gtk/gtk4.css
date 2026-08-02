@@ -1,4 +1,1 @@
-window, .titlebar, headerbar {
-  box-shadow: none;
-  border-radius: 0;
-}
+/* GTK 4 overrides — theme defaults for decorations, shadows, and radius are preserved */
