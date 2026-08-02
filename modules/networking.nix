@@ -15,9 +15,6 @@
   networking.firewall = {
     enable = true;
     allowedUDPPorts = [ 53317 ]; # LocalSend discovery
-    allowedTCPPorts = [
-      53317
-      9090
-    ]; # LocalSend file transfer
+    allowedTCPPorts = [ 53317 ]; # LocalSend file transfer
   };
 }
