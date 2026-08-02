@@ -1,0 +1,53 @@
+diff --git a/kitty/boss.py b/kitty/boss.py
+index b0c75ed..ad26621 100644
+--- a/kitty/boss.py
++++ b/kitty/boss.py
+@@ -2149,7 +2149,7 @@ def handle_close_os_window_confirmation(self, confirmed: bool, os_window_id: int
+         else:
+             self.mark_os_window_for_close(os_window_id, NO_CLOSE_REQUESTED)
+ 
+-    def on_os_window_closed(self, os_window_id: int, x: int, y: int, viewport_width: int, viewport_height: int, is_layer_shell: bool) -> None:
++    def on_os_window_closed(self, os_window_id: int, x: int, y: int, viewport_width: int, viewport_height: int, was_maximized: bool, is_layer_shell: bool) -> None:
+         tm = self.os_window_map.pop(os_window_id, None)
+         opts = get_options()
+         if not is_layer_shell:
+@@ -2157,6 +2157,7 @@ def on_os_window_closed(self, os_window_id: int, x: int, y: int, viewport_width:
+                 self.cached_values['window-pos'] = x, y
+                 self.cached_values['monitor-workarea'] = glfw_get_monitor_workarea()
+             self.cached_values['window-size'] = viewport_width, viewport_height
++            self.cached_values['window-state'] = 'maximized' if was_maximized else 'normal'
+         if tm is not None:
+             tm.destroy()
+         for window_id in tuple(w.id for w in self.window_id_map.values() if getattr(w, 'os_window_id', None) == os_window_id):
+diff --git a/kitty/child-monitor.c b/kitty/child-monitor.c
+index f969f98..fd67ee8 100644
+--- a/kitty/child-monitor.c
++++ b/kitty/child-monitor.c
+@@ -1217,8 +1217,12 @@ close_os_window(ChildMonitor *self, OSWindow *os_window) {
+     int x = 0, y = 0;
+     if (os_window->handle && !global_state.is_wayland) glfwGetWindowPos(os_window->handle, &x, &y);
+     bool is_layer_shell = os_window->is_layer_shell;
++    bool was_maximized = false;
++    if (os_window->handle && !is_layer_shell) {
++        was_maximized = glfwGetWindowAttrib(os_window->handle, GLFW_MAXIMIZED) != 0;
++    }
+     destroy_os_window(os_window);
+-    call_boss(on_os_window_closed, "KiiiiO", os_window->id, x, y, w, h, is_layer_shell ? Py_True : Py_False);
++    call_boss(on_os_window_closed, "KiiiiOO", os_window->id, x, y, w, h, was_maximized ? Py_True : Py_False, is_layer_shell ? Py_True : Py_False);
+     for (size_t t=0; t < os_window->num_tabs; t++) {
+         Tab *tab = os_window->tabs + t;
+         for (size_t w = 0; w < tab->num_windows; w++) mark_child_for_close(self, tab->windows[w].id);
+diff --git a/kitty/main.py b/kitty/main.py
+index 95c75d6..2638dd4 100644
+--- a/kitty/main.py
++++ b/kitty/main.py
+@@ -304,6 +304,9 @@ def _run_app(opts: Options, args: CLIOptions, bad_lines: Sequence[BadLine] = (),
+         window_state = (args.start_as if args.start_as and args.start_as != 'normal' else None) or (
+             getattr(startup_sessions[0], 'os_window_state', None) if startup_sessions else None
+         )
++        # Remember the maximized state from the previous session, if enabled.
++        if window_state is None and opts.remember_window_size:
++            window_state = cached_values.get('window-state') or None
+         wstate = parse_os_window_state(window_state) if window_state is not None else None
+ 
+         with startup_notification_handler(extra_callback=run_app.first_window_callback) as pre_show_callback:
