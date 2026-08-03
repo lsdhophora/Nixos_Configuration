@@ -10,6 +10,5 @@
     nixd
     unzip
     kitty
-    pulsemixer
   ];
 }
