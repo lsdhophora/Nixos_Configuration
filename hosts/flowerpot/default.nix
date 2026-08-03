@@ -34,6 +34,7 @@
 
   # ---- X11 support (required for Plasma X11 session) ----
   services.xserver.enable = true;
+  services.xserver.excludePackages = [ pkgs.xterm ];
 
   # Write generated xorg.conf with ModulePath entries to /etc/X11/xorg.conf.
   # plasma-login-manager does not pass -config to the X server, so the X server
