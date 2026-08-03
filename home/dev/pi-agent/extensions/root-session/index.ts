@@ -210,12 +210,51 @@ export default function (pi: ExtensionAPI) {
       }
       const cmd = params.command;
       let acc = "";
+
+      // Throttled streaming: mimics pi's built-in bash tool behavior.
+      // Fire at most once every THROTTLE_MS to avoid overwhelming the TUI render loop.
+      const THROTTLE_MS = 100;
+      let updateTimer: ReturnType<typeof setTimeout> | undefined;
+      let updateDirty = false;
+      let lastUpdateAt = 0;
+
+      const emitUpdate = () => {
+        if (!onUpdate || !updateDirty) return;
+        updateDirty = false;
+        lastUpdateAt = Date.now();
+        onUpdate({ content: [{ type: "text", text: `$ ${cmd}\n${acc}` }] });
+      };
+
+      const scheduleUpdate = () => {
+        if (!onUpdate) return;
+        updateDirty = true;
+        const delay = THROTTLE_MS - (Date.now() - lastUpdateAt);
+        if (delay <= 0) {
+          clearTimeout(updateTimer);
+          updateTimer = undefined;
+          emitUpdate();
+        } else {
+          updateTimer ??= setTimeout(() => {
+            updateTimer = undefined;
+            emitUpdate();
+          }, delay);
+        }
+      };
+
+      // Signal to the TUI that streaming updates are coming.
+      if (onUpdate) onUpdate({ content: [], details: undefined });
+
       const out = await request(sock(), cmd, 1800000, (chunk) => {
         acc += chunk;
-        onUpdate?.({ content: [{ type: "text", text: `$ ${cmd}\n${acc}` }] });
+        scheduleUpdate();
       }).catch((e) => {
         return "root-session error: " + (e as Error).message;
       });
+
+      // Flush any pending update.
+      clearTimeout(updateTimer);
+      emitUpdate();
+
       return {
         content: [{ type: "text", text: `$ ${cmd}\n${out || "(no output)"}` }],
         details: { active: true, command: cmd },
