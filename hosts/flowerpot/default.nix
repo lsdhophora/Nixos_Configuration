@@ -26,6 +26,7 @@
     ../../modules/services/tlp.nix
     ../../modules/services/cups.nix
     ../../modules/services/dae.nix
+    ../../modules/services/openssh.nix
     # ../../modules/services/kmscon.nix  # conflicts with plasma-login-manager VT handling
 
     # ---- Desktop ----
@@ -45,6 +46,12 @@
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
+  };
+
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+    HandleLidSwitchDocked = "ignore";
   };
 
 }

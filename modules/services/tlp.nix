@@ -14,7 +14,7 @@
       DISK_APM_LEVEL_ON_BAT = "128";
       SATA_LINKPWR_ON_BAT = "med_power_with_dipm";
       PCIE_ASPM_ON_BAT = "powersupersave";
-      WIFI_PWR_ON_BAT = 1;
+      WIFI_PWR_ON_BAT = "off";
       USB_AUTOSUSPEND = 1;
       RUNTIME_PM_ON_BAT = "auto";
     };

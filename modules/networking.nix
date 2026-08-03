@@ -10,6 +10,7 @@
   networking.networkmanager = {
     enable = true;
     unmanaged = [ "interface-name:lo" ];
+    wifi.powersave = false;
   };
 
   networking.firewall = {
