@@ -32,18 +32,39 @@ function request(
   payload: string,
   timeoutMs: number,
   onData?: (chunk: string) => void,
+  signal?: AbortSignal,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const client = net.createConnection(sock);
     const chunks: Buffer[] = [];
     let done = false;
+
+    const finalize = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (onAbort) signal?.removeEventListener("abort", onAbort);
+      client.destroy();
+    };
+
     const timer = setTimeout(() => {
-      if (!done) {
-        done = true;
-        client.destroy();
-        reject(new Error("root-session: socket timeout"));
-      }
+      finalize();
+      reject(new Error("root-session: socket timeout"));
     }, timeoutMs);
+
+    const onAbort = () => {
+      finalize();
+      reject(new Error("Command aborted"));
+    };
+
+    if (signal) {
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+
     client.on("connect", () => client.write(payload));
     client.on("data", (d) => {
       chunks.push(d);
@@ -51,15 +72,13 @@ function request(
     });
     client.on("close", () => {
       if (!done) {
-        done = true;
-        clearTimeout(timer);
+        finalize();
         resolve(Buffer.concat(chunks).toString());
       }
     });
     client.on("error", (e) => {
       if (!done) {
-        done = true;
-        clearTimeout(timer);
+        finalize();
         reject(e);
       }
     });
@@ -198,7 +217,7 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       command: Type.String({ description: "Shell command to run as root" }),
     }),
-    async execute(_toolCallId, params, _signal, onUpdate, _ctx) {
+    async execute(_toolCallId, params, signal, onUpdate, _ctx) {
       if (!(await alive())) {
         return {
           content: [{
@@ -244,12 +263,15 @@ export default function (pi: ExtensionAPI) {
       // Signal to the TUI that streaming updates are coming.
       if (onUpdate) onUpdate({ content: [], details: undefined });
 
-      const out = await request(sock(), cmd, 1800000, (chunk) => {
-        acc += chunk;
-        scheduleUpdate();
-      }).catch((e) => {
-        return "root-session error: " + (e as Error).message;
-      });
+      let out: string;
+      try {
+        out = await request(sock(), cmd, 1800000, (chunk) => {
+          acc += chunk;
+          scheduleUpdate();
+        }, signal);
+      } catch (e) {
+        out = "root-session error: " + (e as Error).message;
+      }
 
       // Flush any pending update.
       clearTimeout(updateTimer);

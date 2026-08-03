@@ -44,6 +44,8 @@ const server = net.createServer((conn) => {
   }, IDLE_TIMEOUT);
 
   let buf = "";
+  let currentProc = null;
+
   conn.on("data", (d) => {
     buf += d.toString();
     const cmd = buf.trim();
@@ -63,6 +65,7 @@ const server = net.createServer((conn) => {
       timeout: 1800000,
       stdio: ["ignore", "pipe", "pipe"],
     });
+    currentProc = proc;
     let hasOutput = false;
     proc.stdout.on("data", (chunk) => {
       hasOutput = true;
@@ -73,16 +76,25 @@ const server = net.createServer((conn) => {
       try { conn.write(chunk); } catch { /* connection gone */ }
     });
     proc.on("error", (err) => {
+      currentProc = null;
       const msg = `root-session error: ${err.message}\n`;
       try { conn.write(hasOutput ? msg : msg); } catch { /* connection gone */ }
       if (!hasOutput) conn.end();
     });
     proc.on("close", (code) => {
+      currentProc = null;
       if (!hasOutput && code !== 0) {
         try { conn.write(`root-session error: exit code ${code}\n`); } catch {}
       }
       conn.end();
     });
+  });
+
+  conn.on("close", () => {
+    if (currentProc && !currentProc.killed) {
+      currentProc.kill();
+      currentProc = null;
+    }
   });
 });
 
