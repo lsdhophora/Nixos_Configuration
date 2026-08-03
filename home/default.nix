@@ -33,7 +33,6 @@
     # ---- Dev ----
     ./dev/direnv.nix
     ./dev/git.nix
-    ./dev/opencode.nix
     ./dev/pi-agent
     ./dev/ssh.nix
     ./dev/texlive.nix

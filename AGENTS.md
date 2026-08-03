@@ -51,8 +51,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   ├── dev/
 │   │   ├── direnv.nix
 │   │   ├── git.nix
-│   │   ├── opencode.nix
-│   │   ├── pi-agent.nix
+│   │   ├── pi-agent/
 │   │   ├── ssh.nix
 │   │   └── texlive.nix
 │   ├── misc/
