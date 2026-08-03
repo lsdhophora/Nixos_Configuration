@@ -64,7 +64,6 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 ├── assets/                   # Static assets
 │   ├── avatar/
 │   ├── gtk/
-│   ├── icons/Adwaita-purple/
 │   └── themes/
 ├── overlays/                 # Nixpkgs overlays (auto-discovered from this dir)
 │   ├── default.nix           # Auto-discovery aggregator
