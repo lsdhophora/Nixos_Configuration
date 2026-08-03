@@ -1,0 +1,27 @@
+{
+  "providers": {
+    "siliconflow": {
+      "baseUrl": "https://api.siliconflow.cn/v1",
+      "api": "openai-completions",
+      "apiKey": "env:SILICONFLOW_API_KEY",
+      "models": [
+        {
+          "id": "Pro/zai-org/GLM-5.1",
+          "name": "GLM-5.1 (SiliconFlow)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 131072,
+          "maxTokens": 16384
+        },
+        {
+          "id": "zai-org/GLM-5.2",
+          "name": "GLM-5.2 (SiliconFlow)",
+          "reasoning": false,
+          "input": ["text"],
+          "contextWindow": 131072,
+          "maxTokens": 16384
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+keys:
+  - &lysergic age15ply2aazagydu8c6s8a5cuzpqsq9zr268hsp7u09y30rf35j4fmqzc2nvr
+
+creation_rules:
+  - path_regex: secrets/[^/]+\.yaml$
+    key_groups:
+      - age:
+        - *lysergic

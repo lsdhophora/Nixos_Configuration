@@ -11,7 +11,7 @@
   users.users.lophophora = {
     isNormalUser = true;
     description = "费雪";
-    hashedPasswordFile = config.age.secrets.hashedPassword.path;
+    hashedPasswordFile = config.sops.secrets.hashed-password.path;
     extraGroups = [ "wheel" ];
     shell = pkgs.zsh;
     packages = [ ];
@@ -21,7 +21,7 @@
     nano
     git
     wget
-    inputs.agenix.packages.x86_64-linux.default
+    inputs.sops-nix.packages.x86_64-linux.default
   ];
 
   system.stateVersion = "25.05";

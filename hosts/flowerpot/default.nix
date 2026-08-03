@@ -16,7 +16,7 @@
     ../../modules/user.nix
 
     # ---- Security ----
-    ../../modules/security/age.nix
+    ../../modules/security/sops.nix
     ../../modules/security/sudo.nix
 
     # ---- Services ----
