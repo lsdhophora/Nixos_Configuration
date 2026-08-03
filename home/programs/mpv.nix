@@ -11,9 +11,9 @@
       osd-font-size = 16;
       osd-color = "#FCFCFC";
       osd-border-color = "#202326";
+      osd-border-size = 3.5;
       osd-back-color = "#202326";
-      osd-shadow-color = "#000000";
-      osd-shadow-offset = 1;
+      osd-shadow-offset = 0;
       profile = "gpu-hq";
       hwdec = "auto-safe";
       video-sync = "display-resample";
