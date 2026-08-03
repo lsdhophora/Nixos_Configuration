@@ -10,7 +10,6 @@
     nixd
     unzip
     kitty
-    bluetui
     pulsemixer
   ];
 }
