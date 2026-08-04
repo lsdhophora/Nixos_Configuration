@@ -1,0 +1,67 @@
+diff --git a/src/AppChooserDialog.qml b/src/AppChooserDialog.qml
+index e209853..edc11d5 100644
+--- a/src/AppChooserDialog.qml
++++ b/src/AppChooserDialog.qml
+@@ -26,7 +26,7 @@ PortalDialog {
+     required property AppFilterModel appModel
+     required property AppChooserData appChooserData
+ 
+-    readonly property bool showingTerminalCommand: root.appChooserData.shellAccess && searchField.editText.startsWith("/")
++    readonly property bool showingTerminalCommand: root.appChooserData.shellAccess && searchField.text.startsWith("/")
+ 
+     property bool remember: false
+     onRememberChanged: root.appChooserData.remember = remember
+@@ -56,10 +56,8 @@ PortalDialog {
+         RowLayout {
+             spacing: Kirigami.Units.smallSpacing
+ 
+-            QQC2.ComboBox {
++            QQC2.TextField {
+                 id: searchField
+-                property bool ready: false
+-                property string text: editText
+ 
+                 function acceptResult() {
+                     if (showingTerminalCommand) {
+@@ -71,29 +69,16 @@ PortalDialog {
+ 
+                 implicitWidth: Kirigami.Units.gridUnit * 20
+                 Layout.fillWidth: true
+-                editable: true
+-                currentIndex: -1
+ 
+                 Keys.onDownPressed: {
+                     grid.forceActiveFocus();
+                     grid.currentIndex = 0;
+                 }
+-                model: root.appChooserData.history
+-                onModelChanged: {
+-                    editText = ""
+-                    ready = true
+-                }
+-                onEditTextChanged: {
+-                    if (!ready) {
+-                        return
+-                    }
+-                    root.appModel.filter = editText
++                onTextChanged: {
++                    root.appModel.filter = text
+                     // delay the auto-selection to allow the GridView to update
+                     Qt.callLater(() => {
+-                        if (!ready) {
+-                            return
+-                        }
+-                        if (editText.length > 0 && grid.count === 1) {
++                        if (text.length > 0 && grid.count === 1) {
+                             grid.currentIndex = 0
+                         }
+                     })
+@@ -103,7 +88,7 @@ PortalDialog {
+                     target: root.appChooserData
+                     function onFileDialogFinished(text) {
+                         if (text !== "") {
+-                            searchField.editText = text
++                            searchField.text = text
+                         }
+                     }
+                 }

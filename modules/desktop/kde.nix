@@ -54,6 +54,14 @@ in
             ./../../patches/ark/batchextract-desturl.patch
           ];
         });
+        # Remove the "Find More in Discover" button and the history dropdown
+        # from the portal's AppChooserDialog (the "Choose Application" window).
+        xdg-desktop-portal-kde = prev.kdePackages.xdg-desktop-portal-kde.overrideAttrs (oldAttrs: {
+          patches = (oldAttrs.patches or [ ]) ++ [
+            ./../../patches/xdg-desktop-portal-kde/appchooser-hide-discover.patch
+            ./../../patches/xdg-desktop-portal-kde/appchooser-plain-input.patch
+          ];
+        });
         # Hide the current directory in the location-bar jump menu.
         dolphin =
           let

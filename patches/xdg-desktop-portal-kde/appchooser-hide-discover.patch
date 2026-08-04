@@ -1,0 +1,36 @@
+diff --git a/src/AppChooserDialog.qml b/src/AppChooserDialog.qml
+index edc11d5..9e3aa65 100644
+--- a/src/AppChooserDialog.qml
++++ b/src/AppChooserDialog.qml
+@@ -31,11 +31,6 @@ PortalDialog {
+     property bool remember: false
+     onRememberChanged: root.appChooserData.remember = remember
+ 
+-    readonly property QQC2.Action discoverAction: QQC2.Action{
+-        icon.name: "plasmadiscover"
+-        text: KI18n.i18nc("Find some more apps that can open this content using the Discover app store", "Find More in Discover…")
+-        onTriggered: root.appChooserData.openDiscover()
+-    }
+     readonly property QQC2.Action openWithTerminalAction: QQC2.Action {
+         icon.name: "system-run"
+         text: KI18n.i18nc("@action:button", "Open")
+@@ -209,7 +204,7 @@ PortalDialog {
+                     }
+                 }
+ 
+-                helpfulAction: root.showingTerminalCommand ? root.openWithTerminalAction : root.discoverAction
++                helpfulAction: root.showingTerminalCommand ? root.openWithTerminalAction : null
+             }
+         }
+     }
+@@ -235,10 +230,6 @@ PortalDialog {
+                 text: KI18n.i18nc("@option:check", "Do not close when command exits")
+             }
+         }
+-
+-        QQC2.Button {
+-            action: root.discoverAction
+-        }
+     }
+ }
+ 
