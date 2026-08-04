@@ -14,7 +14,7 @@ in
     ".pi/agent/settings.json" = {
       text = builtins.toJSON {
         defaultProvider = "deepseek";
-        defaultModel = "deepseek-chat";
+        defaultModel = "deepseek-v4-flash";
         packages = [
           "git:github.com/Fletcher-Alderton/exa-pi"
         ];
