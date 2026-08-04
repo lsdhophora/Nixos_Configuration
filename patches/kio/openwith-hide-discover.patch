@@ -1,0 +1,49 @@
+diff --git a/src/widgets/kopenwithdialog.cpp b/src/widgets/kopenwithdialog.cpp
+index 9e84f4e..7bc63df 100644
+--- a/src/widgets/kopenwithdialog.cpp
++++ b/src/widgets/kopenwithdialog.cpp
+@@ -31,7 +31,6 @@
+ #include <KCollapsibleGroupBox>
+ #include <KDesktopFile>
+ #include <KHistoryComboBox>
+-#include <KIO/CommandLauncherJob>
+ #include <KLineEdit>
+ #include <KLocalizedString>
+ #include <KMessageBox>
+@@ -529,7 +528,6 @@ public:
+     // slots
+     void slotDbClick();
+     void slotFileSelected();
+-    void discoverButtonClicked();
+ 
+     bool saveNewApps;
+     bool m_terminaldirty;
+@@ -792,14 +772,6 @@ void KOpenWithDialogPrivate::init(const QString &_text, const QString &_value)
+ 
+     topLayout->addWidget(dialogExtension);
+ 
+-    if (!qMimeType.isNull() && KService::serviceByDesktopName(QStringLiteral("org.kde.discover"))) {
+-        QPushButton *discoverButton = new QPushButton(QIcon::fromTheme(QStringLiteral("plasmadiscover")), i18n("Get more Apps from Discover"));
+-        QObject::connect(discoverButton, &QPushButton::clicked, q, [this]() {
+-            discoverButtonClicked();
+-        });
+-        topLayout->addWidget(discoverButton);
+-    }
+-
+     buttonBox = new QDialogButtonBox(q);
+     buttonBox->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+     q->connect(buttonBox, &QDialogButtonBox::accepted, q, &QDialog::accept);
+@@ -818,13 +790,6 @@ void KOpenWithDialogPrivate::init(const QString &_text, const QString &_value)
+     q->slotTextChanged();
+ }
+ 
+-void KOpenWithDialogPrivate::discoverButtonClicked()
+-{
+-    KIO::CommandLauncherJob *job = new KIO::CommandLauncherJob(QStringLiteral("plasma-discover"), {QStringLiteral("--mime"), qMimeType});
+-    job->setDesktopName(QStringLiteral("org.kde.discover"));
+-    job->start();
+-}
+-
+ // ----------------------------------------------------------------------
+ 
+ KOpenWithDialog::~KOpenWithDialog()

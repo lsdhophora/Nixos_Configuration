@@ -64,6 +64,8 @@ in
             patchedKio = prev.kdePackages.kio.overrideAttrs (oldAttrs: {
               patches = (oldAttrs.patches or [ ]) ++ [
                 ./../../patches/kio/kurlnavigator-button-border.patch
+                ./../../patches/kio/openwith-hide-discover.patch
+                ./../../patches/kio/openwith-plain-input.patch
               ];
             });
             patchedKdeSelf = prev.kdePackages // { kio = patchedKio; };

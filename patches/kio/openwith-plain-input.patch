@@ -1,0 +1,70 @@
+diff --git a/src/widgets/kopenwithdialog.cpp b/src/widgets/kopenwithdialog.cpp
+index 9e84f4e..b8f7f3a 100644
+--- a/src/widgets/kopenwithdialog.cpp
++++ b/src/widgets/kopenwithdialog.cpp
+@@ -671,22 +669,10 @@ void KOpenWithDialogPrivate::init(const QString &_text, const QString &_value)
+     topLayout->addWidget(label);
+ 
+     if (!bReadOnly) {
+-        // init the history combo and insert it into the URL-Requester
+-        KHistoryComboBox *combo = new KHistoryComboBox();
+-        combo->setToolTip(i18n("Type to filter the applications below, or specify the name of a command.\nPress down arrow to navigate the results."));
+-        KLineEdit *lineEdit = new KLineEdit(q);
+-        lineEdit->setClearButtonEnabled(true);
+-        combo->setLineEdit(lineEdit);
+-        combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+-        combo->setDuplicatesEnabled(false);
+-        KConfigGroup cg(KSharedConfig::openStateConfig(), QStringLiteral("Open-with settings"));
+-        int max = cg.readEntry("Maximum history", 15);
+-        combo->setMaxCount(max);
+-        int mode = cg.readEntry("CompletionMode", int(KCompletion::CompletionNone));
+-        combo->setCompletionMode(static_cast<KCompletion::CompletionMode>(mode));
+-        const QStringList list = cg.readEntry("History", QStringList());
+-        combo->setHistoryItems(list, true);
+-        edit = new KUrlRequester(combo, q);
++        // Use a plain line edit as the input field: no history dropdown.
++        edit = new KUrlRequester(q);
++        edit->lineEdit()->setToolTip(i18n("Type to filter the applications below, or specify the name of a command.\nPress down arrow to navigate the results."));
++        edit->button()->hide();
+         edit->installEventFilter(q);
+     } else {
+         edit = new KUrlRequester(q);
+@@ -710,12 +696,6 @@ void KOpenWithDialogPrivate::init(const QString &_text, const QString &_value)
+ 
+     topLayout->addWidget(edit);
+ 
+-    if (edit->comboBox()) {
+-        KUrlCompletion *comp = new KUrlCompletion(KUrlCompletion::ExeCompletion);
+-        edit->comboBox()->setCompletionObject(comp);
+-        edit->comboBox()->setAutoDeleteCompletionObject(true);
+-    }
+-
+     QObject::connect(edit, &KUrlRequester::textChanged, q, &KOpenWithDialog::slotTextChanged);
+     QObject::connect(edit, &KUrlRequester::urlSelected, q, [this]() {
+         slotFileSelected();
+@@ -952,17 +917,14 @@ bool KOpenWithDialog::eventFilter(QObject *object, QEvent *event)
+     if (object == d->edit && event->type() == QEvent::ShortcutOverride) {
+         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+         if (keyEvent->key() == Qt::Key_Down) {
+-            KHistoryComboBox *combo = static_cast<KHistoryComboBox *>(d->edit->comboBox());
+-            // FIXME: Disable arrow down in CompletionPopup and CompletionPopupAuto only when the dropdown list is shown.
+-            // When popup completion mode is used the down arrow is used to navigate the dropdown list of results
+-            if (combo->completionMode() != KCompletion::CompletionPopup && combo->completionMode() != KCompletion::CompletionPopupAuto) {
+-                QModelIndex leafNodeIdx = d->view->model()->index(0, 0);
+-                // Check if we have at least one result or the focus is passed to the empty QTreeView
+-                if (d->view->model()->hasChildren(leafNodeIdx)) {
+-                    d->view->setFocus(Qt::OtherFocusReason);
+-                    QApplication::sendEvent(d->view, keyEvent);
+-                    return true;
+-                }
++            // A plain line edit has no popup completion, so the down arrow
++            // always moves the focus to the results tree.
++            QModelIndex leafNodeIdx = d->view->model()->index(0, 0);
++            // Check if we have at least one result or the focus is passed to the empty QTreeView
++            if (d->view->model()->hasChildren(leafNodeIdx)) {
++                d->view->setFocus(Qt::OtherFocusReason);
++                QApplication::sendEvent(d->view, keyEvent);
++                return true;
+             }
+         }
+     }
