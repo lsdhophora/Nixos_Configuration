@@ -54,6 +54,47 @@ in
             ./../../patches/ark/batchextract-desturl.patch
           ];
         });
+        # Hide the current directory in the location-bar jump menu.
+        dolphin =
+          let
+            unstablePkgs = unstable.legacyPackages.${prev.stdenv.hostPlatform.system};
+            # Only Dolphin uses this kio build with the location-bar border
+            # fix, so the rest of the desktop keeps the stock kio and the
+            # rebuild stays small.
+            patchedKio = prev.kdePackages.kio.overrideAttrs (oldAttrs: {
+              patches = (oldAttrs.patches or [ ]) ++ [
+                ./../../patches/kio/kurlnavigator-button-border.patch
+              ];
+            });
+            patchedKdeSelf = prev.kdePackages // { kio = patchedKio; };
+            mkKdeDerivationForDolphin =
+              (import "${prev.path}/pkgs/kde/lib/mk-kde-derivation.nix" patchedKdeSelf) {
+                inherit
+                  (unstablePkgs)
+                  lib
+                  stdenv
+                  makeSetupHook
+                  cmake
+                  ninja
+                  qt6
+                  python3
+                  python3Packages
+                  jq
+                  ;
+              };
+          in
+          (prev.kdePackages.dolphin.override {
+            mkKdeDerivation = mkKdeDerivationForDolphin;
+          }).overrideAttrs (oldAttrs: {
+            patches = (oldAttrs.patches or [ ]) ++ [
+              ./../../patches/dolphin/hide-current-dir-path-selector.patch
+            ];
+            # Put the patched kio first in the link inputs so that the
+            # linker and the dynamic loader resolve to it instead of the
+            # stock kio that is pulled in transitively.
+            buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
+            propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
+          });
       };
     })
 

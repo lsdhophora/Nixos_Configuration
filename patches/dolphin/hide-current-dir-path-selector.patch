@@ -1,0 +1,216 @@
+diff --git a/src/dolphinurlnavigator.cpp b/src/dolphinurlnavigator.cpp
+index 5c32538..53d1e20 100644
+--- a/src/dolphinurlnavigator.cpp
++++ b/src/dolphinurlnavigator.cpp
+@@ -12,14 +12,20 @@
+ #include "dolphinurlnavigatorscontroller.h"
+ #include "global.h"
+ 
++#include <KAcceleratorManager>
+ #include <KLocalizedString>
+ #include <KUrlComboBox>
+ 
+ #include <QAbstractButton>
++#include <QActionEvent>
++#include <QApplication>
++#include <QEvent>
+ #include <QKeyEvent>
+ #include <QLabel>
+ #include <QLayout>
+ #include <QLineEdit>
++#include <QMenu>
++#include <QTimer>
+ 
+ DolphinUrlNavigator::DolphinUrlNavigator(QWidget *parent)
+     : DolphinUrlNavigator(QUrl(), parent)
+@@ -29,6 +35,22 @@ DolphinUrlNavigator::DolphinUrlNavigator(QWidget *parent)
+ DolphinUrlNavigator::DolphinUrlNavigator(const QUrl &url, QWidget *parent)
+     : KUrlNavigator(DolphinPlacesModelSingleton::instance().placesModel(), url, parent)
+ {
++    // Do not let KAcceleratorManager::manage() insert mnemonic '&' markers
++    // into the breadcrumb button texts (like DolphinTabWidget does for the
++    // tab widget). Without this, the breadcrumbs show mnemonic underlines
++    // whenever the mnemonics are drawn.
++    KAcceleratorManager::setNoAccel(this);
++
++    // The frame of the location bar only draws its blue focus highlight
++    // when it has the focus itself (or when the focus indicator is enabled
++    // and the navigator is active). Clicking a breadcrumb button or opening
++    // one of its menus moves the focus to the button or the menu, which
++    // repaints the frame without the focus state and makes the whole
++    // highlight disappear. Since the navigator stays active once it has
++    // been activated, enabling the focus indicator here keeps the frame
++    // highlight of the whole location bar always visible.
++    setHighlightFocusIndicator(true);
++
+     const GeneralSettings *settings = GeneralSettings::self();
+     setUrlEditable(settings->editableUrl());
+     setShowFullPath(settings->showFullPath());
+@@ -50,6 +72,10 @@ DolphinUrlNavigator::DolphinUrlNavigator(const QUrl &url, QWidget *parent)
+ 
+     DolphinUrlNavigatorsController::registerDolphinUrlNavigator(this);
+ 
++    // Watch the menus of this navigator for the entry of the current
++    // directory (see eventFilter()).
++    QApplication::instance()->installEventFilter(this);
++
+     connect(this, &KUrlNavigator::returnPressed, this, &DolphinUrlNavigator::slotReturnPressed);
+ 
+     auto readOnlyBadge = new QLabel();
+@@ -61,6 +87,7 @@ DolphinUrlNavigator::DolphinUrlNavigator(const QUrl &url, QWidget *parent)
+ 
+ DolphinUrlNavigator::~DolphinUrlNavigator()
+ {
++    QApplication::instance()->removeEventFilter(this);
+     DolphinUrlNavigatorsController::unregisterDolphinUrlNavigator(this);
+ }
+ 
+@@ -155,4 +182,116 @@ void DolphinUrlNavigator::keyPressEvent(QKeyEvent *keyEvent)
+     KUrlNavigator::keyPressEvent(keyEvent);
+ }
+ 
++bool DolphinUrlNavigator::eventFilter(QObject *watched, QEvent *event)
++{
++    if (event->type() == QEvent::ActionAdded) {
++        if (QMenu *menu = qobject_cast<QMenu *>(watched)) {
++            // Only consider menus of this navigator: the path selector menu
++            // is a direct child, while the breadcrumb subdirectory menus are
++            // children of the breadcrumb buttons.
++            bool ownMenu = false;
++            for (QObject *object = menu->parent(); object; object = object->parent()) {
++                if (object == this) {
++                    ownMenu = true;
++                    break;
++                }
++            }
++            if (ownMenu) {
++                if (menu->parent() == this) {
++                    // The drop-down button at the left of the location bar
++                    // opens a menu that lists all directories of the current
++                    // path, including the directory that is currently shown.
++                    // The entry for the current directory is redundant, so
++                    // hide it while the menu is still being populated (which
++                    // keeps the menu size correct).
++                    auto *actionEvent = static_cast<QActionEvent *>(event);
++                    const QUrl menuUrl(actionEvent->action()->data().toString());
++                    if (menuUrl.toString(QUrl::StripTrailingSlash) == locationUrl().toString(QUrl::StripTrailingSlash)) {
++                        actionEvent->action()->setVisible(false);
++
++                        // Also hide a separator directly before it, if there is one.
++                        const QList<QAction *> actions = menu->actions();
++                        if (!actions.isEmpty() && actions.constLast()->isSeparator()) {
++                            actions.constLast()->setVisible(false);
++                        }
++                    }
++                }
++
++                // A menu of the location bar covers a part of it while it is
++                // open. Repaint the whole location bar when the menu opens
++                // and when it closes, so that the rendering underneath the
++                // popup is always fresh and the highlight is always preserved.
++                if (!m_hookedMenus.contains(menu)) {
++                    m_hookedMenus.insert(menu);
++                    auto repaint = [this]() {
++                        QTimer::singleShot(0, this, [this]() {
++                            update();
++                            const QList<QAbstractButton *> buttons = findChildren<QAbstractButton *>();
++                            for (QAbstractButton *button : buttons) {
++                                button->update();
++                            }
++                        });
++                    };
++                    connect(menu, &QMenu::aboutToShow, this, repaint);
++                    connect(menu, &QMenu::aboutToHide, this, [this, menu, repaint]() {
++                        m_hookedMenus.remove(menu);
++                        repaint();
++                    });
++
++                    // While a subdirectory menu of a breadcrumb button is
++                    // open, the KUrlNavigatorButton sets its PopupActiveHint
++                    // to keep the button highlighted. The Breeze style does
++                    // not render that custom hint (it only reacts to the
++                    // QStyleOption states), so the highlight of the button
++                    // is lost as soon as the pointer leaves it. Restore a
++                    // visible highlight by using the checked state instead.
++                    if (QAbstractButton *button = qobject_cast<QAbstractButton *>(menu->parent())) {
++                        connect(menu, &QMenu::aboutToShow, this, [button]() {
++                            button->setChecked(true);
++                        });
++                        connect(menu, &QMenu::aboutToHide, this, [button]() {
++                            button->setChecked(false);
++                        });
++                    }
++
++                    // The menus of the location bar open right at its bottom
++                    // edge, exactly on the row where the frame border is drawn.
++                    // That covers the border at the point where the menu pops
++                    // out, which makes the location bar's highlight look broken
++                    // there. Nudge the menu one pixel down (invisible to the
++                    // eye) so that the border stays visible and the highlight
++                    // of the whole location bar stays preserved.
++                    connect(menu, &QMenu::aboutToShow, this, [this, menu]() {
++                        QTimer::singleShot(0, this, [this, menu]() {
++                            if (!menu->isVisible()) {
++                                qWarning() << "DNU nudge: menu not visible";
++                                return;
++                            }
++                            const int menuTop = menu->mapToGlobal(QPoint(0, 0)).y();
++                            const int navBottom = mapToGlobal(QPoint(0, 0)).y() + height() - 1;
++                            qWarning() << "DNU nudge: menuTop" << menuTop << "navBottom" << navBottom;
++                            if (menuTop <= navBottom) {
++                                menu->move(menu->x(), menu->y() + (navBottom - menuTop) + 1);
++                                qWarning() << "DNU nudge: moved to" << menu->y();
++                            }
++                        });
++                    });
++                }
++            }
++        }
++    }
++
++    // Forward only the events of the navigator and its own child widgets to
++    // the base implementation. This filter is installed on the whole
++    // application, so forwarding events of unrelated widgets (for example
++    // focus changes of the file view) would run the navigator's focus
++    // handling for them and toggle the breadcrumb mnemonic state globally.
++    for (QObject *object = watched; object; object = object->parent()) {
++        if (object == this) {
++            return KUrlNavigator::eventFilter(watched, event);
++        }
++    }
++    return QObject::eventFilter(watched, event);
++}
++
+ #include "moc_dolphinurlnavigator.cpp"
+diff --git a/src/dolphinurlnavigator.h b/src/dolphinurlnavigator.h
+index d6da51b..e64d779 100644
+--- a/src/dolphinurlnavigator.h
++++ b/src/dolphinurlnavigator.h
+@@ -10,6 +10,9 @@
+ 
+ #include <KUrlNavigator>
+ 
++#include <QObject>
++#include <QSet>
++
+ /**
+  * @brief Extends KUrlNavigator in a Dolphin-specific way.
+  *
+@@ -104,6 +107,17 @@ protected:
+      * Return focus back to the view when pressing Escape and this would have no other effect (e.g. deselecting or changing edit mode).
+      */
+     void keyPressEvent(QKeyEvent *keyEvent) override;
++
++    /**
++     * Removes the entry for the current directory from the path selector
++     * menu, which is opened by the drop-down button at the left of the
++     * location bar, and repaints the location bar whenever one of its
++     * menus opens or closes, so that the highlight is always preserved.
++     */
++    bool eventFilter(QObject *watched, QEvent *event) override;
++
++private:
++    QSet<QObject *> m_hookedMenus;
+ };
+ 
+ #endif // DOLPHINURLNAVIGATOR_H

@@ -1,0 +1,80 @@
+diff --git a/src/filewidgets/kurlnavigatorbutton.cpp b/src/filewidgets/kurlnavigatorbutton.cpp
+index bed4af1..1f7bb7b 100644
+--- a/src/filewidgets/kurlnavigatorbutton.cpp
++++ b/src/filewidgets/kurlnavigatorbutton.cpp
+@@ -249,6 +249,48 @@ void KUrlNavigatorButton::paintEvent(QPaintEvent *event)
+         }
+         style()->drawPrimitive(leftToRight ? QStyle::PE_IndicatorArrowRight : QStyle::PE_IndicatorArrowLeft, &option, &painter, this);
+     }
++
++    // While the subdirectory popup menu of this button is open, the button
++    // covers the frame border of the location bar (its state background is
++    // drawn over the whole button). Redraw the frame border segment on top
++    // of the button in the highlight color, so that the highlight stays
++    // continuous at the position of this button.
++    //
++    // At all other times this method does not paint anything, so that the
++    // location bar's own frame is shown through the button unchanged and
++    // the border segment lights up and dims together with the location bar.
++    if (isDisplayHintEnabled(PopupActiveHint)) {
++        const KUrlNavigator *urlNavigator = qobject_cast<KUrlNavigator *>(parent());
++        if (urlNavigator && urlNavigator->isBackgroundEnabled()) {
++            QStyleOptionFrame borderOption;
++            borderOption.initFrom(urlNavigator);
++            borderOption.lineWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth, &borderOption, urlNavigator);
++            borderOption.midLineWidth = 0;
++            borderOption.palette.setColor(QPalette::Base, urlNavigator->palette().alternateBase().color());
++            borderOption.state |= QStyle::State_Enabled;
++            // Force the focus state, so that the segment is always drawn in
++            // the highlight color while the menu is open.
++            borderOption.state |= QStyle::State_HasFocus;
++            // The navigator's rect, expressed in this button's coordinates.
++            borderOption.rect = QRect(-x(), -y(), parentWidget()->width(), parentWidget()->height());
++
++            QRegion borderRegion;
++            const int borderWidth = qMax(2, borderOption.lineWidth);
++            borderRegion += QRect(0, 0, width(), borderWidth); // top
++            borderRegion += QRect(0, height() - borderWidth, width(), borderWidth); // bottom
++            if (x() == 0) { // the left edge of the location bar
++                borderRegion += QRect(0, 0, borderWidth, height());
++            }
++            if (x() + width() == parentWidget()->width()) { // the right edge of the location bar
++                borderRegion += QRect(width() - borderWidth, 0, borderWidth, height());
++            }
++
++            painter.save();
++            painter.setClipRegion(borderRegion);
++            style()->drawPrimitive(QStyle::PE_FrameLineEdit, &borderOption, &painter, urlNavigator);
++            painter.restore();
++        }
++    }
+ }
+ 
+ void KUrlNavigatorButton::enterEvent(QEnterEvent *event)
+diff --git a/src/filewidgets/kurlnavigatorbuttonbase.cpp b/src/filewidgets/kurlnavigatorbuttonbase.cpp
+index fe1f0c3..0af62d9 100644
+--- a/src/filewidgets/kurlnavigatorbuttonbase.cpp
++++ b/src/filewidgets/kurlnavigatorbuttonbase.cpp
+@@ -90,9 +90,21 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
+ {
+     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) || isDisplayHintEnabled(DraggedHint) || isDisplayHintEnabled(PopupActiveHint);
+ 
++    // Keep the button's state background away from the frame border of the
++    // location bar. The button fills the navigator completely, so its state
++    // background would cover the frame border at the outer pixels of the
++    // navigator. Inset the background by the border width at the edges where
++    // the button touches the navigator, so that the frame border stays
++    // visible and continuous in every button state (hover, pressed, popup).
++    QRect panelRect(0, 0, width(), height());
++    if (const QWidget *parent = parentWidget()) {
++        const int borderWidth = 2;
++        panelRect = panelRect.intersected(QRect(-x(), -y(), parent->width(), parent->height()).adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth));
++    }
++
+     QStyleOptionButton buttonOption;
+     buttonOption.initFrom(this);
+-    buttonOption.rect = QRect(0, 0, width(), height());
++    buttonOption.rect = panelRect;
+     buttonOption.features = QStyleOptionButton::Flat;
+ 
+     // Draw button graphic
