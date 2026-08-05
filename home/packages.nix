@@ -10,5 +10,6 @@
     nixd
     unzip
     kitty
+    mosh
   ];
 }

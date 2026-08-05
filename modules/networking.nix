@@ -18,6 +18,9 @@
     enable = true;
     allowedUDPPorts = [ 53317 ]; # LocalSend discovery
     allowedTCPPorts = [ 53317 ]; # LocalSend file transfer
+    allowedUDPPortRanges = [
+      { from = 60000; to = 61000; } # mosh
+    ];
   };
 
   # Declarative WiFi tuning: reduce AP switching for 56-606.
