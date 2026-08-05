@@ -1,8 +1,122 @@
+diff --git a/src/filewidgets/kurlnavigator.cpp b/src/filewidgets/kurlnavigator.cpp
+index d2a26fa..2bd6149 100644
+--- a/src/filewidgets/kurlnavigator.cpp
++++ b/src/filewidgets/kurlnavigator.cpp
+@@ -200,6 +200,7 @@ public:
+     bool m_showFullPath = false;
+     bool m_backgroundEnabled = true;
+     bool m_contextMenuOpen = false;
++    bool m_menuOpen = false;
+ 
+     int m_padding = 5;
+ 
+@@ -541,7 +542,12 @@ void KUrlNavigatorPrivate::openPathSelectorMenu()
+     } while (!dirName.isEmpty());
+ 
+     const QPoint pos = q->mapToGlobal(m_dropDownButton->geometry().bottomRight());
++    // While the menu is open the focus moves to the menu and the location
++    // bar loses the focus. Keep the frame highlighted, so that the
++    // highlight does not disappear while the menu is shown.
++    q->setMenuOpen(true);
+     const QAction *activatedAction = popup->exec(pos);
++    q->setMenuOpen(false);
+     if (activatedAction != nullptr) {
+         const QUrl url(activatedAction->data().toString());
+         q->setLocationUrl(url);
+@@ -1308,6 +1314,18 @@ bool KUrlNavigator::eventFilter(QObject *watched, QEvent *event)
+         for (KUrlNavigatorButton *button : std::as_const(d->m_navButtons)) {
+             button->setShowMnemonic(true);
+         }
++        // The edge buttons of the location bar (drop-down button, places
++        // selector, editable-mode toggle) draw their part of the frame
++        // border with the location bar's focus state. Repaint them together
++        // with the location bar, so that the border segment stays in sync
++        // with the frame.
++        if (d->m_dropDownButton) {
++            d->m_dropDownButton->update();
++        }
++        if (d->m_placesSelector) {
++            d->m_placesSelector->update();
++        }
++        d->m_toggleEditableMode->update();
+         update();
+         break;
+ 
+@@ -1315,6 +1333,13 @@ bool KUrlNavigator::eventFilter(QObject *watched, QEvent *event)
+         for (KUrlNavigatorButton *button : std::as_const(d->m_navButtons)) {
+             button->setShowMnemonic(false);
+         }
++        if (d->m_dropDownButton) {
++            d->m_dropDownButton->update();
++        }
++        if (d->m_placesSelector) {
++            d->m_placesSelector->update();
++        }
++        d->m_toggleEditableMode->update();
+         update();
+         break;
+ 
+@@ -1440,6 +1465,19 @@ bool KUrlNavigator::isBackgroundEnabled() const
+     return d->m_backgroundEnabled;
+ }
+ 
++bool KUrlNavigator::isFrameHighlighted() const
++{
++    return (m_showFocusIndicator && d->m_active) || d->m_contextMenuOpen || d->m_menuOpen || hasFocus();
++}
++
++void KUrlNavigator::setMenuOpen(bool open)
++{
++    if (d->m_menuOpen != open) {
++        d->m_menuOpen = open;
++        update();
++    }
++}
++
+ void KUrlNavigator::paintEvent(QPaintEvent *event)
+ {
+     Q_UNUSED(event);
+@@ -1452,7 +1490,7 @@ void KUrlNavigator::paintEvent(QPaintEvent *event)
+     if (d->m_backgroundEnabled && !d->m_editable) {
+         option.palette.setColor(QPalette::Base, palette().alternateBase().color());
+         option.state |= QStyle::State_Enabled;
+-        if ((m_showFocusIndicator && d->m_active) || d->m_contextMenuOpen) {
++        if ((m_showFocusIndicator && d->m_active) || d->m_contextMenuOpen || d->m_menuOpen) {
+             option.state |= QStyle::State_HasFocus;
+         }
+         if (underMouse()) {
+diff --git a/src/filewidgets/kurlnavigator.h b/src/filewidgets/kurlnavigator.h
+index 740687b..38b2fcb 100644
+--- a/src/filewidgets/kurlnavigator.h
++++ b/src/filewidgets/kurlnavigator.h
+@@ -361,6 +361,22 @@ public:
+      */
+     bool isBackgroundEnabled() const;
+ 
++    /*!
++     * Returns true if the frame of the location bar is drawn with its focus
++     * highlight. This is the exact condition that KUrlNavigator::paintEvent()
++     * uses, so that the buttons can draw their part of the frame border with
++     * the same state.
++     */
++    bool isFrameHighlighted() const;
++
++    /*!
++     * Sets whether a popup menu of the location bar is currently open.
++     * While a menu is open, the location bar's frame is drawn with its
++     * focus highlight (in the same way as for the context menu), so that
++     * the highlight does not disappear when the focus moves to the menu.
++     */
++    void setMenuOpen(bool open);
++
+     /*!
+      * Sets whether to show additional focus indicator which has been implemented as thick
+      * line rounded at the ends and clipped at the bottom drawing in accent
 diff --git a/src/filewidgets/kurlnavigatorbutton.cpp b/src/filewidgets/kurlnavigatorbutton.cpp
-index bed4af1..1f7bb7b 100644
+index bed4af1..7a79151 100644
 --- a/src/filewidgets/kurlnavigatorbutton.cpp
 +++ b/src/filewidgets/kurlnavigatorbutton.cpp
-@@ -249,6 +249,48 @@ void KUrlNavigatorButton::paintEvent(QPaintEvent *event)
+@@ -249,6 +249,19 @@ void KUrlNavigatorButton::paintEvent(QPaintEvent *event)
          }
          style()->drawPrimitive(leftToRight ? QStyle::PE_IndicatorArrowRight : QStyle::PE_IndicatorArrowLeft, &option, &painter, this);
      }
@@ -17,45 +131,37 @@ index bed4af1..1f7bb7b 100644
 +    // location bar's own frame is shown through the button unchanged and
 +    // the border segment lights up and dims together with the location bar.
 +    if (isDisplayHintEnabled(PopupActiveHint)) {
-+        const KUrlNavigator *urlNavigator = qobject_cast<KUrlNavigator *>(parent());
-+        if (urlNavigator && urlNavigator->isBackgroundEnabled()) {
-+            QStyleOptionFrame borderOption;
-+            borderOption.initFrom(urlNavigator);
-+            borderOption.lineWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth, &borderOption, urlNavigator);
-+            borderOption.midLineWidth = 0;
-+            borderOption.palette.setColor(QPalette::Base, urlNavigator->palette().alternateBase().color());
-+            borderOption.state |= QStyle::State_Enabled;
-+            // Force the focus state, so that the segment is always drawn in
-+            // the highlight color while the menu is open.
-+            borderOption.state |= QStyle::State_HasFocus;
-+            // The navigator's rect, expressed in this button's coordinates.
-+            borderOption.rect = QRect(-x(), -y(), parentWidget()->width(), parentWidget()->height());
-+
-+            QRegion borderRegion;
-+            const int borderWidth = qMax(2, borderOption.lineWidth);
-+            borderRegion += QRect(0, 0, width(), borderWidth); // top
-+            borderRegion += QRect(0, height() - borderWidth, width(), borderWidth); // bottom
-+            if (x() == 0) { // the left edge of the location bar
-+                borderRegion += QRect(0, 0, borderWidth, height());
-+            }
-+            if (x() + width() == parentWidget()->width()) { // the right edge of the location bar
-+                borderRegion += QRect(width() - borderWidth, 0, borderWidth, height());
-+            }
-+
-+            painter.save();
-+            painter.setClipRegion(borderRegion);
-+            style()->drawPrimitive(QStyle::PE_FrameLineEdit, &borderOption, &painter, urlNavigator);
-+            painter.restore();
-+        }
++        drawFrameBorderSegment(&painter, true);
 +    }
  }
  
  void KUrlNavigatorButton::enterEvent(QEnterEvent *event)
+@@ -544,7 +557,12 @@ void KUrlNavigatorButton::openSubDirsMenu(KJob *job)
+ 
+     QPointer<QObject> guard(this);
+ 
++    // While the menu is open the focus moves to the menu and the location
++    // bar loses the focus. Keep the frame highlighted, so that the
++    // highlight does not disappear while the menu is shown.
++    const_cast<KUrlNavigator *>(urlNavigator)->setMenuOpen(true);
+     m_subDirsMenu->exec(popupPos);
++    const_cast<KUrlNavigator *>(urlNavigator)->setMenuOpen(false);
+ 
+     // If 'this' has been deleted in the menu's nested event loop, we have to return
+     // immediately because any access to a member variable might cause a crash.
 diff --git a/src/filewidgets/kurlnavigatorbuttonbase.cpp b/src/filewidgets/kurlnavigatorbuttonbase.cpp
-index fe1f0c3..0af62d9 100644
+index fe1f0c3..ae19033 100644
 --- a/src/filewidgets/kurlnavigatorbuttonbase.cpp
 +++ b/src/filewidgets/kurlnavigatorbuttonbase.cpp
-@@ -90,9 +90,21 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
+@@ -10,6 +10,7 @@ SPDX-License-Identifier: LGPL-2.0-or-later
+ #include <KLocalizedString>
+ #include <KUrlNavigator>
+ 
++#include <QPainter>
+ #include <QStyle>
+ #include <QStyleOptionViewItem>
+ 
+@@ -90,9 +91,21 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
  {
      const bool isHighlighted = isDisplayHintEnabled(EnteredHint) || isDisplayHintEnabled(DraggedHint) || isDisplayHintEnabled(PopupActiveHint);
  
@@ -78,3 +184,126 @@ index fe1f0c3..0af62d9 100644
      buttonOption.features = QStyleOptionButton::Flat;
  
      // Draw button graphic
+@@ -101,6 +114,47 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
+     }
+ }
+ 
++void KUrlNavigatorButtonBase::drawFrameBorderSegment(QPainter *painter, bool forceFocus)
++{
++    const KUrlNavigator *urlNavigator = qobject_cast<KUrlNavigator *>(parent());
++    if (!urlNavigator || !urlNavigator->isBackgroundEnabled()) {
++        return;
++    }
++
++    QStyleOptionFrame borderOption;
++    borderOption.initFrom(urlNavigator);
++    borderOption.lineWidth = style()->pixelMetric(QStyle::PM_DefaultFrameWidth, &borderOption, urlNavigator);
++    borderOption.midLineWidth = 0;
++    borderOption.palette.setColor(QPalette::Base, urlNavigator->palette().alternateBase().color());
++    borderOption.state |= QStyle::State_Enabled;
++    // Use the same focus condition as the location bar's frame (see
++    // KUrlNavigator::paintEvent), so that the border segment lights up and
++    // dims together with the location bar. forceFocus is used while a popup
++    // menu of the button is open, so that the segment is highlighted then.
++    if (forceFocus || urlNavigator->isFrameHighlighted()) {
++        borderOption.state |= QStyle::State_HasFocus;
++    }
++    // The navigator's rect, expressed in this button's coordinates.
++    borderOption.rect = QRect(-x(), -y(), parentWidget()->width(), parentWidget()->height());
++
++    // Only the rows and columns where the frame border is drawn.
++    QRegion borderRegion;
++    const int borderWidth = qMax(2, borderOption.lineWidth);
++    borderRegion += QRect(0, 0, width(), borderWidth); // top
++    borderRegion += QRect(0, height() - borderWidth, width(), borderWidth); // bottom
++    if (x() == 0) { // the left edge of the location bar
++        borderRegion += QRect(0, 0, borderWidth, height());
++    }
++    if (x() + width() == parentWidget()->width()) { // the right edge of the location bar
++        borderRegion += QRect(width() - borderWidth, 0, borderWidth, height());
++    }
++
++    painter->save();
++    painter->setClipRegion(borderRegion);
++    style()->drawPrimitive(QStyle::PE_FrameLineEdit, &borderOption, painter, urlNavigator);
++    painter->restore();
++}
++
+ QColor KUrlNavigatorButtonBase::foregroundColor() const
+ {
+     const bool isHighlighted = isDisplayHintEnabled(EnteredHint) || isDisplayHintEnabled(DraggedHint) || isDisplayHintEnabled(PopupActiveHint);
+diff --git a/src/filewidgets/kurlnavigatorbuttonbase_p.h b/src/filewidgets/kurlnavigatorbuttonbase_p.h
+index 3ebf2c1..a2b8008 100644
+--- a/src/filewidgets/kurlnavigatorbuttonbase_p.h
++++ b/src/filewidgets/kurlnavigatorbuttonbase_p.h
+@@ -66,6 +66,19 @@ protected:
+ 
+     void drawHoverBackground(QPainter *painter);
+ 
++    /*!
++     * Redraws the frame border of the location bar at the position of this
++     * button, on top of the button's own painting. This keeps the location
++     * bar's border continuous even where the button paints its state
++     * background (for example while a popup menu of the button is open).
++     *
++     * If \a forceFocus is true the segment is always drawn with the focus
++     * (highlight) state; otherwise it uses the same state as the location
++     * bar's frame, so that the segment lights up and dims together with the
++     * location bar.
++     */
++    void drawFrameBorderSegment(QPainter *painter, bool forceFocus = false);
++
+     /*! Returns the foreground color by respecting the current display hint. */
+     QColor foregroundColor() const;
+ 
+diff --git a/src/filewidgets/kurlnavigatordropdownbutton.cpp b/src/filewidgets/kurlnavigatordropdownbutton.cpp
+index de80016..84d57c5 100644
+--- a/src/filewidgets/kurlnavigatordropdownbutton.cpp
++++ b/src/filewidgets/kurlnavigatordropdownbutton.cpp
+@@ -54,6 +54,12 @@ void KUrlNavigatorDropDownButton::paintEvent(QPaintEvent *event)
+     } else {
+         style()->drawPrimitive(QStyle::PE_IndicatorArrowLeft, &option, &painter, this);
+     }
++
++    // This button sits at the left edge of the location bar. Its state
++    // background (drawn above) covers the frame border of the location bar,
++    // so redraw the border segment on top with the location bar's own frame
++    // state, to keep the border continuous and in sync with the location bar.
++    drawFrameBorderSegment(&painter);
+ }
+ 
+ void KUrlNavigatorDropDownButton::keyPressEvent(QKeyEvent *event)
+diff --git a/src/filewidgets/kurlnavigatorplacesselector.cpp b/src/filewidgets/kurlnavigatorplacesselector.cpp
+index 7997edf..622ffba 100644
+--- a/src/filewidgets/kurlnavigatorplacesselector.cpp
++++ b/src/filewidgets/kurlnavigatorplacesselector.cpp
+@@ -164,6 +164,12 @@ void KUrlNavigatorPlacesSelector::paintEvent(QPaintEvent *event)
+     // draw icon
+     const QPixmap pixmap = icon().pixmap(QSize(22, 22).expandedTo(iconSize()), QIcon::Normal);
+     style()->drawItemPixmap(&painter, rect(), Qt::AlignCenter, pixmap);
++
++    // This button sits at the left edge of the location bar. Its state
++    // background (drawn above) covers the frame border of the location bar,
++    // so redraw the border segment on top with the location bar's own frame
++    // state, to keep the border continuous and in sync with the location bar.
++    drawFrameBorderSegment(&painter);
+ }
+ 
+ void KUrlNavigatorPlacesSelector::dragEnterEvent(QDragEnterEvent *event)
+diff --git a/src/filewidgets/kurlnavigatortogglebutton.cpp b/src/filewidgets/kurlnavigatortogglebutton.cpp
+index fa0db1f..b27a320 100644
+--- a/src/filewidgets/kurlnavigatortogglebutton.cpp
++++ b/src/filewidgets/kurlnavigatortogglebutton.cpp
+@@ -72,6 +72,12 @@ void KUrlNavigatorToggleButton::paintEvent(QPaintEvent *event)
+             style()->drawItemPixmap(&painter, rect(), Qt::AlignRight | Qt::AlignVCenter, m_pixmap);
+         }
+     }
++
++    // This button sits at the right edge of the location bar. Its state
++    // background (drawn above) covers the frame border of the location bar,
++    // so redraw the border segment on top with the location bar's own frame
++    // state, to keep the border continuous and in sync with the location bar.
++    drawFrameBorderSegment(&painter);
+ }
+ 
+ void KUrlNavigatorToggleButton::updateToolTip()
