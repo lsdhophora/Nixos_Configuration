@@ -12,6 +12,7 @@ export interface ScheduleTask {
 	intervalMs?: number;
 	cronExpression?: string;
 	timezone?: string;
+	session?: string;
 	expiresAt?: number;
 	jitterMs: number;
 	lastRunAt?: number;

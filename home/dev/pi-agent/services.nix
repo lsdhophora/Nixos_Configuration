@@ -12,7 +12,7 @@ in {
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStart = ''
-        ${pkgs.bash}/bin/bash -c "${t} has-session -t hv-farm || ${t} new-session -d -s hv-farm 'cd ~/Projects/HVAuto && exec ${pi}'"
+        ${pkgs.bash}/bin/bash -c "${t} has-session -t hv-farm || ${t} new-session -d -s hv-farm 'cd ~/Projects/HVAuto && PI_SESSION=hv-farm exec ${pi}'"
       '';
     };
     Install.WantedBy = [ "default.target" ];

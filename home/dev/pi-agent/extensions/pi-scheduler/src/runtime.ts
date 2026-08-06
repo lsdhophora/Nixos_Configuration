@@ -22,6 +22,7 @@ export class SchedulerRuntime {
 	private runtimeCtx: ExtensionContext | undefined;
 	private dispatching = false;
 	private storagePath: string | undefined;
+	private sessionId: string | undefined;
 
 	constructor(private readonly pi: ExtensionAPI) {}
 
@@ -32,6 +33,10 @@ export class SchedulerRuntime {
 	setRuntimeContext(ctx: ExtensionContext | undefined) {
 		this.runtimeCtx = ctx;
 		if (!ctx?.cwd) return;
+		// Session identity: prefer a stable env-provided id (set by the tmux
+		// wrapper, e.g. PI_SESSION=hv-farm) so tasks survive pi restarts.
+		// Fall back to the runtime session id (changes on every pi start).
+		this.sessionId = process.env.PI_SESSION ?? ctx.sessionManager?.getSessionId?.() ?? undefined;
 
 		const nextStorePath = path.join(ctx.cwd, ".pi", "scheduler.json");
 		if (nextStorePath !== this.storagePath) {
@@ -124,6 +129,7 @@ export class SchedulerRuntime {
 			nextRunAt,
 			intervalMs,
 			expiresAt: expiresInMs !== undefined ? createdAt + expiresInMs : undefined,
+			session: this.sessionId,
 			jitterMs,
 			runCount: 0,
 			pending: false,
@@ -150,6 +156,7 @@ export class SchedulerRuntime {
 			cronExpression,
 			timezone,
 			expiresAt: expiresInMs !== undefined ? createdAt + expiresInMs : undefined,
+			session: this.sessionId,
 			jitterMs: 0,
 			runCount: 0,
 			pending: false,
@@ -170,6 +177,7 @@ export class SchedulerRuntime {
 			enabled: true,
 			createdAt,
 			nextRunAt: createdAt + delayMs,
+			session: this.sessionId,
 			jitterMs: 0,
 			runCount: 0,
 			pending: false,
@@ -226,6 +234,7 @@ export class SchedulerRuntime {
 			}
 
 			if (!task.enabled) continue;
+			if (!this.belongsToSession(task)) continue;
 			if (now >= task.nextRunAt) {
 				task.pending = true;
 			}
@@ -461,13 +470,20 @@ export class SchedulerRuntime {
 		return id;
 	}
 
+	private belongsToSession(task: ScheduleTask): boolean {
+		// Tasks without a session field (legacy format) run in any session.
+		return task.session === undefined || task.session === this.sessionId;
+	}
+
 	private taskMode(task: ScheduleTask): string {
 		if (task.kind === "once") return "once";
 		if (task.cronExpression) {
 			const tz = task.timezone ? ` (TZ=${task.timezone})` : "";
-			return `cron ${task.cronExpression}${tz}`;
+			const sess = task.session ? ` [s:${task.session.slice(0, 6)}]` : "";
+			return `cron ${task.cronExpression}${tz}${sess}`;
 		}
-		return `every ${formatDurationShort(task.intervalMs ?? DEFAULT_LOOP_INTERVAL)}`;
+		const sess = task.session ? ` [s:${task.session.slice(0, 6)}]` : "";
+		return `every ${formatDurationShort(task.intervalMs ?? DEFAULT_LOOP_INTERVAL)}${sess}`;
 	}
 
 	private taskOptionLabel(task: ScheduleTask): string {
