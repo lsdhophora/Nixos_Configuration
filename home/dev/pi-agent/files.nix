@@ -23,8 +23,7 @@ in
 
     # Extensions
     ".pi/agent/extensions/deepseek-balance.ts".source =
-      config.lib.file.mkOutOfStoreSymlink "${base}/extensions/deepseek-balance.ts";
-    ".pi/agent/extensions/exa-gate.ts".source =
+      config.lib.file.mkOutOfStoreSymlink "${base}/extensions/deepseek-balance.ts";    ".pi/agent/extensions/exa-gate.ts".source =
       config.lib.file.mkOutOfStoreSymlink "${base}/extensions/exa-gate.ts";
     ".pi/agent/extensions/exa-prefix.ts".source =
       config.lib.file.mkOutOfStoreSymlink "${base}/extensions/exa-prefix.ts";
@@ -36,6 +35,11 @@ in
       config.lib.file.mkOutOfStoreSymlink "${base}/extensions/root-session/daemon.js";
     ".pi/agent/extensions/root-session/SKILL.md".source =
       config.lib.file.mkOutOfStoreSymlink "${base}/extensions/root-session/SKILL.md";
+
+    # pi-scheduler (local fork with timezone + expiry support)
+    ".pi/agent/extensions/pi-scheduler" = {
+      source = config.lib.file.mkOutOfStoreSymlink "${base}/extensions/pi-scheduler";
+    };
 
     # Skills
     ".pi/agent/skills/exa-search/SKILL.md".source =
