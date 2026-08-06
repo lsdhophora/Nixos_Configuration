@@ -13,6 +13,8 @@
     extraConfig = ''
       # extended-keys: modified Enter keys (needed by e.g. some TUI apps)
       set -g extended-keys on
+      # csi-u format: pi (coding agent) works best with this
+      set -g extended-keys-format csi-u
 
       # reload config
       bind-key r source-file ~/.config/tmux/tmux.conf \; display-message "sourced tmux.conf"
