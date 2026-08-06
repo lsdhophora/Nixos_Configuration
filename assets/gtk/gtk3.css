@@ -1,1 +1,9 @@
 /* GTK 3 overrides — theme defaults for decorations, shadows, and radius are preserved */
+
+/* 修复 transmission 下载列表进度条：
+   轨道 (treeview trough) 补上与进度 (progress) 相同的圆角，使两者同步。
+   根源：Breeze 主题给 treeview.view.progressbar 定义了 1.25mm 圆角，
+   但 treeview.view.trough 没有 border-radius。 */
+treeview.view.trough {
+    border-radius: 1.25mm;
+}
