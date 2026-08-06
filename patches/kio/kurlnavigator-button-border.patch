@@ -150,7 +150,7 @@ index bed4af1..7a79151 100644
      // If 'this' has been deleted in the menu's nested event loop, we have to return
      // immediately because any access to a member variable might cause a crash.
 diff --git a/src/filewidgets/kurlnavigatorbuttonbase.cpp b/src/filewidgets/kurlnavigatorbuttonbase.cpp
-index fe1f0c3..ae19033 100644
+index fe1f0c3..8a4d7d4 100644
 --- a/src/filewidgets/kurlnavigatorbuttonbase.cpp
 +++ b/src/filewidgets/kurlnavigatorbuttonbase.cpp
 @@ -10,6 +10,7 @@ SPDX-License-Identifier: LGPL-2.0-or-later
@@ -161,7 +161,7 @@ index fe1f0c3..ae19033 100644
  #include <QStyle>
  #include <QStyleOptionViewItem>
  
-@@ -90,9 +91,21 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
+@@ -90,9 +91,22 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
  {
      const bool isHighlighted = isDisplayHintEnabled(EnteredHint) || isDisplayHintEnabled(DraggedHint) || isDisplayHintEnabled(PopupActiveHint);
  
@@ -172,9 +172,10 @@ index fe1f0c3..ae19033 100644
 +    // the button touches the navigator, so that the frame border stays
 +    // visible and continuous in every button state (hover, pressed, popup).
 +    QRect panelRect(0, 0, width(), height());
-+    if (const QWidget *parent = parentWidget()) {
++    const KUrlNavigator *urlNavigator = qobject_cast<KUrlNavigator *>(parentWidget());
++    if (urlNavigator && !urlNavigator->isUrlEditable()) {
 +        const int borderWidth = 2;
-+        panelRect = panelRect.intersected(QRect(-x(), -y(), parent->width(), parent->height()).adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth));
++        panelRect = panelRect.intersected(QRect(-x(), -y(), parentWidget()->width(), parentWidget()->height()).adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth));
 +    }
 +
      QStyleOptionButton buttonOption;
@@ -184,14 +185,18 @@ index fe1f0c3..ae19033 100644
      buttonOption.features = QStyleOptionButton::Flat;
  
      // Draw button graphic
-@@ -101,6 +114,47 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
+@@ -101,6 +115,51 @@ void KUrlNavigatorButtonBase::drawHoverBackground(QPainter *painter)
      }
  }
  
 +void KUrlNavigatorButtonBase::drawFrameBorderSegment(QPainter *painter, bool forceFocus)
 +{
 +    const KUrlNavigator *urlNavigator = qobject_cast<KUrlNavigator *>(parent());
-+    if (!urlNavigator || !urlNavigator->isBackgroundEnabled()) {
++    // The location bar paints its frame border only in navigation mode
++    // (KUrlNavigator::paintEvent skips it while the bar is editable). Do the
++    // same here, otherwise the border rows are painted over the edge buttons
++    // without any frame below them and show up as stray lines in edit mode.
++    if (!urlNavigator || !urlNavigator->isBackgroundEnabled() || urlNavigator->isUrlEditable()) {
 +        return;
 +    }
 +
