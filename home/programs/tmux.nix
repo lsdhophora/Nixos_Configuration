@@ -11,6 +11,9 @@
     escapeTime = 0;
 
     extraConfig = ''
+      # extended-keys: modified Enter keys (needed by e.g. some TUI apps)
+      set -g extended-keys on
+
       # reload config
       bind-key r source-file ~/.config/tmux/tmux.conf \; display-message "sourced tmux.conf"
 
