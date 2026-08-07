@@ -11,6 +11,11 @@ in {
     Service = {
       Type = "oneshot";
       RemainAfterExit = true;
+      # The desktop session imports TMUX_TMPDIR=/run/user/1000 after this
+      # service runs at boot. Without an explicit value, tmux falls back to
+      # /tmp and interactive shells cannot find the socket (`tmux ls` fails).
+      # %t = XDG_RUNTIME_DIR (/run/user/1000), matching the shells.
+      Environment = "TMUX_TMPDIR=%t";
       ExecStart = ''
         ${pkgs.bash}/bin/bash -c "${t} has-session -t hv-farm || ${t} new-session -d -s hv-farm 'cd ~/Projects/HVAuto && PI_SESSION=hv-farm exec ${pi}'"
       '';
