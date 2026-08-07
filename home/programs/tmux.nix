@@ -54,8 +54,13 @@
       bind-key -n C-. next-window
       bind-key -n C-, previous-window
 
+      # Breeze Dark palette (official KDE BreezeDark.colors)
+      # bg=#202326 fg=#fcfcfc accent=#3daee9 inactive=#a1a9b1 alt=#292c30
+      # red=#da4453 orange=#f67400 green=#27ae60
+
       # appearance
-      set -g pane-active-border-style 'fg=red'
+      set -g pane-border-style 'fg=#292c30'
+      set -g pane-active-border-style 'fg=#3daee9'
 
       # auto-rename windows to current program (sway-like)
       setw -g automatic-rename on
@@ -64,19 +69,25 @@
       # status bar
       set -g status-interval 10
       set -g status-right-length 80
+      set -g status-style 'bg=#202326,fg=#fcfcfc'
 
       setw -g window-status-separator ' '
       setw -g window-status-format " #I:#W "
       setw -g window-status-current-format " #I:#W "
-      setw -g window-status-style 'fg=#ffffff bg=#111111'
-      setw -g window-status-current-style 'fg=#000000 bg=#ffffff'
-      setw -g window-status-bell-style 'fg=yellow bg=red bold'
+      setw -g window-status-style 'fg=#a1a9b1 bg=#292c30'
+      setw -g window-status-current-style 'fg=#fcfcfc bg=#3daee9 bold'
+      setw -g window-status-bell-style 'fg=#fcfcfc bg=#da4453 bold'
 
       # battery on kmscon or TTY only
-      set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then read c < /sys/class/power_supply/BAT0/capacity; read s < /sys/class/power_supply/BAT0/status; echo \"\$c%% \$s |\"; fi)%H:%M [#S]"
-      set -g status-right-style 'fg=#ffffff bg=#111111'
-      set -g status-left ""
-      set -g status-style 'bg=#111111'
+      set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then read c < /sys/class/power_supply/BAT0/capacity; read s < /sys/class/power_supply/BAT0/status; echo \"\$c%% \$s |\"; fi)%H:%M"
+      set -g status-right-style 'fg=#a1a9b1 bg=#202326'
+      set -g status-left "#[bg=#3daee9,fg=#fcfcfc,bold] #S #[default]"
+      set -g status-left-style 'bg=#202326'
+
+      # messages and modes
+      set -g message-style 'fg=#fcfcfc bg=#3daee9'
+      set -g message-command-style 'fg=#fcfcfc bg=#3daee9'
+      set -g mode-style 'fg=#fcfcfc bg=#3daee9'
     '';
   };
 }
