@@ -236,7 +236,7 @@
                "oj test"
                (when oj-test-args
                  (format " %s" (mapconcat #'identity oj-test-args " ")))
-               " -c 'sh -c \"grep -v \\\"^#\\\" | " run-cmd "\"'"))
+               " -c 'sh -c \"awk \\\"/^#/\\\" | " run-cmd "\"'"))
              (script (mapconcat #'identity
                                 (append compile-cmds (list oj-cmd))
                                 " && ")))
