@@ -11,5 +11,7 @@
     unzip
     kitty
     mosh
+    online-judge-tools
+    time
   ];
 }

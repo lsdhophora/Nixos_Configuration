@@ -202,3 +202,12 @@
   (eca-chat-auto-add-repomap t)
   :config
   (add-hook 'prog-mode-hook #'eca-completion-mode))
+
+;; --- competitive programming: oj.el + quickrun ---
+;; oj test requires the `oj` CLI from online-judge-tools (system package).
+;; Packages live in site-lisp/ (cloned locally, no straight needed).
+(add-to-list 'load-path (expand-file-name "site-lisp/oj" user-emacs-directory))
+(require 'quickrun)
+(require 'oj)
+(setq oj-command-name "oj")
+(setq oj-test-args '("--print-memory"))
