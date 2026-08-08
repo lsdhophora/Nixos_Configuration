@@ -1,0 +1,11 @@
+{
+  "nixpkgs": {
+    "expr": "(builtins.getFlake \"/home/lophophora/.config/nixos\").inputs.nixpkgs.legacyPackages.x86_64-linux"
+  },
+  "nixos": {
+    "expr": "(builtins.getFlake \"/home/lophophora/.config/nixos\").nixosConfigurations.flowerpot.options"
+  },
+  "formatting": {
+    "command": ["nixfmt"]
+  }
+}
