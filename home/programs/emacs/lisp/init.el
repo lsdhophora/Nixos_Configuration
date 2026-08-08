@@ -213,6 +213,10 @@
 (setq oj-test-args '("--print-memory"))
 (setq oj-compiler-c "clang")
 
+;; Render ANSI colors (oj output) inside *compilation* buffers
+(require 'ansi-color)
+(add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)
+
 ;; oj-test with # comment lines stripped from stdin (oj layer filter).
 ;; Uses `compile' (non-interactive) so the zsh precmd OSC title sequence
 ;; and shell prompt never pollute the output.
@@ -236,7 +240,7 @@
                "oj test"
                (when oj-test-args
                  (format " %s" (mapconcat #'identity oj-test-args " ")))
-               " -c 'sh -c \"awk \\\"/^#/\\\" | " run-cmd "\"'"))
+               " -c 'sh -c \"awk \\\"!/^#/\\\" | " run-cmd "\"'"))
              (script (mapconcat #'identity
                                 (append compile-cmds (list oj-cmd))
                                 " && ")))
