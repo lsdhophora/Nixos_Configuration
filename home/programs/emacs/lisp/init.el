@@ -216,7 +216,7 @@
 ;; oj-test with # comment lines stripped from stdin (oj layer filter).
 ;; Uses `compile' (non-interactive) so the zsh precmd OSC title sequence
 ;; and shell prompt never pollute the output.
-(defun my/oj-test ()
+(defun oj-test ()
   "Run `oj test' on the current buffer via `compile', filtering # lines."
   (interactive)
   (let* ((alist (quickrun--command-info
