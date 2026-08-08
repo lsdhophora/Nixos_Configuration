@@ -28,6 +28,7 @@
     ./programs/kitty.nix
     ./programs/mpv.nix
     ./programs/tmux.nix
+    ./programs/vscodium.nix
     ./programs/zathura.nix
 
     # ---- Dev ----
