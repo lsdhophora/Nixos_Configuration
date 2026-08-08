@@ -240,7 +240,7 @@
              (script (mapconcat #'identity
                                 (append compile-cmds (list oj-cmd))
                                 " && ")))
-        (compile (concat "cd " (shell-quote-argument default-directory)
+        (compile (concat "cd " (shell-quote-argument (expand-file-name default-directory))
                          " && " script))))))
 
 ;; C++: use clang++ for quickrun, clangd via eglot for LSP
