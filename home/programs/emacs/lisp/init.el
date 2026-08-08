@@ -220,8 +220,11 @@
 ;; oj-test with # comment lines stripped from stdin (oj layer filter).
 ;; Uses `compile' (non-interactive) so the zsh precmd OSC title sequence
 ;; and shell prompt never pollute the output.
+(defvar oj-test-buffer "*oj-test*")
+
 (defun oj-test ()
-  "Run `oj test' on the current buffer via `compile', filtering # lines."
+  "Run `oj test' on the current buffer (compile + filter # lines).
+Output goes to a clean *oj-test* buffer: no command echo, no exit line."
   (interactive)
   (let* ((alist (quickrun--command-info
                  (quickrun--command-key (buffer-file-name))))
@@ -243,9 +246,24 @@
                " -c 'sh -c \"awk \\\"!/^#/\\\" | " run-cmd "\"'"))
              (script (mapconcat #'identity
                                 (append compile-cmds (list oj-cmd))
-                                " && ")))
-        (compile (concat "cd " (shell-quote-argument (expand-file-name default-directory))
-                         " && " script))))))
+                                " && "))
+             (full (concat "cd " (shell-quote-argument (expand-file-name default-directory))
+                           " && " script)))
+        (with-current-buffer (get-buffer-create oj-test-buffer)
+          (erase-buffer))
+        (let ((proc (start-process "oj-test" oj-test-buffer "bash" "-c" full)))
+          (set-process-filter proc #'oj-test-filter))
+        (pop-to-buffer oj-test-buffer)))))
+
+(defun oj-test-filter (proc output)
+  "Insert OUTPUT into the oj-test buffer, applying ANSI colors."
+  (with-current-buffer (process-buffer proc)
+    (let ((start (process-mark proc)))
+      (goto-char start)
+      (insert output)
+      (ansi-color-apply-on-region start (point))
+      (set-marker (process-mark proc) (point))
+      (goto-char (point-max)))))
 
 ;; C++: use clang++ for quickrun, clangd via eglot for LSP
 (add-hook 'c++-mode-hook
