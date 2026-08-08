@@ -211,3 +211,43 @@
 (require 'oj)
 (setq oj-command-name "oj")
 (setq oj-test-args '("--print-memory"))
+(setq oj-compiler-c "clang")
+
+;; oj-test with # comment lines stripped from stdin (oj layer filter).
+;; The .in files carry "# name = original" comment lines; this builds
+;;   oj test ... -c 'sh -c "grep -v \"^#\" | <run-cmd>"'
+;; so the program never sees comment lines.
+(defun my/oj-test ()
+  "Run `oj test' on the current buffer, filtering # comment lines."
+  (interactive)
+  (oj--exec-script (format "cd %s" default-directory))
+  (let* ((alist (quickrun--command-info
+                 (quickrun--command-key (buffer-file-name))))
+         (spec (mapcar (lambda (elm)
+                         `(,(string-to-char (substring (car elm) 1)) . ,(cdr elm)))
+                       (quickrun--template-argument alist (buffer-file-name))))
+         (exec (or (alist-get :exec alist)
+                   (alist-get :exec quickrun--default-tmpl-alist))))
+    (oj--exec-script
+     (apply
+      #'oj--join-scripts
+      (append
+       (when (consp exec)
+         (mapcar
+          (lambda (arg)
+            (format-spec arg spec))
+          (nreverse (cdr (reverse exec)))))
+       (list
+        (concat
+         "oj test"
+         (when oj-test-args
+           (format " %s" (mapconcat #'identity oj-test-args " ")))
+         " -c 'sh -c \"grep -v \\\"^#\\\" | "
+         (format-spec (if (consp exec) (car (last exec)) exec) spec)
+         "\"'")))))))
+
+;; C++: use clang++ for quickrun, clangd via eglot for LSP
+(add-hook 'c++-mode-hook
+          (lambda ()
+            (setq-local quickrun-command-key "c++/clang++")
+            (eglot-ensure)))
