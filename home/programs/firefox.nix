@@ -1,5 +1,12 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
+let
+  # AMO force-install entry; `slug` is the addon id in the download URL.
+  mozAddon = slug: {
+    install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/addon-${slug}-latest.xpi";
+    installation_mode = "force_installed";
+  };
+in
 {
   programs.firefox = {
     enable = true;
@@ -127,23 +134,11 @@
       '';
     };
     policies = {
-      ExtensionSettings = {
-        "uBlock0@raymondhill.net" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-ublock-origin-latest.xpi";
-          installation_mode = "force_installed";
-        };
-        "addon@darkreader.org" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/darkreader/addon-darkreader-latest.xpi";
-          installation_mode = "force_installed";
-        };
-        "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/stylus/addon-stylus-latest.xpi";
-          installation_mode = "force_installed";
-        };
-        "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/violentmonkey/addon-violentmonkey-latest.xpi";
-          installation_mode = "force_installed";
-        };
+      ExtensionSettings = lib.mapAttrs (id: slug: mozAddon slug) {
+        "uBlock0@raymondhill.net" = "ublock-origin";
+        "addon@darkreader.org" = "darkreader";
+        "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = "stylus";
+        "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
       };
     };
   };

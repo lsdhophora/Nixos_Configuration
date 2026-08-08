@@ -11,6 +11,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 ├── flake-modules/            # Flake-parts modules
 │   ├── default.nix           # Module aggregator
 │   └── nixos.nix             # nixosConfigurations.flowerpot
+├── lib/                      # Shared helpers (applyPatches for overlays/modules)
 ├── hosts/
 │   └── flowerpot/            # Machine entry point
 │       ├── default.nix       # Host config menu (imports modules directly)
@@ -67,13 +68,10 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   └── themes/
 ├── overlays/                 # Nixpkgs overlays (auto-discovered from this dir)
 │   ├── default.nix           # Auto-discovery aggregator
-│   ├── granite.nix           # granite7: GNOME named accent-color support
 │   ├── firefox.nix           # omni.ja patches
 │   └── kitty.nix             # Patched: remove resize text overlay
 ├── patches/                  # Patch files (grouped by package)
 │   ├── ark/
-│   ├── granite/
-│   │   └── fallback-accent-color.patch
 │   ├── kitty/
 │   │   ├── kitty-remove-resize-text.patch
 │   │   └── kitty-fix-panel-position.patch
@@ -82,7 +80,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   │   ├── lookandfeelbox-highlight-border.patch
 │   │   └── hide-virtual-keyboard-button.patch
 │   └── plasma-workspace/
-│       └── accent-color-clip.patch
+│       └── jobitem-null-check.patch
 ├── secrets/                  # Age-encrypted
 │   ├── secrets.nix
 │   ├── config.dae.age

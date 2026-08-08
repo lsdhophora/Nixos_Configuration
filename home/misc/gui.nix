@@ -1,7 +1,20 @@
-{ pkgs, ... }: let
-  kdenlive-wrapped = pkgs.symlinkJoin {
+{ pkgs, ... }:
+let
+  # symlinkJoin + postBuild wrapper for one package.
+  wrapPackage =
+    {
+      name,
+      pkg,
+      postBuild,
+      buildInputs ? [ ],
+    }:
+    pkgs.symlinkJoin {
+      inherit name postBuild buildInputs;
+      paths = [ pkg ];
+    };
+  kdenlive-wrapped = wrapPackage {
     name = "kdenlive";
-    paths = [ pkgs.kdePackages.kdenlive ];
+    pkg = pkgs.kdePackages.kdenlive;
     buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/kdenlive \
@@ -10,18 +23,18 @@
         --add-flags "--stylesheet ${./../../assets/themes/kdenlive.qss}"
     '';
   };
-  localsend-wrapped = pkgs.symlinkJoin {
+  localsend-wrapped = wrapPackage {
     name = "localsend";
-    paths = [ pkgs.localsend ];
+    pkg = pkgs.localsend;
     postBuild = ''
-      rm $out/bin/localsend_app
-      cat > $out/bin/localsend_app <<'SCRIPT'
-#!/bin/sh
-export GTK_THEME=Breeze:dark
-export GTK_CSD=0
-exec ${pkgs.localsend}/bin/localsend_app "$@"
-SCRIPT
-      chmod +x $out/bin/localsend_app
+            rm $out/bin/localsend_app
+            cat > $out/bin/localsend_app <<'SCRIPT'
+      #!/bin/sh
+      export GTK_THEME=Breeze:dark
+      export GTK_CSD=0
+      exec ${pkgs.localsend}/bin/localsend_app "$@"
+      SCRIPT
+            chmod +x $out/bin/localsend_app
     '';
   };
 in

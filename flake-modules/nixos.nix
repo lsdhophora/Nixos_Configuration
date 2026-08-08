@@ -1,8 +1,12 @@
-{ self, inputs, ... }: {
+{ self, inputs, ... }:
+let
+  system = "x86_64-linux";
+in
+{
   flake.nixosConfigurations.flowerpot = inputs.nixpkgs.lib.nixosSystem {
-    system = "x86_64-linux";
+    inherit system;
     pkgs = import inputs.nixpkgs {
-      system = "x86_64-linux";
+      inherit system;
       overlays = (import ../overlays/default.nix);
     };
     specialArgs = { inherit inputs; };

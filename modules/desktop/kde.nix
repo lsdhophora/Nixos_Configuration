@@ -1,12 +1,37 @@
 {
-  config,
   lib,
   pkgs,
   inputs,
   ...
 }:
 let
+  applyPatches = (import ../../lib).applyPatches;
   unstable = inputs.nixpkgs-unstable;
+  unstablePkgs = unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+
+  # Patches per KDE package. Add an entry here and the package is patched
+  # via applyPatches (keeping any existing upstream patches).
+  kdePatches = {
+    plasma-desktop = [
+      ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
+      ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
+      ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
+      ./../../patches/plasma-desktop/kcm-splash-dedup.patch
+    ];
+    kscreenlocker = [
+      ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
+    ];
+    plasma-workspace = [
+      ./../../patches/plasma-workspace/jobitem-null-check.patch
+    ];
+    ark = [
+      ./../../patches/ark/batchextract-desturl.patch
+    ];
+    xdg-desktop-portal-kde = [
+      ./../../patches/xdg-desktop-portal-kde/appchooser-hide-discover.patch
+      ./../../patches/xdg-desktop-portal-kde/appchooser-plain-input.patch
+    ];
+  };
 in
 {
   services.desktopManager.plasma6.enable = true;
@@ -26,61 +51,34 @@ in
   services.power-profiles-daemon.enable = false;
 
   nixpkgs.overlays = [
+    # Use the unstable kdePackages set as the base for the whole desktop.
     (final: prev: {
-      kdePackages = unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.kdePackages;
+      kdePackages = unstablePkgs.kdePackages;
     })
+    # Apply the per-package patch sets from `kdePatches` above.
     (final: prev: {
-      kdePackages = prev.kdePackages // {
-        plasma-desktop = prev.kdePackages.plasma-desktop.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or [ ]) ++ [
-            ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
-            ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
-            ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
-            ./../../patches/plasma-desktop/kcm-splash-dedup.patch
-          ];
-        });
-        kscreenlocker = prev.kdePackages.kscreenlocker.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or [ ]) ++ [
-            ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
-          ];
-        });
-        plasma-workspace = prev.kdePackages.plasma-workspace.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or [ ]) ++ [
-            ./../../patches/plasma-workspace/jobitem-null-check.patch
-          ];
-        });
-        ark = prev.kdePackages.ark.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or [ ]) ++ [
-            ./../../patches/ark/batchextract-desturl.patch
-          ];
-        });
-        # Remove the "Find More in Discover" button and the history dropdown
-        # from the portal's AppChooserDialog (the "Choose Application" window).
-        xdg-desktop-portal-kde = prev.kdePackages.xdg-desktop-portal-kde.overrideAttrs (oldAttrs: {
-          patches = (oldAttrs.patches or [ ]) ++ [
-            ./../../patches/xdg-desktop-portal-kde/appchooser-hide-discover.patch
-            ./../../patches/xdg-desktop-portal-kde/appchooser-plain-input.patch
-          ];
-        });
-        # Hide the current directory in the location-bar jump menu.
-        dolphin =
-          let
-            unstablePkgs = unstable.legacyPackages.${prev.stdenv.hostPlatform.system};
-            # Only Dolphin uses this kio build with the location-bar border
-            # fix, so the rest of the desktop keeps the stock kio and the
-            # rebuild stays small.
-            patchedKio = prev.kdePackages.kio.overrideAttrs (oldAttrs: {
-              patches = (oldAttrs.patches or [ ]) ++ [
-                ./../../patches/kio/kurlnavigator-button-border.patch
-                ./../../patches/kio/openwith-hide-discover.patch
-                ./../../patches/kio/openwith-plain-input.patch
-              ];
-            });
-            patchedKdeSelf = prev.kdePackages // { kio = patchedKio; };
-            mkKdeDerivationForDolphin =
-              (import "${prev.path}/pkgs/kde/lib/mk-kde-derivation.nix" patchedKdeSelf) {
-                inherit
-                  (unstablePkgs)
+      kdePackages =
+        prev.kdePackages
+        // (lib.mapAttrs (name: patches: applyPatches patches prev.kdePackages.${name}) kdePatches);
+    })
+    # Dolphin: patched kio + location-bar fix. Only Dolphin uses this kio
+    # build with the location-bar border fix, so the rest of the desktop
+    # keeps the stock kio and the rebuild stays small.
+    (final: prev: {
+      dolphin =
+        let
+          patchedKio = applyPatches [
+            ./../../patches/kio/kurlnavigator-button-border.patch
+            ./../../patches/kio/openwith-hide-discover.patch
+            ./../../patches/kio/openwith-plain-input.patch
+          ] prev.kdePackages.kio;
+          patchedKdeSelf = prev.kdePackages // {
+            kio = patchedKio;
+          };
+          mkKdeDerivationForDolphin =
+            (import "${prev.path}/pkgs/kde/lib/mk-kde-derivation.nix" patchedKdeSelf)
+              {
+                inherit (unstablePkgs)
                   lib
                   stdenv
                   makeSetupHook
@@ -92,32 +90,33 @@ in
                   jq
                   ;
               };
-          in
-          (prev.kdePackages.dolphin.override {
-            mkKdeDerivation = mkKdeDerivationForDolphin;
-          }).overrideAttrs (oldAttrs: {
-            patches = (oldAttrs.patches or [ ]) ++ [
-              ./../../patches/dolphin/hide-current-dir-path-selector.patch
-            ];
-            # Put the patched kio first in the link inputs so that the
-            # linker and the dynamic loader resolve to it instead of the
-            # stock kio that is pulled in transitively.
-            buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
-            propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
-          });
-      };
+          patchedDolphin =
+            applyPatches
+              [
+                ./../../patches/dolphin/hide-current-dir-path-selector.patch
+              ]
+              (
+                prev.kdePackages.dolphin.override {
+                  mkKdeDerivation = mkKdeDerivationForDolphin;
+                }
+              );
+        in
+        patchedDolphin.overrideAttrs (oldAttrs: {
+          # Put the patched kio first in the link inputs so that the linker
+          # and the dynamic loader resolve to it instead of the stock kio
+          # that is pulled in transitively.
+          buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
+          propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
+        });
     })
-
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
     (final: prev: {
-      klassy =
-        unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.klassy.overrideAttrs
-          (oldAttrs: {
-            postInstall = (oldAttrs.postInstall or "") + ''
-              rm -f "$out/share/applications/kcm_klassydecoration.desktop"
-            '';
-          });
+      klassy = unstablePkgs.klassy.overrideAttrs (oldAttrs: {
+        postInstall = (oldAttrs.postInstall or "") + ''
+          rm -f "$out/share/applications/kcm_klassydecoration.desktop"
+        '';
+      });
     })
   ];
 

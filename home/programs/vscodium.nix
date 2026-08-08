@@ -2,7 +2,17 @@
 let
   # 通用 VSIX 打包器：从 URL 拉取 VSIX，剥离包装层，输出扩展内容到 $out 根目录。
   # VSIX 是 zip，顶层带 [Content_Types].xml / extension/ / extension.vsixmanifest 包装。
-  buildVsix = { name, version, url, hash, description, homepage, license }:
+  buildVsix =
+    {
+      publisher,
+      name,
+      version,
+      url,
+      hash,
+      description,
+      homepage,
+      license,
+    }:
     pkgs.stdenv.mkDerivation {
       pname = name;
       inherit version;
@@ -11,6 +21,13 @@ let
 
       nativeBuildInputs = [ pkgs.unzip ];
       dontUnpack = true;
+
+      # VSCodium installs extensions under <publisher>.<name>-<version>;
+      # derive that dir name here so it cannot drift from the version.
+      passthru = {
+        inherit publisher;
+        extensionDir = "${publisher}.${name}-${version}";
+      };
 
       installPhase = ''
         runHook preInstall
@@ -33,6 +50,7 @@ let
 
   # Competitive Programming Helper —— 官方 GitHub release
   competitiveProgrammingHelper = buildVsix {
+    publisher = "divyanshuagrawal";
     name = "competitive-programming-helper";
     version = "2077.0.0";
     url = "https://github.com/agrawal-d/cph/releases/download/latest-vsix/competitive-programming-helper-2077.0.0.vsix";
@@ -44,6 +62,7 @@ let
 
   # Nix IDE —— nixd/nil LSP 客户端（Open VSX）
   nixIde = buildVsix {
+    publisher = "jnoortheen";
     name = "nix-ide";
     version = "0.5.13";
     url = "https://open-vsx.org/api/jnoortheen/nix-ide/0.5.13/file/jnoortheen.nix-ide-0.5.13.vsix";
@@ -52,6 +71,11 @@ let
     homepage = "https://github.com/nix-community/vscode-nix-ide";
     license = pkgs.lib.licenses.mit;
   };
+
+  extensions = [
+    competitiveProgrammingHelper
+    nixIde
+  ];
 in
 {
   # VSCodium 本体（原先用 nix shell 临时安装，改为声明式）
@@ -67,13 +91,15 @@ in
     ${pkgs.vscodium}/bin/codium --list-extensions > /dev/null 2>&1 || true
   '';
 
-  # 目录 source + 无 recursive => 整体符号链接指向 store，声明式、只读
-  home.file.".vscode-oss/extensions/divyanshuagrawal.competitive-programming-helper-2077.0.0" = {
-    source = competitiveProgrammingHelper;
-    force = true;
-  };
-  home.file.".vscode-oss/extensions/jnoortheen.nix-ide-0.5.13" = {
-    source = nixIde;
-    force = true;
-  };
+  # 目录 source + 无 recursive => 整体符号链接指向 store，声明式、只读。
+  # 目录名来自 buildVsix.passthru.extensionDir（<publisher>.<name>-<version>）。
+  home.file = builtins.listToAttrs (
+    map (ext: {
+      name = ".vscode-oss/extensions/${ext.passthru.extensionDir}";
+      value = {
+        source = ext;
+        force = true;
+      };
+    }) extensions
+  );
 }

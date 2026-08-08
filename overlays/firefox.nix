@@ -12,21 +12,24 @@ let
     rm -rf "$tmpdir"
   '';
 
+  # firefox-unwrapped does not set every passthru field (depends on the
+  # nixpkgs version); the defaults below fill in the gaps uniformly.
+  passthruDefaults = {
+    binaryName = "firefox";
+    libName = "firefox";
+    ffmpegSupport = false;
+    gssSupport = false;
+    alsaSupport = false;
+    pipewireSupport = false;
+    sndioSupport = false;
+    jackSupport = false;
+    requireSigning = true;
+    allowAddonSideload = false;
+  };
+
   commonPassthru =
     ff:
-    (ff.passthru or { })
-    // {
-      binaryName = ff.binaryName or "firefox";
-      libName = ff.libName or "firefox";
-      ffmpegSupport = ff.ffmpegSupport or false;
-      gssSupport = ff.gssSupport or false;
-      alsaSupport = ff.alsaSupport or false;
-      pipewireSupport = ff.pipewireSupport or false;
-      sndioSupport = ff.sndioSupport or false;
-      jackSupport = ff.jackSupport or false;
-      requireSigning = ff.requireSigning or true;
-      allowAddonSideload = ff.allowAddonSideload or false;
-    };
+    (ff.passthru or { }) // (prev.lib.mapAttrs (name: default: ff.${name} or default) passthruDefaults);
 
   commonNativeBuildInputs = [
     prev.unzip
@@ -63,6 +66,9 @@ in
   inherit tridactyl-native;
 
   firefox-patched = final.wrapFirefox (mkPkg "") {
-    nativeMessagingHosts = [ final.tridactyl-native final.kdePackages.plasma-browser-integration ];
+    nativeMessagingHosts = [
+      final.tridactyl-native
+      final.kdePackages.plasma-browser-integration
+    ];
   };
 }
