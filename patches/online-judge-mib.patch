@@ -1,0 +1,34 @@
+--- a/onlinejudge/service/atcoder.py
++++ b/onlinejudge/service/atcoder.py
+@@ -539,8 +539,12 @@
+             assert False
+         if tds[3].text.endswith(' KB'):
+             memory_limit_byte = int(float(utils.remove_suffix(tds[3].text, ' KB')) * 1000)
++        elif tds[3].text.endswith(' KiB'):
++            memory_limit_byte = int(float(utils.remove_suffix(tds[3].text, ' KiB')) * 1024)
+         elif tds[3].text.endswith(' MB'):
+-            memory_limit_byte = int(float(utils.remove_suffix(tds[3].text, ' MB')) * 1000 * 1000)  # TODO: confirm this is MB truly, not MiB
++            memory_limit_byte = int(float(utils.remove_suffix(tds[3].text, ' MB')) * 1000 * 1000)
++        elif tds[3].text.endswith(' MiB'):
++            memory_limit_byte = int(float(utils.remove_suffix(tds[3].text, ' MiB')) * 1024 * 1024)
+         else:
+             assert False
+         if len(tds) == 5:
+@@ -578,7 +582,7 @@
+             assert False
+ 
+         # When login as the admin, a link is added after memory limit. See https://github.com/online-judge-tools/api-client/issues/90
+-        parsed_memory_limit = re.search(r'^(メモリ制限|Memory Limit): ([0-9.]+) (KB|MB)', memory_limit)
++        parsed_memory_limit = re.search(r'^(メモリ制限|Memory Limit): ([0-9.]+) (KB|KiB|MB|MiB)', memory_limit)
+         assert parsed_memory_limit
+ 
+         memory_limit_value = parsed_memory_limit.group(2)
+@@ -587,6 +591,8 @@
+             memory_limit_byte = int(float(memory_limit_value) * 1000)
+         elif memory_limit_unit == 'MB':
+             memory_limit_byte = int(float(memory_limit_value) * 1000 * 1000)
++        elif memory_limit_unit == 'MiB':
++            memory_limit_byte = int(float(memory_limit_value) * 1024 * 1024)
+         else:
+             assert False
+ 

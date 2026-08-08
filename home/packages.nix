@@ -12,6 +12,11 @@
     kitty
     mosh
     online-judge-tools
+    python3Packages.online-judge-template-generator
+    (python3.withPackages (ps: [ ps.selenium ]))
+    geckodriver
     time
+    clang
+    clang-tools
   ];
 }
