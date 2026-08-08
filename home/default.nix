@@ -23,7 +23,6 @@
     ./desktop/session.nix
 
     # ---- Programs ----
-    ./programs/emacs
     ./programs/firefox.nix
     ./programs/kitty.nix
     ./programs/mpv.nix
