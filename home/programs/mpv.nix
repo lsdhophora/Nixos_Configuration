@@ -28,43 +28,51 @@
     };
 
     scriptOpts = {
-      modernz = {
+      modernz =
+        let
+          # Breeze Dark shared palette + modernz-specific accents.
+          palette = (import ../../lib).breezeDark // {
+            border = "#3D4044";
+            handle = "#1D99F3";
+            hover = "#5A5D62";
+          };
+        in
+        {
+          accent_color = palette.accent;
+          osc_color = palette.accent;
+          title_color = palette.fg;
+          time_color = palette.fg;
+          chapter_title_color = palette.fg;
+          cache_info_color = palette.inactive;
+          side_buttons_color = palette.fg;
+          middle_buttons_color = palette.fg;
+          playpause_color = palette.fg;
+          seekbarfg_color = palette.accent;
+          seekbarbg_color = palette.alt;
+          seekbar_cache_color = palette.border;
+          seek_handle_color = palette.handle;
+          seek_handle_border_color = palette.accent;
+          nibble_color = palette.accent;
+          nibble_current_color = palette.fg;
+          hover_effect_color = palette.accent;
+          held_element_color = palette.hover;
+          thumbnail_box_color = palette.bg;
+          thumbnail_box_outline = palette.border;
+          window_title_color = palette.fg;
+          window_controls_color = palette.fg;
+          windowcontrols_close_hover = palette.red;
+          windowcontrols_max_hover = palette.orange;
+          windowcontrols_min_hover = palette.green;
+          volumebar_match_seek_color = true;
 
-        accent_color = "#3DAEE9";
-        osc_color = "#3DAEE9";
-        title_color = "#FCFCFC";
-        time_color = "#FCFCFC";
-        chapter_title_color = "#FCFCFC";
-        cache_info_color = "#A1A9B1";
-        side_buttons_color = "#FCFCFC";
-        middle_buttons_color = "#FCFCFC";
-        playpause_color = "#FCFCFC";
-        seekbarfg_color = "#3DAEE9";
-        seekbarbg_color = "#292C30";
-        seekbar_cache_color = "#3D4044";
-        seek_handle_color = "#1D99F3";
-        seek_handle_border_color = "#3DAEE9";
-        nibble_color = "#3DAEE9";
-        nibble_current_color = "#FCFCFC";
-        hover_effect_color = "#3DAEE9";
-        held_element_color = "#5A5D62";
-        thumbnail_box_color = "#202326";
-        thumbnail_box_outline = "#3D4044";
-        window_title_color = "#FCFCFC";
-        window_controls_color = "#FCFCFC";
-        windowcontrols_close_hover = "#DA4453";
-        windowcontrols_max_hover = "#F67400";
-        windowcontrols_min_hover = "#27AE60";
-        volumebar_match_seek_color = true;
-
-        window_controls = "no";
-        title_font_size = 28;
-        chapter_title_font_size = 20;
-        time_font_size = 20;
-        tooltip_font_size = 18;
-        speed_font_size = 20;
-        cache_info_font_size = 16;
-      };
+          window_controls = "no";
+          title_font_size = 28;
+          chapter_title_font_size = 20;
+          time_font_size = 20;
+          tooltip_font_size = 18;
+          speed_font_size = 20;
+          cache_info_font_size = 16;
+        };
     };
 
     bindings = {

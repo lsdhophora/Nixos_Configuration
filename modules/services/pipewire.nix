@@ -3,7 +3,24 @@
   lib,
   ...
 }:
-
+let
+  # Dual-mono noise gate: the L and R channel nodes are identical.
+  gateNode = side: ''
+    {
+        type = ladspa
+        name = gate${side}
+        plugin = "gate_1410"
+        label = gate
+        control = {
+            "Threshold (dB)" = -50.0
+            "Attack (ms)" = 10.0
+            "Hold (ms)" = 200.0
+            "Decay (ms)" = 500.0
+            "Range (dB)" = -60.0
+        }
+    }
+  '';
+in
 {
   services.pipewire = {
     enable = lib.mkDefault true;
@@ -47,32 +64,8 @@
                                 "VAD Threshold (%)" 30.0
                             }
                         }
-                        {
-                            type = ladspa
-                            name = gateL
-                            plugin = "gate_1410"
-                            label = gate
-                            control = {
-                                "Threshold (dB)" = -50.0
-                                "Attack (ms)" = 10.0
-                                "Hold (ms)" = 200.0
-                                "Decay (ms)" = 500.0
-                                "Range (dB)" = -60.0
-                            }
-                        }
-                        {
-                            type = ladspa
-                            name = gateR
-                            plugin = "gate_1410"
-                            label = gate
-                            control = {
-                                "Threshold (dB)" = -50.0
-                                "Attack (ms)" = 10.0
-                                "Hold (ms)" = 200.0
-                                "Decay (ms)" = 500.0
-                                "Range (dB)" = -60.0
-                            }
-                        }
+                        ${gateNode "L"}
+                        ${gateNode "R"}
                     ]
                     inputs = [ "rnnoise:Input (L)" "rnnoise:Input (R)" ]
                     outputs = [ "gateL:Output" "gateR:Output" ]
@@ -100,7 +93,13 @@
     '')
   ];
 
-  environment.systemPackages = [ pkgs.rnnoise-plugin pkgs.ladspaPlugins ];
+  environment.systemPackages = [
+    pkgs.rnnoise-plugin
+    pkgs.ladspaPlugins
+  ];
 
-  services.pipewire.extraLadspaPackages = [ pkgs.rnnoise-plugin pkgs.ladspaPlugins ];
+  services.pipewire.extraLadspaPackages = [
+    pkgs.rnnoise-plugin
+    pkgs.ladspaPlugins
+  ];
 }

@@ -1,5 +1,9 @@
 { pkgs, ... }:
-
+let
+  # zsh prompt format; label shows as a bracket tag when non-empty.
+  prompt =
+    label: if label == "" then "%F{green}%B$%b%f " else "%F{green}%B[${label}]%b %F{green}%B$%b%f ";
+in
 {
   home.sessionVariables = {
     PI_SKIP_VERSION_CHECK = "1";
@@ -34,11 +38,11 @@
       }
 
       if [[ $IN_NIX_SHELL == "nix3" ]]; then
-        PROMPT='%F{green}%B[nix shell]%b %F{green}%B$%b%f '
+        PROMPT='${prompt "nix shell"}'
       elif [[ -n $IN_NIX_SHELL ]]; then
-        PROMPT='%F{green}%B[nix-shell]%b %F{green}%B$%b%f '
+        PROMPT='${prompt "nix-shell"}'
       else
-        PROMPT='%F{green}%B$%b%f '
+        PROMPT='${prompt ""}'
       fi
       RPROMPT=""
 

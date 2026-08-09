@@ -1,5 +1,22 @@
-{ pkgs, ... }:
+{ lib, ... }:
+let
+  palette = (import ../../lib).breezeDark;
 
+  # "bind-key <flags> <key> <cmd>" lines from a key→command table.
+  bindKeys =
+    flags: binds:
+    lib.concatStringsSep "\n" (
+      lib.mapAttrsToList (
+        key: cmd: "bind-key${if flags == "" then "" else " " + flags} ${key} ${cmd}"
+      ) binds
+    );
+
+  # bindKeys over a key→direction table; adds the tmux -<dir> suffix.
+  # Example: bindDirs "" "select-pane" { h = "L"; } → "bind-key h select-pane -L"
+  bindDirs =
+    flags: cmd: dirs:
+    bindKeys flags (lib.mapAttrs (key: dir: "${cmd} -${dir}") dirs);
+in
 {
   programs.tmux = {
     enable = true;
@@ -20,13 +37,18 @@
       bind-key r source-file ~/.config/tmux/tmux.conf \; display-message "sourced tmux.conf"
 
       bind-key c copy-mode
-      bind-key -Tcopy-mode-vi n send-keys -X halfpage-down
-      bind-key -Tcopy-mode-vi p send-keys -X halfpage-up
+
+      # copy-mode scrolling (vi)
+      ${bindKeys "-Tcopy-mode-vi" {
+        n = "send-keys -X halfpage-down";
+        p = "send-keys -X halfpage-up";
+      }}
       bind-key -Tcopy-mode-vi v send-keys -X begin-selection
       bind-key -Tcopy-mode-vi y send-keys -X copy-selection
       bind-key -Tcopy-mode-vi Enter send-keys -X copy-selection-and-cancel
       bind-key -Tcopy-mode-vi Escape send-keys -X cancel
 
+      # sessions
       bind-key s choose-session
       bind-key n display-panes
       bind-key : command-prompt
@@ -34,33 +56,37 @@
       # panes
       bind-key v split-window -h
       bind-key x split-window -v
-      bind-key o rotate-window
       bind-key q kill-pane
-      bind-key h select-pane -L
-      bind-key j select-pane -D
-      bind-key k select-pane -U
-      bind-key l select-pane -R
-      bind-key -r C-h swap-pane -D
-      bind-key -r C-j swap-pane -U
-      bind-key -r C-k swap-pane -D
-      bind-key -r C-l swap-pane -U
-      bind-key -r i resize-pane -U 5
-      bind-key -r u resize-pane -D 5
-      bind-key -r y resize-pane -L 5
-      bind-key -r o resize-pane -R 5
+      # navigation — h/j/k/l
+      ${bindDirs "" "select-pane" {
+        h = "L";
+        j = "D";
+        k = "U";
+        l = "R";
+      }}
+      # swap — C-h/C-j/C-k/C-l (repeat)
+      ${bindDirs "-r" "swap-pane" {
+        "C-h" = "D";
+        "C-j" = "U";
+        "C-k" = "D";
+        "C-l" = "U";
+      }}
+      # resize — i/u/y/o (repeat)
+      ${bindDirs "-r" "resize-pane" {
+        i = "U 5";
+        u = "D 5";
+        y = "L 5";
+        o = "R 5";
+      }}
 
       # windows (workspace-like)
       bind-key enter new-window
       bind-key -n C-. next-window
       bind-key -n C-, previous-window
 
-      # Breeze Dark palette (official KDE BreezeDark.colors)
-      # bg=#202326 fg=#fcfcfc accent=#3daee9 inactive=#a1a9b1 alt=#292c30
-      # red=#da4453 orange=#f67400 green=#27ae60
-
       # appearance
-      set -g pane-border-style 'fg=#292c30'
-      set -g pane-active-border-style 'fg=#3daee9'
+      set -g pane-border-style 'fg=${palette.alt}'
+      set -g pane-active-border-style 'fg=${palette.accent}'
 
       # auto-rename windows to current program (sway-like)
       setw -g automatic-rename on
@@ -69,25 +95,25 @@
       # status bar
       set -g status-interval 10
       set -g status-right-length 80
-      set -g status-style 'bg=#202326,fg=#fcfcfc'
+      set -g status-style 'bg=${palette.bg},fg=${palette.fg}'
 
       setw -g window-status-separator ' '
       setw -g window-status-format " #I:#W "
       setw -g window-status-current-format " #I:#W "
-      setw -g window-status-style 'fg=#a1a9b1 bg=#292c30'
-      setw -g window-status-current-style 'fg=#fcfcfc bg=#3daee9 bold'
-      setw -g window-status-bell-style 'fg=#fcfcfc bg=#da4453 bold'
+      setw -g window-status-style 'fg=${palette.inactive} bg=${palette.alt}'
+      setw -g window-status-current-style 'fg=${palette.fg} bg=${palette.accent} bold'
+      setw -g window-status-bell-style 'fg=${palette.fg} bg=${palette.red} bold'
 
       # battery on kmscon or TTY only
       set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then read c < /sys/class/power_supply/BAT0/capacity; read s < /sys/class/power_supply/BAT0/status; echo \"\$c%% \$s |\"; fi)%H:%M"
-      set -g status-right-style 'fg=#a1a9b1 bg=#202326'
-      set -g status-left "#[bg=#3daee9,fg=#fcfcfc,bold] #S #[default]"
-      set -g status-left-style 'bg=#202326'
+      set -g status-right-style 'fg=${palette.inactive} bg=${palette.bg}'
+      set -g status-left "#[bg=${palette.accent},fg=${palette.fg},bold] #S #[default]"
+      set -g status-left-style 'bg=${palette.bg}'
 
       # messages and modes
-      set -g message-style 'fg=#fcfcfc bg=#3daee9'
-      set -g message-command-style 'fg=#fcfcfc bg=#3daee9'
-      set -g mode-style 'fg=#fcfcfc bg=#3daee9'
+      set -g message-style 'fg=${palette.fg} bg=${palette.accent}'
+      set -g message-command-style 'fg=${palette.fg} bg=${palette.accent}'
+      set -g mode-style 'fg=${palette.fg} bg=${palette.accent}'
     '';
   };
 }
