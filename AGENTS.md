@@ -64,6 +64,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │       └── zsh.nix
 ├── assets/                   # Static assets
 │   ├── avatar/
+│   ├── firefox/               # userContent/userChrome.css (linked as profile chrome)
 │   ├── gtk/
 │   └── themes/
 ├── overlays/                 # Nixpkgs overlays (auto-discovered from this dir)

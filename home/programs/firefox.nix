@@ -1,11 +1,15 @@
 { pkgs, lib, ... }:
-
 let
   # AMO force-install entry; `slug` is the addon id in the download URL.
   mozAddon = slug: {
     install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/addon-${slug}-latest.xpi";
     installation_mode = "force_installed";
   };
+
+  # Tridactyl site bindings for the Pixiv manga-viewer close button.
+  # One selector serves both hint variants.
+  tridactylSelector = "div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon";
+  bindurl = key: flags: "bindurl pixiv\\.net ${key} hint ${flags} ${tridactylSelector}";
 in
 {
   programs.firefox = {
@@ -40,98 +44,10 @@ in
         "browser.fullscreen.autohide" = false;
         "browser.ml.linkPreview.enabled" = false;
       };
-      userContent = ''
-        @-moz-document url(about:home) {
-          .personalize-button,
-          .open-customization-button {
-            display: none !important;
-          }
-        }
-
-        /* Bilibili - search bar border */
-        @-moz-document domain("bilibili.com") {
-          .bili-header .mini-header .center-search-container .center-search__bar #nav-searchform {
-            border: 2px solid var(--line_regular) !important;
-            background: var(--bg1) !important;
-          }
-
-          .bpx-player-top-left-title {
-            line-height: 1.4 !important;
-          }
-
-          a.title.jumpable {
-            line-height: 1.4 !important;
-          }
-
-          body, html {
-            touch-action: pan-x pan-y pinch-zoom !important;
-            overscroll-behavior: auto !important;
-          }
-        }
-
-        /* DuckDuckGo - result site name line-height */
-        @-moz-document domain("duckduckgo.com") {
-          article[data-testid="result"] p {
-            line-height: 1.4 !important;
-          }
-        }
-
-        /* Zhihu - search bar, links, global text stroke */
-        @-moz-document domain("zhihu.com") {
-          [class*="SearchBar-input"] {
-            transform: scale(0.9) !important;
-            transform-origin: left center !important;
-            border: 2px solid var(--MapUIFrame08B) !important;
-          }
-
-          [class*="SearchBar-input"]:focus,
-          [class*="SearchBar-input"]:focus-within {
-            outline: none !important;
-            border: 2px solid !important;
-          }
-
-          a[href="/creator"] {
-            border: 2px solid !important;
-          }
-
-          a[href="/question/waiting"] {
-            border: 2px solid !important;
-          }
-
-          * {
-            -webkit-text-stroke: 0.4px currentColor !important;
-          }
-        }
-
-        span.cleanslate.TridactylStatusIndicator {
-          bottom: 8px !important;
-          right: 8px !important;
-        }
-
-        input#tridactyl-input {
-          margin-bottom: 3px;
-        }
-      '';
-      userChrome = ''
-        :root { font-size: 12pt !important; }
-        menupopup { --panel-border-radius: 8px !important; }
-        #contentAreaContextMenu::part(content) { border: 1px solid #3c3c40 !important; }
-        #plasma-browser-integration_kde_org-menuitem-_purpose_share,              
-        #context-sep-sendpagetodevice { display: none !important; }
-        menupopup#context-sendimage, #context-sendimage { display: none !important; }
-        #context-openlinkinusercontext-menu, #context-openlinkincontainertab,
-        #spell-check-enabled, #spell-add-to-dictionary, #spell-suggestions-separator,
-        #spell-separator, #context-sep-bidi, #context-sep-selectall,
-        [data-l10n-id="places-open-in-container-tab"] { display: none !important; }
-        #tabbrowser-tabs[movingtab-group] .tab-background[dragover-groupTarget] { outline-width: 3px !important; outline-offset: -3px !important; }
-        #tabbrowser-tabs[movingtab-group] tab-split-view-wrapper[dragover-groupTarget] { outline-width: 3px !important; }
-        #tabbrowser-tabs[movingtab-group] .tabbrowser-tab[dragtarget] .tab-background { outline-width: 3px !important; }
-        #historySwipeAnimationPreviousArrow > svg, #historySwipeAnimationNextArrow > svg { scale: 1.25 !important; }
-        #editBMPanel_namePicker { margin-bottom: 8px !important; }
-        #contentAreaContextMenu menuseparator:last-child, #contentAreaContextMenu menuseparator:only-child { display: none !important; }
-        panel[type="arrow"].panel-no-padding { transform: translateY(2px) !important; }
-        #appMenu-empty-profiles-button { display: none !important; }
-      '';
+      # CSS lives in assets/ (real .css files, like the GTK themes);
+      # home-manager accepts a path and links it as the profile chrome.
+      userContent = ./../../assets/firefox/userContent.css;
+      userChrome = ./../../assets/firefox/userChrome.css;
     };
     policies = {
       ExtensionSettings = lib.mapAttrs (id: slug: mozAddon slug) {
@@ -144,9 +60,9 @@ in
   };
 
   xdg.configFile."tridactyl/tridactylrc" = {
-    text = ''
-      bindurl pixiv\.net f hint -C div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon
-      bindurl pixiv\.net F hint -bC div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon
-    '';
+    text = lib.concatLines [
+      (bindurl "f" "-C")
+      (bindurl "F" "-bC")
+    ];
   };
 }

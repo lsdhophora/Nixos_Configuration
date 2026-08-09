@@ -1,0 +1,70 @@
+@-moz-document url(about:home) {
+  .personalize-button,
+  .open-customization-button {
+    display: none !important;
+  }
+}
+
+/* Bilibili - search bar border */
+@-moz-document domain("bilibili.com") {
+  .bili-header .mini-header .center-search-container .center-search__bar #nav-searchform {
+    border: 2px solid var(--line_regular) !important;
+    background: var(--bg1) !important;
+  }
+
+  .bpx-player-top-left-title {
+    line-height: 1.4 !important;
+  }
+
+  a.title.jumpable {
+    line-height: 1.4 !important;
+  }
+
+  body, html {
+    touch-action: pan-x pan-y pinch-zoom !important;
+    overscroll-behavior: auto !important;
+  }
+}
+
+/* DuckDuckGo - result site name line-height */
+@-moz-document domain("duckduckgo.com") {
+  article[data-testid="result"] p {
+    line-height: 1.4 !important;
+  }
+}
+
+/* Zhihu - search bar, links, global text stroke */
+@-moz-document domain("zhihu.com") {
+  [class*="SearchBar-input"] {
+    transform: scale(0.9) !important;
+    transform-origin: left center !important;
+    border: 2px solid var(--MapUIFrame08B) !important;
+  }
+
+  [class*="SearchBar-input"]:focus,
+  [class*="SearchBar-input"]:focus-within {
+    outline: none !important;
+    border: 2px solid !important;
+  }
+
+  a[href="/creator"] {
+    border: 2px solid !important;
+  }
+
+  a[href="/question/waiting"] {
+    border: 2px solid !important;
+  }
+
+  * {
+    -webkit-text-stroke: 0.4px currentColor !important;
+  }
+}
+
+span.cleanslate.TridactylStatusIndicator {
+  bottom: 8px !important;
+  right: 8px !important;
+}
+
+input#tridactyl-input {
+  margin-bottom: 3px;
+}
