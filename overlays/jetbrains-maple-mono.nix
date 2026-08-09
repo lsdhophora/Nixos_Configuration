@@ -1,5 +1,5 @@
 final: prev: {
-  sarasa-term-sc-nerd = import ../packages/sarasa-term-sc-nerd {
+  jetbrains-maple-mono = import ../packages/jetbrains-maple-mono {
     inherit (final) lib stdenvNoCC fetchzip;
   };
 }

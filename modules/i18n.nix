@@ -15,7 +15,7 @@
       charis
       ibm-plex
       noto-fonts-color-emoji
-      sarasa-term-sc-nerd
+      jetbrains-maple-mono
     ];
     fontconfig = {
       enable = true;

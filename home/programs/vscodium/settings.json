@@ -2,9 +2,9 @@
     "extensions.excludeUnsafes": false,
     "cph.language.cpp.Command": "clang++",
     "window.titleBarStyle": "native",
-    "editor.fontFamily": "'Sarasa Term SC Nerd', 'monospace'",
+    "editor.fontFamily": "'JetBrains Maple Mono', 'monospace'",
     "editor.fontSize": 14,
     "editor.fontLigatures": true,
-    "terminal.integrated.fontFamily": "'Sarasa Term SC Nerd', 'monospace'",
+    "terminal.integrated.fontFamily": "'JetBrains Maple Mono', 'monospace'",
     "terminal.integrated.fontSize": 14
 }
