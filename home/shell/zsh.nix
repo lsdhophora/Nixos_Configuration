@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  # zsh prompt format; label shows as a bracket tag when non-empty.
+  # zsh prompt format. The label shows as a bracket tag when not empty.
   prompt =
     label: if label == "" then "%F{green}%B$%b%f " else "%F{green}%B[${label}]%b %F{green}%B$%b%f ";
 in
@@ -46,10 +46,10 @@ in
       fi
       RPROMPT=""
 
-      # 终端标题栏显示当前目录
+      # Set the terminal title to the current directory
       precmd() { print -Pn "\e]0;%~\a" }
 
-      # auto-start tmux on kmscon or kernel TTY
+      # Start tmux automatically on kmscon or a kernel TTY
       if [[ -z "$TMUX" ]] && command -v tmux &>/dev/null; then
         if [[ $TERM_SESSION_TYPE == kms ]] || [[ $(tty) == /dev/tty* ]]; then
           tmux new-session -A -s main

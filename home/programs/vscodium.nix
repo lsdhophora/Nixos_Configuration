@@ -1,7 +1,10 @@
 { pkgs, lib, ... }:
 let
-  # 通用 VSIX 打包器：从 URL 拉取 VSIX，剥离包装层，输出扩展内容到 $out 根目录。
-  # VSIX 是 zip，顶层带 [Content_Types].xml / extension/ / extension.vsixmanifest 包装。
+  # Generic VSIX builder.
+  # It downloads a VSIX from a URL, removes the wrapper layer,
+  # and puts the extension content into $out.
+  # A VSIX is a zip file. The top level has the wrapper
+  # [Content_Types].xml, extension/, and extension.vsixmanifest.
   buildVsix =
     {
       publisher,
@@ -22,8 +25,8 @@ let
       nativeBuildInputs = [ pkgs.unzip ];
       dontUnpack = true;
 
-      # VSCodium installs extensions under <publisher>.<name>-<version>;
-      # derive that dir name here so it cannot drift from the version.
+      # VSCodium installs extensions under <publisher>.<name>-<version>.
+      # Derive that dir name here, so it cannot drift from the version.
       passthru = {
         inherit publisher;
         extensionDir = "${publisher}.${name}-${version}";
@@ -48,7 +51,7 @@ let
       };
     };
 
-  # Competitive Programming Helper —— 官方 GitHub release
+  # Competitive Programming Helper (official GitHub release)
   competitiveProgrammingHelper = buildVsix {
     publisher = "divyanshuagrawal";
     name = "competitive-programming-helper";
@@ -60,7 +63,7 @@ let
     license = pkgs.lib.licenses.gpl3Plus;
   };
 
-  # Nix IDE —— nixd/nil LSP 客户端（Open VSX）
+  # Nix IDE: nixd/nil LSP client (Open VSX)
   nixIde = buildVsix {
     publisher = "jnoortheen";
     name = "nix-ide";
@@ -78,21 +81,23 @@ let
   ];
 in
 {
-  # VSCodium 本体（原先用 nix shell 临时安装，改为声明式）
+  # VSCodium (previously installed with nix shell; now declarative)
   home.packages = [ pkgs.vscodium ];
 
-  # VSCodium 的 profile 清理机制会把"目录里有但 extensions.json 没登记"的扩展
-  # 当作残留自动删除（deleteExtensionsNotInProfiles）。
-  # 因此每次重建后：删掉旧注册表 + 触发 --list-extensions 全量重建，
-  # 让 store 符号链接扩展被登记进 extensions.json。
+  # VSCodium's profile cleanup deletes extensions that are in the
+  # directory but not registered in extensions.json
+  # (deleteExtensionsNotInProfiles). After each rebuild, delete the old
+  # registry and trigger --list-extensions to rebuild it. The
+  # store-linked extensions then register in extensions.json.
   home.activation.regenerateVscodiumExtensions = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     run rm -f "$HOME/.vscode-oss/extensions/extensions.json" \
              "$HOME/.vscode-oss/extensions/.init-default-profile-extensions"
     ${pkgs.vscodium}/bin/codium --list-extensions > /dev/null 2>&1 || true
   '';
 
-  # 目录 source + 无 recursive => 整体符号链接指向 store，声明式、只读。
-  # 目录名来自 buildVsix.passthru.extensionDir（<publisher>.<name>-<version>）。
+  # Directory source without recursive: the whole dir links to the store.
+  # It is declarative and read-only. The dir name comes from
+  # buildVsix.passthru.extensionDir (<publisher>.<name>-<version>).
   home.file = builtins.listToAttrs (
     map (ext: {
       name = ".vscode-oss/extensions/${ext.passthru.extensionDir}";

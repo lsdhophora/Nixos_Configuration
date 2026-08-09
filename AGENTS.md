@@ -31,7 +31,6 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │       ├── atd.nix
 │       ├── cups.nix
 │       ├── dae.nix
-│       ├── kmscon.nix        # Kmscon VT (disabled in host menu)
 │       ├── pipewire.nix
 │       ├── tlp.nix
 │       └── zram.nix
@@ -86,7 +85,6 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, Agenix, Chao
 │   ├── secrets.nix
 │   ├── config.dae.age
 │   └── hashed-password.age
-└── unused/
 ```
 
 ## Commands

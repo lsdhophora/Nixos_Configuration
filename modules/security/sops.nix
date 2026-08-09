@@ -10,12 +10,12 @@
     neededForUsers = true;
   };
 
-  # GitHub access token for nix, rendered into the user nix.conf with the
-  # sops template pattern (same as the dae config template).
-  # NOTE: the secret value must be the bare token (ghp_...), NOT a full
-  # nix.conf line — the template adds the "access-tokens = github.com=" part.
-  # The nix *client* (running as the user) reads ~/.config/nix/nix.conf
-  # itself, so it must be user-readable — a root-only path under
+  # GitHub access token for nix. It renders into the user nix.conf
+  # with the sops template pattern (same as the dae config template).
+  # The secret value must be the bare token (ghp_...), not a full
+  # nix.conf line. The template adds the "access-tokens = github.com=" part.
+  # The nix client (running as the user) reads ~/.config/nix/nix.conf
+  # itself. It must be user-readable. A root-only path under
   # /run/secrets.d gives EACCES and access-tokens stays empty.
   sops.secrets.access-tokens-github = { };
 

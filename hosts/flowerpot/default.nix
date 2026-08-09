@@ -27,7 +27,6 @@
     ../../modules/services/cups.nix
     ../../modules/services/dae.nix
     ../../modules/services/openssh.nix
-    # ../../modules/services/kmscon.nix  # conflicts with plasma-login-manager VT handling
 
     # ---- Desktop ----
     ../../modules/desktop/kde.nix

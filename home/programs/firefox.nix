@@ -1,6 +1,6 @@
 { pkgs, lib, ... }:
 let
-  # AMO force-install entry; `slug` is the addon id in the download URL.
+  # AMO force-install entry. `slug` is the addon id in the download URL.
   mozAddon = slug: {
     install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/addon-${slug}-latest.xpi";
     installation_mode = "force_installed";
@@ -44,7 +44,7 @@ in
         "browser.fullscreen.autohide" = false;
         "browser.ml.linkPreview.enabled" = false;
       };
-      # CSS lives in assets/ (real .css files, like the GTK themes);
+      # CSS files live in assets/, like the GTK themes.
       # home-manager accepts a path and links it as the profile chrome.
       userContent = ./../../assets/firefox/userContent.css;
       userChrome = ./../../assets/firefox/userChrome.css;

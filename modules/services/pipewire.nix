@@ -45,7 +45,7 @@ in
     ];
   };
 
-  # RNNoise + stereo noise gate (dual mono LADSPA gate_1410)
+  # RNNoise and stereo noise gate (dual mono LADSPA gate_1410)
   services.pipewire.configPackages = [
     (pkgs.writeTextDir "share/pipewire/pipewire.conf.d/99-noise-cancel.conf" ''
       context.modules = [

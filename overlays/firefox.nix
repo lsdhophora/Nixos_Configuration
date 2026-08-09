@@ -12,8 +12,8 @@ let
     rm -rf "$tmpdir"
   '';
 
-  # firefox-unwrapped does not set every passthru field (depends on the
-  # nixpkgs version); the defaults below fill in the gaps uniformly.
+  # firefox-unwrapped does not set every passthru field (it depends on
+  # the nixpkgs version). The defaults below fill the gaps uniformly.
   passthruDefaults = {
     binaryName = "firefox";
     libName = "firefox";

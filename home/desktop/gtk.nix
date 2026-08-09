@@ -1,8 +1,8 @@
 { ... }:
 {
-  # Only manage gtk.css (read-only fine, doesn't need modification)
-  # settings.ini is intentionally NOT managed here - it must be writable
-  # so KDE's kde-gtk-config gtkconfig KDED module can write GTK theme choices.
+  # Only manage gtk.css (read-only, does not need modification)
+  # settings.ini is intentionally not managed here. It must be writable
+  # so KDE's kde-gtk-config gtkconfig KDED module can write the GTK theme choices.
   home.file = builtins.listToAttrs (
     map
       (major: {

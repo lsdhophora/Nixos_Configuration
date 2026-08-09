@@ -30,7 +30,7 @@
     scriptOpts = {
       modernz =
         let
-          # Breeze Dark shared palette + modernz-specific accents.
+          # Shared Breeze Dark palette with modernz-specific accents.
           palette = (import ../../lib).breezeDark // {
             border = "#3D4044";
             handle = "#1D99F3";

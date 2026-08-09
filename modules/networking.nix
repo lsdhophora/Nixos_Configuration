@@ -19,13 +19,16 @@
     allowedUDPPorts = [ 53317 ]; # LocalSend discovery
     allowedTCPPorts = [ 53317 ]; # LocalSend file transfer
     allowedUDPPortRanges = [
-      { from = 60000; to = 61000; } # mosh
+      {
+        from = 60000;
+        to = 61000;
+      } # mosh
     ];
   };
 
   # Declarative WiFi tuning: reduce AP switching for 56-606.
   # The connection profile (SSID, password, auth) stays managed by Plasma GUI.
-  # This oneshot only sets band preference and clears any BSSID lock.
+  # This oneshot only sets the band preference and clears any BSSID lock.
   systemd.services.nm-wifi-tune = {
     description = "Tune NetworkManager WiFi profiles for reduced AP switching";
     after = [ "NetworkManager.service" ];

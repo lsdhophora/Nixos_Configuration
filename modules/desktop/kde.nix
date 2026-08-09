@@ -9,8 +9,9 @@ let
   unstable = inputs.nixpkgs-unstable;
   unstablePkgs = unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
-  # Patches per KDE package. Add an entry here and the package is patched
-  # via applyPatches (keeping any existing upstream patches).
+  # Patch files per KDE package.
+  # Add an entry here to patch the package with applyPatches.
+  # applyPatches keeps the existing upstream patches.
   kdePatches = {
     plasma-desktop = [
       ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
@@ -61,9 +62,9 @@ in
         prev.kdePackages
         // (lib.mapAttrs (name: patches: applyPatches patches prev.kdePackages.${name}) kdePatches);
     })
-    # Dolphin: patched kio + location-bar fix. Only Dolphin uses this kio
-    # build with the location-bar border fix, so the rest of the desktop
-    # keeps the stock kio and the rebuild stays small.
+    # Dolphin uses the patched kio and the location-bar fix.
+    # Only Dolphin uses this kio build with the location-bar border fix.
+    # The rest of the desktop keeps the stock kio. The rebuild stays small.
     (final: prev: {
       dolphin =
         let
@@ -102,9 +103,9 @@ in
               );
         in
         patchedDolphin.overrideAttrs (oldAttrs: {
-          # Put the patched kio first in the link inputs so that the linker
-          # and the dynamic loader resolve to it instead of the stock kio
-          # that is pulled in transitively.
+          # Put the patched kio first in the link inputs.
+          # The linker and the dynamic loader then use it instead of the
+          # stock kio, which is pulled in transitively.
           buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
           propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
         });

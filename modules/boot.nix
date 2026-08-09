@@ -22,8 +22,8 @@
       "systemd.log_level=emerg"
       "rd.systemd.log_level=emerg"
       "model=dell-headset-multi"
-      # OLED: OEM brightness curve table has a broken point near the top,
-      # 100% then maps to ~0 nits (dimmer than 95%). Disable the curve.
+      # OLED: the OEM brightness curve has a broken point near the top.
+      # 100% then maps to about 0 nits (dimmer than 95%). Disable the curve.
       "amdgpu.dcdebugmask=0x40000"
     ];
 

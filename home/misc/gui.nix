@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  # symlinkJoin + postBuild wrapper for one package.
+  # Wrap one package with symlinkJoin and postBuild.
   wrapPackage =
     {
       name,

@@ -2,7 +2,7 @@
 let
   palette = (import ../../lib).breezeDark;
 
-  # "bind-key <flags> <key> <cmd>" lines from a key→command table.
+  # Generate "bind-key <flags> <key> <cmd>" lines from a key-command table.
   bindKeys =
     flags: binds:
     lib.concatStringsSep "\n" (
@@ -11,8 +11,8 @@ let
       ) binds
     );
 
-  # bindKeys over a key→direction table; adds the tmux -<dir> suffix.
-  # Example: bindDirs "" "select-pane" { h = "L"; } → "bind-key h select-pane -L"
+  # bindKeys over a key-direction table. It adds the tmux -<dir> suffix.
+  # Example: bindDirs "" "select-pane" { h = "L"; } gives "bind-key h select-pane -L"
   bindDirs =
     flags: cmd: dirs:
     bindKeys flags (lib.mapAttrs (key: dir: "${cmd} -${dir}") dirs);
@@ -38,7 +38,7 @@ in
 
       bind-key c copy-mode
 
-      # copy-mode scrolling (vi)
+      # copy-mode scroll bindings (vi)
       ${bindKeys "-Tcopy-mode-vi" {
         n = "send-keys -X halfpage-down";
         p = "send-keys -X halfpage-up";
@@ -57,21 +57,21 @@ in
       bind-key v split-window -h
       bind-key x split-window -v
       bind-key q kill-pane
-      # navigation — h/j/k/l
+      # navigation (h/j/k/l)
       ${bindDirs "" "select-pane" {
         h = "L";
         j = "D";
         k = "U";
         l = "R";
       }}
-      # swap — C-h/C-j/C-k/C-l (repeat)
+      # swap (C-h/C-j/C-k/C-l, repeat)
       ${bindDirs "-r" "swap-pane" {
         "C-h" = "D";
         "C-j" = "U";
         "C-k" = "D";
         "C-l" = "U";
       }}
-      # resize — i/u/y/o (repeat)
+      # resize (i/u/y/o, repeat)
       ${bindDirs "-r" "resize-pane" {
         i = "U 5";
         u = "D 5";
@@ -88,7 +88,7 @@ in
       set -g pane-border-style 'fg=${palette.alt}'
       set -g pane-active-border-style 'fg=${palette.accent}'
 
-      # auto-rename windows to current program (sway-like)
+      # Rename windows automatically to the current program (sway-like)
       setw -g automatic-rename on
       setw -g automatic-rename-format "#{pane_current_command}"
 

@@ -1,8 +1,8 @@
 # Shared helper functions and constants.
-# Import with: (import ../lib) — resolves to this file.
+# Import with: (import ../lib). It resolves to this file.
 
 {
-  # Add patch files to a package, preserving any existing patches.
+  # Add patch files to a package. Keep any existing patches.
   # Example: applyPatches [ ./fix.patch ] pkg
   applyPatches =
     patches: pkg:
@@ -11,7 +11,7 @@
     });
 
   # Breeze Dark palette (official KDE BreezeDark.colors).
-  # Shared by tmux and mpv configs so the whole desktop keeps one theme.
+  # Used by tmux and mpv. The desktop keeps one theme.
   breezeDark = {
     bg = "#202326";
     fg = "#fcfcfc";
