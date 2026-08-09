@@ -21,7 +21,7 @@
     };
     settings = {
       enabled_layouts = "splits,stack,tall,fat,grid,horizontal,vertical";
-      font_family = "Maple Mono NF CN";
+      font_family = "Sarasa Term SC Nerd";
       font_size = 14.0;
       foreground = "#ffffff";
       background = "#1e1e1e";

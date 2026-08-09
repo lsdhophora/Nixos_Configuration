@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   # Generic VSIX builder.
   # It downloads a VSIX from a URL, removes the wrapper layer,
@@ -95,16 +100,26 @@ in
     ${pkgs.vscodium}/bin/codium --list-extensions > /dev/null 2>&1 || true
   '';
 
-  # Directory source without recursive: the whole dir links to the store.
-  # It is declarative and read-only. The dir name comes from
-  # buildVsix.passthru.extensionDir (<publisher>.<name>-<version>).
-  home.file = builtins.listToAttrs (
-    map (ext: {
-      name = ".vscode-oss/extensions/${ext.passthru.extensionDir}";
-      value = {
-        source = ext;
+  # VSCodium user settings. The file stays editable: it is a symlink
+  # to this repo file, so UI changes show up in git.
+  home.file = lib.mkMerge [
+    {
+      ".config/VSCodium/User/settings.json" = {
+        source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nixos/home/programs/vscodium/settings.json";
         force = true;
       };
-    }) extensions
-  );
+    }
+    # Directory source without recursive: the whole dir links to the store.
+    # It is declarative and read-only. The dir name comes from
+    # buildVsix.passthru.extensionDir (<publisher>.<name>-<version>).
+    (builtins.listToAttrs (
+      map (ext: {
+        name = ".vscode-oss/extensions/${ext.passthru.extensionDir}";
+        value = {
+          source = ext;
+          force = true;
+        };
+      }) extensions
+    ))
+  ];
 }
