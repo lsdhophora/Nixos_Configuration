@@ -1,4 +1,4 @@
---- a/desktoppackage/contents/lockscreen/LockScreenUi.qml
+--- /tmp/LockScreenUi-673.qml	2026-08-10 14:26:51.801855747 +0800
 +++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
 @@ -26,6 +26,8 @@
      // See https://bugs.kde.org/show_bug.cgi?id=398317
@@ -46,7 +46,7 @@
          }
          function onPromptForSecretChanged(msg) {
              mainBlock.showPassword = false;
-@@ -96,6 +109,15 @@
+@@ -96,6 +109,18 @@
          target: sessionManagement
          function onAboutToSuspend() {
              root.clearPassword();
@@ -57,12 +57,31 @@
 +            root.clearPassword();
 +            lockScreenUi.suppressNextFailure = true;
 +            authenticator.cancel();
-+            authenticator.startAuthenticating();
++            // PAM fail_delay (1s) kicks in when cancel interrupts pam_authenticate;
++            // starting immediately hits "attempt too soon" and auth never starts.
++            // Defer the restart to let the rate limit expire.
++            resumeAuthTimer.restart();
 +            fadeoutTimer.restart();
          }
      }
  
-@@ -267,5 +289,8 @@
+@@ -177,6 +202,14 @@
+             onTriggered: root.notification = ""
+         }
+         Timer {
++            id: resumeAuthTimer
++            interval: 2000
++            onTriggered: {
++                authenticator.startAuthenticating();
++            }
++        }
++
++        Timer {
+             id: graceLockTimer
+             interval: 3000
+             onTriggered: {
+@@ -266,7 +299,10 @@
+ 
                  showUserList: userList.y + mainStack.y > 0
  
 -                enabled: !graceLockTimer.running
@@ -72,6 +91,8 @@
 +                enabled: true
  
                  StackView.onStatusChanged: {
+                     // prepare for presenting again to the user
+
 --- a/desktoppackage/contents/lockscreen/MainBlock.qml
 +++ b/desktoppackage/contents/lockscreen/MainBlock.qml
 @@ -64,7 +64,8 @@
