@@ -1,5 +1,5 @@
---- /tmp/LockScreenUi-673.qml	2026-08-10 14:26:51.801855747 +0800
-+++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml
+--- a/desktoppackage/contents/lockscreen/LockScreenUi.qml	2026-08-10 00:00:00.000000000 +0800
++++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml	2026-08-10 00:00:00.000000000 +0800
 @@ -26,6 +26,8 @@
      // See https://bugs.kde.org/show_bug.cgi?id=398317
      readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
@@ -46,7 +46,7 @@
          }
          function onPromptForSecretChanged(msg) {
              mainBlock.showPassword = false;
-@@ -96,6 +109,18 @@
+@@ -96,6 +109,19 @@
          target: sessionManagement
          function onAboutToSuspend() {
              root.clearPassword();
@@ -57,51 +57,25 @@
 +            root.clearPassword();
 +            lockScreenUi.suppressNextFailure = true;
 +            authenticator.cancel();
-+            // PAM fail_delay (1s) kicks in when cancel interrupts pam_authenticate;
-+            // starting immediately hits "attempt too soon" and auth never starts.
-+            // Defer the restart to let the rate limit expire.
-+            resumeAuthTimer.restart();
++            // Grey out the auth area on the first frame after resume, then let
++            // graceLockTimer (3s) restart auth past the PAM fail_delay (1s rate
++            // limit) that cancel() triggers. Starting immediately would hit
++            // "attempt too soon" and auth would never start.
++            graceLockTimer.start();
 +            fadeoutTimer.restart();
          }
      }
  
-@@ -177,6 +202,14 @@
-             onTriggered: root.notification = ""
-         }
-         Timer {
-+            id: resumeAuthTimer
-+            interval: 2000
-+            onTriggered: {
-+                authenticator.startAuthenticating();
-+            }
-+        }
-+
-+        Timer {
-             id: graceLockTimer
-             interval: 3000
-             onTriggered: {
-@@ -266,7 +299,10 @@
+@@ -266,6 +292,12 @@
  
                  showUserList: userList.y + mainStack.y > 0
  
--                enabled: !graceLockTimer.running
-+                // Do not grey out while graceLockTimer runs; the timer also
-+                // lingers across suspend (frozen during s2idle, resumed after
-+                // wake), flickering the whole auth area after resume.
-+                enabled: true
++                // Grey out while graceLockTimer runs (upstream behaviour): the
++                // user sees the auth area disabled and knows to wait after
++                // resume. Safe now: onAboutToSuspend stops the timer (no
++                // frozen-time linger across s2idle) and onResumingFromSuspend
++                // starts it, so the area turns grey on the first frame after
++                // wake instead of flickering bright->grey->bright.
+                 enabled: !graceLockTimer.running
  
                  StackView.onStatusChanged: {
-                     // prepare for presenting again to the user
-
---- a/desktoppackage/contents/lockscreen/MainBlock.qml
-+++ b/desktoppackage/contents/lockscreen/MainBlock.qml
-@@ -64,7 +64,8 @@
- 
-             placeholderText: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:placeholder in text field", "Password")
-             focus: true
--            enabled: !authenticator.graceLocked
-+            // graceLocked is not exposed to QML; keep the field enabled.
-+            enabled: true
- 
-             // In Qt this is implicitly active based on focus rather than visibility
-             // in any other application having a focussed invisible object would be weird
