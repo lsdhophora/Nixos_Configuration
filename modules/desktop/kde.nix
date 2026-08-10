@@ -19,9 +19,6 @@ let
       ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
       ./../../patches/plasma-desktop/kcm-splash-dedup.patch
     ];
-    kscreenlocker = [
-      ./../../patches/kscreenlocker/fix-prepare-for-sleep-cancel-on-wake.patch
-    ];
     plasma-workspace = [
       ./../../patches/plasma-workspace/jobitem-null-check.patch
     ];
@@ -36,6 +33,27 @@ let
 in
 {
   services.desktopManager.plasma6.enable = true;
+
+  # kscreenlocker probes kde-fingerprint / kde-smartcard on every lock.
+  # Without these files, Linux-PAM falls back to "other" (pam_deny) which
+  # returns PAM_AUTH_ERR, so kscreenlocker thinks fingerprint/smartcard are
+  # available and shows the "scan your fingerprint/smartcard" hints.
+  # With these stacks the modules return PAM_AUTHINFO_UNAVAIL when no device
+  # is present, so kscreenlocker marks the authenticators unavailable and
+  # hides the hints. Users with hardware get working auth automatically.
+  security.pam.services."kde-fingerprint" = {
+    text = ''
+      # fingerprint auth via fprintd; PAM_AUTHINFO_UNAVAIL without a reader
+      auth required ${pkgs.fprintd}/lib/security/pam_fprintd.so
+    '';
+  };
+  security.pam.services."kde-smartcard" = {
+    text = ''
+      # smartcard auth via pam_p11; PAM_AUTHINFO_UNAVAIL without a token
+      auth required ${pkgs.pam_p11}/lib/security/pam_p11.so
+    '';
+  };
+  services.fprintd.enable = true; # provides pam_fprintd.so and the fprintd service
 
   environment.systemPackages = [
     pkgs.klassy # overridden in overlay below to remove Type=Application from .desktop
@@ -57,6 +75,11 @@ in
       kdePackages = unstablePkgs.kdePackages;
     })
     # Apply the per-package patch sets from `kdePatches` above.
+    # Note: only the listed packages are rebuilt; packages that depend on
+    # them (e.g. kwin -> kscreenlocker) keep their stock outputs. This
+    # keeps the rebuild small and lets cache.nixos.org serve the rest.
+    # (overrideScope was tried but it rebuilds the whole kdePackages set,
+    # turning everything into custom builds that miss the binary cache.)
     (final: prev: {
       kdePackages =
         prev.kdePackages
