@@ -15,7 +15,7 @@
              }
 +            if (lockScreenUi.suppressNextFailure) {
 +                lockScreenUi.suppressNextFailure = false;
-+                graceLockTimer.restart();
++                // Restart is handled by onResumingFromSuspend; skip to avoid clearing typed input.
 +                return;
 +            }
              const msg = i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Unlocking failed");
@@ -46,17 +46,30 @@
          }
          function onPromptForSecretChanged(msg) {
              mainBlock.showPassword = false;
-@@ -97,6 +110,13 @@
+@@ -96,6 +109,14 @@
+         target: sessionManagement
          function onAboutToSuspend() {
              root.clearPassword();
 +            fadeoutTimer.stop();
-         }
++        }
 +        function onResumingFromSuspend() {
 +            root.clearPassword();
 +            lockScreenUi.suppressNextFailure = true;
 +            authenticator.cancel();
++            authenticator.startAuthenticating();
 +            fadeoutTimer.restart();
-+        }
+         }
      }
  
-     RejectPasswordAnimation {
+--- a/desktoppackage/contents/lockscreen/MainBlock.qml
++++ b/desktoppackage/contents/lockscreen/MainBlock.qml
+@@ -64,7 +64,8 @@
+ 
+             placeholderText: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:placeholder in text field", "Password")
+             focus: true
+-            enabled: !authenticator.graceLocked
++            // graceLocked is not exposed to QML; keep the field enabled.
++            enabled: true
+ 
+             // In Qt this is implicitly active based on focus rather than visibility
+             // in any other application having a focussed invisible object would be weird
