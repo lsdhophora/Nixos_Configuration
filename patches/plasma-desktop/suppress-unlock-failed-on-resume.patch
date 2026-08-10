@@ -46,14 +46,16 @@
          }
          function onPromptForSecretChanged(msg) {
              mainBlock.showPassword = false;
-@@ -97,6 +110,11 @@
+@@ -97,6 +110,13 @@
          function onAboutToSuspend() {
              root.clearPassword();
++            fadeoutTimer.stop();
          }
 +        function onResumingFromSuspend() {
 +            root.clearPassword();
 +            lockScreenUi.suppressNextFailure = true;
 +            authenticator.cancel();
++            fadeoutTimer.restart();
 +        }
      }
  

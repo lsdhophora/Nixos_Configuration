@@ -17,6 +17,7 @@ let
       ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
       ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
       ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
+      ./../../patches/plasma-desktop/defer-failable-labels.patch
       ./../../patches/plasma-desktop/kcm-splash-dedup.patch
     ];
     plasma-workspace = [
@@ -49,8 +50,11 @@ in
   };
   security.pam.services."kde-smartcard" = {
     text = ''
-      # smartcard auth via pam_p11; PAM_AUTHINFO_UNAVAIL without a token
-      auth required ${pkgs.pam_p11}/lib/security/pam_p11.so
+      # smartcard auth via pam_p11; PAM_AUTHINFO_UNAVAIL without a token.
+      # The first argument IS the PKCS#11 module path (no "module=" prefix;
+      # pam_p11 uses argv[0] directly). opensc returns AUTHINFO_UNAVAIL
+      # when no reader is present, so the hint stays hidden.
+      auth required ${pkgs.pam_p11}/lib/security/pam_p11.so ${pkgs.opensc}/lib/opensc-pkcs11.so
     '';
   };
   services.fprintd.enable = true; # provides pam_fprintd.so and the fprintd service
