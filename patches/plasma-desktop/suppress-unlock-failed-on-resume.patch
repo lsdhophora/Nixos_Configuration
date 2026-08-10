@@ -1,61 +1,70 @@
 --- a/desktoppackage/contents/lockscreen/LockScreenUi.qml	2026-08-10 00:00:00.000000000 +0800
 +++ b/desktoppackage/contents/lockscreen/LockScreenUi.qml	2026-08-10 00:00:00.000000000 +0800
-@@ -26,6 +26,8 @@
+@@ -26,6 +26,15 @@
      // See https://bugs.kde.org/show_bug.cgi?id=398317
      readonly property bool softwareRendering: GraphicsInfo.api === GraphicsInfo.Software
  
-+    property bool suppressNextFailure: false
++    property double suppressFailuresUntil: 0
++    function failuresSuppressed() {
++        return Date.now() < suppressFailuresUntil;
++    }
++    // Set on suspend so the auth area is grey on the very first frame after
++    // wake (onResumingFromSuspend fires after the window's first render,
++    // which would otherwise show one bright frame before greying).
++    property bool resumeGrey: false
 +
      function handleMessage(msg) {
          if (!root.notification) {
              root.notification += msg;
-@@ -45,6 +47,11 @@
+@@ -45,6 +54,12 @@
              if (kind != 0) { // if this is coming from the noninteractive authenticators
                  return;
              }
-+            if (lockScreenUi.suppressNextFailure) {
-+                lockScreenUi.suppressNextFailure = false;
-+                // Restart is handled by onResumingFromSuspend; skip to avoid clearing typed input.
++            if (lockScreenUi.failuresSuppressed()) {
++                // Auth restart (and its PAM fail_delay fallout) is handled by
++                // onResumingFromSuspend; skip so the area stays grey until the
++                // graceLockTimer fires and then stays interactive.
 +                return;
 +            }
              const msg = i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:status", "Unlocking failed");
              lockScreenUi.handleMessage(msg);
              graceLockTimer.restart();
-@@ -67,15 +74,21 @@
+@@ -67,15 +82,21 @@
          }
  
          function onInfoMessageChanged() {
 -            lockScreenUi.handleMessage(authenticator.infoMessage);
-+            if (!lockScreenUi.suppressNextFailure) {
++            if (!lockScreenUi.failuresSuppressed()) {
 +                lockScreenUi.handleMessage(authenticator.infoMessage);
 +            }
          }
  
          function onErrorMessageChanged() {
 -            lockScreenUi.handleMessage(authenticator.errorMessage);
-+            if (!lockScreenUi.suppressNextFailure) {
++            if (!lockScreenUi.failuresSuppressed()) {
 +                lockScreenUi.handleMessage(authenticator.errorMessage);
 +            }
          }
  
          function onPromptChanged(msg) {
 -            lockScreenUi.handleMessage(authenticator.prompt);
-+            if (!lockScreenUi.suppressNextFailure) {
++            if (!lockScreenUi.failuresSuppressed()) {
 +                lockScreenUi.handleMessage(authenticator.prompt);
 +            }
          }
          function onPromptForSecretChanged(msg) {
              mainBlock.showPassword = false;
-@@ -96,6 +109,19 @@
+@@ -96,6 +117,20 @@
          target: sessionManagement
          function onAboutToSuspend() {
              root.clearPassword();
 +            fadeoutTimer.stop();
-+            graceLockTimer.stop();
++            lockScreenUi.resumeGrey = true;
++            graceLockTimer.start();
 +        }
 +        function onResumingFromSuspend() {
 +            root.clearPassword();
-+            lockScreenUi.suppressNextFailure = true;
++            lockScreenUi.suppressFailuresUntil = Date.now() + 5000;
 +            authenticator.cancel();
 +            // Grey out the auth area on the first frame after resume, then let
 +            // graceLockTimer (3s) restart auth past the PAM fail_delay (1s rate
@@ -66,16 +75,27 @@
          }
      }
  
-@@ -266,6 +292,12 @@
+@@ -180,6 +215,7 @@
+             id: graceLockTimer
+             interval: 3000
+             onTriggered: {
++                lockScreenUi.resumeGrey = false;
+                 root.clearPassword();
+                 authenticator.startAuthenticating();
+             }
+@@ -266,7 +302,14 @@
  
                  showUserList: userList.y + mainStack.y > 0
  
-+                // Grey out while graceLockTimer runs (upstream behaviour): the
-+                // user sees the auth area disabled and knows to wait after
-+                // resume. Safe now: onAboutToSuspend stops the timer (no
-+                // frozen-time linger across s2idle) and onResumingFromSuspend
-+                // starts it, so the area turns grey on the first frame after
-+                // wake instead of flickering bright->grey->bright.
-                 enabled: !graceLockTimer.running
+-                enabled: !graceLockTimer.running
++                // Grey out while graceLockTimer runs or resumeGrey is set
++                // (upstream behaviour, extended): the user sees the auth area
++                // disabled and knows to wait after resume. resumeGrey is set on
++                // suspend so the first frame after wake is already grey
++                // (onResumingFromSuspend fires after the window's first
++                // render). graceLockTimer restarts auth 3s later, past the PAM
++                // fail_delay rate limit, then un-greys.
++                enabled: !graceLockTimer.running && !lockScreenUi.resumeGrey
  
                  StackView.onStatusChanged: {
+                     // prepare for presenting again to the user
