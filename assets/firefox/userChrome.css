@@ -1,4 +1,4 @@
-:root { font-size: 12pt !important; }
+#main-window { font-size: 16px !important; }
 menupopup { --panel-border-radius: 8px !important; }
 #contentAreaContextMenu::part(content) { border: 1px solid #3c3c40 !important; }
 #plasma-browser-integration_kde_org-menuitem-_purpose_share,              
