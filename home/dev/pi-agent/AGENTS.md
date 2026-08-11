@@ -2,16 +2,7 @@
 
 ## Language and Writing Standard
 
-1. **Use Simplified Technical English (STE)** — Write all technical content according to the ASD-STE100 Simplified Technical English specification:
-   - Use only approved words with a single meaning (one word, one meaning).
-   - Keep sentences short: max 20 words for procedural text, max 25 words for descriptive text.
-   - Use the active voice by default. Use passive voice only when permitted by the STE rules.
-   - Do not use contractions (e.g., "don't" → "do not").
-   - Do not use -ing forms as nouns (gerunds). Use the base form instead.
-   - Do not use long noun clusters (max 3 nouns in a row).
-   - Write instructions in the imperative mood.
-   - Use articles ("a", "an", "the") correctly.
-   - Use only the approved verb tenses: simple present, simple past, present perfect.
+1. **Code style** — Follow the rules in `/home/lophophora/.config/nixos/docs/code-style.md`. Use the `equational-reasoning` and `hoare-logic` skills when their trigger conditions match.
 
 2. **Reply in the user's language** — If the user writes in a language other than English, first write the response in English following STE rules inside the thinking block (do not output it directly), then translate and output only the final response in the user's language. The English version must stay in the thinking block only.
 

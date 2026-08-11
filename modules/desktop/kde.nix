@@ -26,10 +26,8 @@ let
     ark = [
       ./../../patches/ark/batchextract-desturl.patch
     ];
-    xdg-desktop-portal-kde = [
-      ./../../patches/xdg-desktop-portal-kde/appchooser-hide-discover.patch
-      ./../../patches/xdg-desktop-portal-kde/appchooser-plain-input.patch
-    ];
+    # xdg-desktop-portal-kde is patched in the kio overlay below. Its file
+    # dialog embeds KFileWidget, so it must link the patched kio.
   };
 in
 {
@@ -86,54 +84,80 @@ in
         unstablePkgs.kdePackages
         // (lib.mapAttrs (name: patches: applyPatches patches unstablePkgs.kdePackages.${name}) kdePatches);
     })
-    # Dolphin uses the patched kio and the location-bar fix.
-    # Only Dolphin uses this kio build with the location-bar border fix.
-    # The rest of the desktop keeps the stock kio. The rebuild stays small.
-    (final: prev: {
-      dolphin =
-        let
-          patchedKio = applyPatches [
-            ./../../patches/kio/kurlnavigator-button-border.patch
-            ./../../patches/kio/openwith-hide-discover.patch
-            ./../../patches/kio/openwith-plain-input.patch
-          ] prev.kdePackages.kio;
-          patchedKdeSelf = prev.kdePackages // {
-            kio = patchedKio;
-          };
-          mkKdeDerivationForDolphin =
-            (import "${prev.path}/pkgs/kde/lib/mk-kde-derivation.nix" patchedKdeSelf)
-              {
-                inherit (unstablePkgs)
-                  lib
-                  stdenv
-                  makeSetupHook
-                  cmake
-                  ninja
-                  qt6
-                  python3
-                  python3Packages
-                  jq
-                  ;
-              };
-          patchedDolphin =
-            applyPatches
-              [
-                ./../../patches/dolphin/hide-current-dir-path-selector.patch
-              ]
-              (
-                prev.kdePackages.dolphin.override {
-                  mkKdeDerivation = mkKdeDerivationForDolphin;
-                }
-              );
-        in
-        patchedDolphin.overrideAttrs (oldAttrs: {
-          # Put the patched kio first in the link inputs.
-          # The linker and the dynamic loader then use it instead of the
-          # stock kio, which is pulled in transitively.
-          buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
-          propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
-        });
-    })
+    # Dolphin and the file portal use the patched kio and the location-bar
+    # fix. The plasma6 module pulls them from kdePackages, so the override
+    # must patch the kdePackages entries (a top-level override does not reach
+    # the desktop). The rest of the desktop keeps the stock kio. The rebuild
+    # stays small.
+    (
+      final: prev:
+      let
+        patchedKio = applyPatches [
+          ./../../patches/kio/kurlnavigator-button-border.patch
+          ./../../patches/kio/openwith-hide-discover.patch
+          ./../../patches/kio/openwith-plain-input.patch
+        ] prev.kdePackages.kio;
+        patchedKdeSelf = prev.kdePackages // {
+          kio = patchedKio;
+        };
+        mkKdeDerivationForPatchedKio =
+          (import "${prev.path}/pkgs/kde/lib/mk-kde-derivation.nix" patchedKdeSelf)
+            {
+              inherit (unstablePkgs)
+                lib
+                stdenv
+                makeSetupHook
+                cmake
+                ninja
+                qt6
+                python3
+                python3Packages
+                jq
+                ;
+            };
+        # Put the patched kio first in the link inputs. The linker and the
+        # dynamic loader then use it instead of the stock kio, which is pulled
+        # in transitively.
+        withPatchedKio =
+          pkg:
+          pkg.overrideAttrs (oldAttrs: {
+            buildInputs = [ patchedKio ] ++ (oldAttrs.buildInputs or [ ]);
+            propagatedBuildInputs = [ patchedKio ] ++ (oldAttrs.propagatedBuildInputs or [ ]);
+          });
+        patchedDolphin = withPatchedKio (
+          applyPatches
+            [
+              ./../../patches/dolphin/hide-current-dir-path-selector.patch
+            ]
+            (
+              prev.kdePackages.dolphin.override {
+                mkKdeDerivation = mkKdeDerivationForPatchedKio;
+              }
+            )
+        );
+        # The portal's file dialog embeds KFileWidget, which uses the same
+        # KUrlNavigator breadcrumb as Dolphin. Link it against the patched kio
+        # so the location-bar border fix applies there too.
+        patchedPortal = withPatchedKio (
+          applyPatches
+            [
+              ./../../patches/xdg-desktop-portal-kde/appchooser-hide-discover.patch
+              ./../../patches/xdg-desktop-portal-kde/appchooser-plain-input.patch
+            ]
+            (
+              prev.kdePackages.xdg-desktop-portal-kde.override {
+                mkKdeDerivation = mkKdeDerivationForPatchedKio;
+              }
+            )
+        );
+      in
+      {
+        kdePackages = prev.kdePackages // {
+          dolphin = patchedDolphin;
+          xdg-desktop-portal-kde = patchedPortal;
+        };
+      }
+    )
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
     (final: prev: {

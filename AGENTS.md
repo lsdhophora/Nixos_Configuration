@@ -104,6 +104,13 @@ git push                                           # push
 3. Commit (if success)
 4. Push (if success)
 
+## Code Style
+
+Follow the rules in `docs/code-style.md`:
+- STE writing standard
+- Required skills: `equational-reasoning`, `hoare-logic`
+- Nix/TypeScript style rules and commit message format
+
 ## Notes
 
 - Hardware config is auto-generated
