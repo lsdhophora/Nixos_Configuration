@@ -222,15 +222,15 @@ export default function (pi: ExtensionAPI) {
       command: Type.String({ description: "Shell command to run as root" }),
     }),
     // Show the tool name at the top-left of the call block, then the
-    // command, following the read/grep convention: bold toolTitle name +
-    // args. The bash tool uses '$ <command>'; a root shell keeps its own
-    // clear label so the privilege level is visible at a glance.
+    // command on its own line, following the read/grep convention: bold
+    // toolTitle name + args. The bash tool uses '$ <command>'; a root shell
+    // keeps its own clear label so the privilege level is visible.
     renderCall: (args, theme, _context) => {
       const command = args.command;
       const invalidArg = theme.fg("error", "?");
       return new Text(
         theme.fg("toolTitle", theme.bold("root")) +
-        " " +
+        "\n" +
         (command ? theme.fg("toolOutput", command) : invalidArg),
         0,
         0,
