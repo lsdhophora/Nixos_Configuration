@@ -222,10 +222,10 @@ export default function (pi: ExtensionAPI) {
       command: Type.String({ description: "Shell command to run as root" }),
     }),
     // Always show the command in the tool call line, like the built-in bash
-    // tool. Without this, a command with no output leaves no trace in the TUI.
+    // tool. The '#' prefix marks the root prompt (Unix convention).
     renderCall: (args, theme, _context) => {
       const command = args.command;
-      return new Text(theme.fg("toolTitle", theme.bold(`$ ${command}`)), 0, 0);
+      return new Text(theme.fg("toolTitle", theme.bold(`# ${command}`)), 0, 0);
     },
     async execute(_toolCallId, params, signal, onUpdate, _ctx) {
       if (!(await alive())) {
