@@ -221,11 +221,20 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       command: Type.String({ description: "Shell command to run as root" }),
     }),
-    // Always show the command in the tool call line, like the built-in bash
-    // tool. The '#' prefix marks the root prompt (Unix convention).
+    // Show the tool name at the top-left of the call block, then the
+    // command, following the read/grep convention: bold toolTitle name +
+    // args. The bash tool uses '$ <command>'; a root shell keeps its own
+    // clear label so the privilege level is visible at a glance.
     renderCall: (args, theme, _context) => {
       const command = args.command;
-      return new Text(theme.fg("toolTitle", theme.bold(`# ${command}`)), 0, 0);
+      const invalidArg = theme.fg("error", "?");
+      return new Text(
+        theme.fg("toolTitle", theme.bold("root")) +
+        " " +
+        (command ? theme.fg("toolOutput", command) : invalidArg),
+        0,
+        0,
+      );
     },
     async execute(_toolCallId, params, signal, onUpdate, _ctx) {
       if (!(await alive())) {
