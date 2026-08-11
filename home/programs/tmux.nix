@@ -104,8 +104,8 @@ in
       setw -g window-status-current-style 'fg=${palette.fg} bg=${palette.accent} bold'
       setw -g window-status-bell-style 'fg=${palette.fg} bg=${palette.red} bold'
 
-      # battery on kmscon or TTY only
-      set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then read c < /sys/class/power_supply/BAT0/capacity; read s < /sys/class/power_supply/BAT0/status; echo \"\$c%% \$s |\"; fi)%H:%M"
+      # battery on kmscon or TTY only; match any BAT* battery name
+      set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then for b in /sys/class/power_supply/BAT*; do [ -f \"\$b/capacity\" ] || continue; read c < \"\$b/capacity\"; read s < \"\$b/status\"; echo \"\$c%% \$s |\"; break; done; fi)%H:%M"
       set -g status-right-style 'fg=${palette.inactive} bg=${palette.bg}'
       set -g status-left "#[bg=${palette.accent},fg=${palette.fg},bold] #S #[default]"
       set -g status-left-style 'bg=${palette.bg}'

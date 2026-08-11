@@ -26,15 +26,11 @@ let
   localsend-wrapped = wrapPackage {
     name = "localsend";
     pkg = pkgs.localsend;
+    buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
-            rm $out/bin/localsend_app
-            cat > $out/bin/localsend_app <<'SCRIPT'
-      #!/bin/sh
-      export GTK_THEME=Breeze:dark
-      export GTK_CSD=0
-      exec ${pkgs.localsend}/bin/localsend_app "$@"
-      SCRIPT
-            chmod +x $out/bin/localsend_app
+      wrapProgram $out/bin/localsend_app \
+        --set GTK_THEME "Breeze:dark" \
+        --set GTK_CSD 0
     '';
   };
 in

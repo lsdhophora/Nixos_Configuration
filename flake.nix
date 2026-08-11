@@ -18,6 +18,6 @@
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" ];
-      imports = [ ./flake-modules/default.nix ];
+      imports = [ ./flake-modules/nixos.nix ];
     };
 }

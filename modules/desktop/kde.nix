@@ -74,11 +74,8 @@ in
   services.power-profiles-daemon.enable = false;
 
   nixpkgs.overlays = [
-    # Use the unstable kdePackages set as the base for the whole desktop.
-    (final: prev: {
-      kdePackages = unstablePkgs.kdePackages;
-    })
-    # Apply the per-package patch sets from `kdePatches` above.
+    # Use the unstable kdePackages set as the base for the whole desktop
+    # and apply the per-package patch sets from `kdePatches` above.
     # Note: only the listed packages are rebuilt; packages that depend on
     # them (e.g. kwin -> kscreenlocker) keep their stock outputs. This
     # keeps the rebuild small and lets cache.nixos.org serve the rest.
@@ -86,8 +83,8 @@ in
     # turning everything into custom builds that miss the binary cache.)
     (final: prev: {
       kdePackages =
-        prev.kdePackages
-        // (lib.mapAttrs (name: patches: applyPatches patches prev.kdePackages.${name}) kdePatches);
+        unstablePkgs.kdePackages
+        // (lib.mapAttrs (name: patches: applyPatches patches unstablePkgs.kdePackages.${name}) kdePatches);
     })
     # Dolphin uses the patched kio and the location-bar fix.
     # Only Dolphin uses this kio build with the location-bar border fix.

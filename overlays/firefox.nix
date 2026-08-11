@@ -49,7 +49,6 @@ let
   '';
 
   mkPkg =
-    extra:
     final.runCommand "firefox-unwrapped-patched-${ff.version}"
       {
         nativeBuildInputs = commonNativeBuildInputs;
@@ -58,14 +57,13 @@ let
       }
       ''
         ${mkBase}
-        ${extra}
         ${patch-omni-ja}
       '';
 in
 {
   inherit tridactyl-native;
 
-  firefox-patched = final.wrapFirefox (mkPkg "") {
+  firefox-patched = final.wrapFirefox mkPkg {
     nativeMessagingHosts = [
       final.tridactyl-native
       final.kdePackages.plasma-browser-integration

@@ -1,4 +1,8 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+let
+  palette = (import ../../lib).kittyPalette;
+in
+{
   programs.kitty = {
     enable = true;
     package = pkgs.kitty;
@@ -23,29 +27,29 @@
       enabled_layouts = "splits,stack,tall,fat,grid,horizontal,vertical";
       font_family = "JetBrains Maple Mono";
       font_size = 14.0;
-      foreground = "#ffffff";
-      background = "#1e1e1e";
-      color0 = "#171421";
-      color1 = "#c01c28";
-      color2 = "#26a269";
-      color3 = "#a2734c";
-      color4 = "#12488b";
-      color5 = "#a347ba";
-      color6 = "#2aa1b3";
-      color7 = "#d0cfcc";
-      color8 = "#5e5c64";
-      color9 = "#f66151";
-      color10 = "#33d17a";
-      color11 = "#e9ad0c";
-      color12 = "#2a7bde";
-      color13 = "#c061cb";
-      color14 = "#33c7de";
-      color15 = "#ffffff";
+      foreground = palette.foreground;
+      background = palette.background;
+      color0 = palette.color0;
+      color1 = palette.color1;
+      color2 = palette.color2;
+      color3 = palette.color3;
+      color4 = palette.color4;
+      color5 = palette.color5;
+      color6 = palette.color6;
+      color7 = palette.color7;
+      color8 = palette.color8;
+      color9 = palette.color9;
+      color10 = palette.color10;
+      color11 = palette.color11;
+      color12 = palette.color12;
+      color13 = palette.color13;
+      color14 = palette.color14;
+      color15 = palette.color15;
       confirm_os_window_close = 0;
       placement_strategy = "top-left";
       tab_bar_style = "hidden";
-      selection_foreground = "#ffffff";
-      selection_background = "#3a4b6b";
+      selection_foreground = palette.selection_foreground;
+      selection_background = palette.selection_background;
     };
   };
 }

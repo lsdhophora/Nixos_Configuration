@@ -3,11 +3,22 @@ let
   system = "x86_64-linux";
 in
 {
+  # flake-parts convention: formatter for `nix fmt`, devShell for `nix develop`.
+  perSystem = { pkgs, ... }: {
+    formatter = pkgs.nixfmt;
+    devShells.default = pkgs.mkShell {
+      packages = [
+        pkgs.nixd
+        pkgs.nixfmt
+      ];
+    };
+  };
+
   flake.nixosConfigurations.flowerpot = inputs.nixpkgs.lib.nixosSystem {
     inherit system;
     pkgs = import inputs.nixpkgs {
       inherit system;
-      overlays = (import ../overlays/default.nix);
+      overlays = (import ../overlays/default.nix) inputs.nixpkgs.lib;
     };
     specialArgs = { inherit inputs; };
     modules = [

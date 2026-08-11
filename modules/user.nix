@@ -1,6 +1,5 @@
 {
   pkgs,
-  inputs,
   config,
   ...
 }:
@@ -21,7 +20,7 @@
     nano
     git
     wget
-    inputs.sops-nix.packages.x86_64-linux.default
+    sops
   ];
 
   system.stateVersion = "25.05";
