@@ -21,6 +21,7 @@
     ./desktop/dconf.nix
     ./desktop/gtk.nix
     ./desktop/session.nix
+    ./desktop/lid-wake.nix
 
     # ---- Programs ----
     ./programs/firefox.nix
