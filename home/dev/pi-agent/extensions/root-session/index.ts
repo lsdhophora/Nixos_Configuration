@@ -10,6 +10,7 @@
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { Text } from "@earendil-works/pi-tui";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
@@ -21,6 +22,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DAEMON_JS = path.join(__dirname, "daemon.js");
 const PING = "__PING__";
 const EXIT = "__EXIT__";
+// The daemon appends a NUL-framed exit-code record after the process ends.
+// The client strips it from the output and uses it for status reporting.
+const EXIT_FRAME_RE = /\u0000EXIT:([^\u0000]*)\u0000/g;
 
 function socketPath(sid: string): string {
   const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid()}`;
@@ -217,6 +221,12 @@ export default function (pi: ExtensionAPI) {
     parameters: Type.Object({
       command: Type.String({ description: "Shell command to run as root" }),
     }),
+    // Always show the command in the tool call line, like the built-in bash
+    // tool. Without this, a command with no output leaves no trace in the TUI.
+    renderCall: (args, theme, _context) => {
+      const command = args.command;
+      return new Text(theme.fg("toolTitle", theme.bold(`$ ${command}`)), 0, 0);
+    },
     async execute(_toolCallId, params, signal, onUpdate, _ctx) {
       if (!(await alive())) {
         return {
@@ -228,7 +238,7 @@ export default function (pi: ExtensionAPI) {
         };
       }
       const cmd = params.command;
-      let acc = "";
+      const stripFrames = (s: string) => s.replace(EXIT_FRAME_RE, "");
 
       // Throttled streaming: mimics pi's built-in bash tool behavior.
       // Fire at most once every THROTTLE_MS to avoid overwhelming the TUI render loop.
@@ -236,12 +246,13 @@ export default function (pi: ExtensionAPI) {
       let updateTimer: ReturnType<typeof setTimeout> | undefined;
       let updateDirty = false;
       let lastUpdateAt = 0;
+      let acc = "";
 
       const emitUpdate = () => {
         if (!onUpdate || !updateDirty) return;
         updateDirty = false;
         lastUpdateAt = Date.now();
-        onUpdate({ content: [{ type: "text", text: `$ ${cmd}\n${acc}` }] });
+        onUpdate({ content: [{ type: "text", text: acc }] });
       };
 
       const scheduleUpdate = () => {
@@ -263,23 +274,39 @@ export default function (pi: ExtensionAPI) {
       // Signal to the TUI that streaming updates are coming.
       if (onUpdate) onUpdate({ content: [], details: undefined });
 
+      let rawAcc = "";
+      let exitCode: number | null = null;
       let out: string;
       try {
-        out = await request(sock(), cmd, 1800000, (chunk) => {
-          acc += chunk;
+        await request(sock(), cmd, 1800000, (chunk) => {
+          rawAcc += chunk;
+          acc = stripFrames(rawAcc);
           scheduleUpdate();
         }, signal);
+        for (const m of rawAcc.matchAll(EXIT_FRAME_RE)) {
+          const code = parseInt(m[1], 10);
+          exitCode = Number.isNaN(code) ? null : code;
+        }
+        out = stripFrames(rawAcc);
       } catch (e) {
-        out = "root-session error: " + (e as Error).message;
+        const msg = (e as Error).message;
+        if (msg === "Command aborted") throw new Error("Command aborted");
+        out = "root-session error: " + msg;
       }
 
       // Flush any pending update.
       clearTimeout(updateTimer);
       emitUpdate();
 
+      const text = out || "(no output)";
+      if (exitCode !== null && exitCode !== 0) {
+        throw new Error(
+          text ? `${text}\n\nCommand exited with code ${exitCode}` : `Command exited with code ${exitCode}`,
+        );
+      }
       return {
-        content: [{ type: "text", text: `$ ${cmd}\n${out || "(no output)"}` }],
-        details: { active: true, command: cmd },
+        content: [{ type: "text", text }],
+        details: { active: true, command: cmd, exitCode },
       };
     },
   });

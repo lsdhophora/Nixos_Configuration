@@ -66,27 +66,30 @@ const server = net.createServer((conn) => {
       stdio: ["ignore", "pipe", "pipe"],
     });
     currentProc = proc;
-    let hasOutput = false;
+    let finished = false;
+    // Report the exit code with a NUL-framed record after the process ends.
+    // The client strips the frame from the output and reads the code.
+    const finish = (code) => {
+      if (finished) return;
+      finished = true;
+      try { conn.write(`\u0000EXIT:${code}\u0000`); } catch { /* connection gone */ }
+      conn.end();
+    };
     proc.stdout.on("data", (chunk) => {
-      hasOutput = true;
       try { conn.write(chunk); } catch { /* connection gone */ }
     });
     proc.stderr.on("data", (chunk) => {
-      hasOutput = true;
       try { conn.write(chunk); } catch { /* connection gone */ }
     });
     proc.on("error", (err) => {
       currentProc = null;
       const msg = `root-session error: ${err.message}\n`;
-      try { conn.write(hasOutput ? msg : msg); } catch { /* connection gone */ }
-      if (!hasOutput) conn.end();
+      try { conn.write(msg); } catch { /* connection gone */ }
+      finish("null");
     });
     proc.on("close", (code) => {
       currentProc = null;
-      if (!hasOutput && code !== 0) {
-        try { conn.write(`root-session error: exit code ${code}\n`); } catch {}
-      }
-      conn.end();
+      finish(code === null ? "null" : String(code));
     });
   });
 
