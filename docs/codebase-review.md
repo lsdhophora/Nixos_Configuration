@@ -1,8 +1,10 @@
-#+TITLE: 代码库评审报告 — NixOS 配置 (flowerpot)
-#+DATE: 2026-08-11
-#+AUTHOR: pi (code review)
+# 代码库评审报告 — NixOS 配置 (flowerpot)
+
+- 日期: 2026-08-11
+- 作者: pi (code review)
 
 本报告依据三类标准:
+
 1. PL 理论 (程序语言原理)
 2. 社区优秀写法 (flake-parts 官方文档, nix-starter-configs, nix.dev, NixOS Discourse)
 3. nixpkgs lib 抽象
@@ -11,33 +13,32 @@
 多数模块已用数据驱动写法 (tmux.nix 的 bindKeys, kde.nix 的 kdePatches, firefox.nix 的
 mozAddon)。以下问题按优先级排列。
 
-* P0 — 值得立即修改
+## P0 — 值得立即修改
 
-** 1. 死代码: root-session/daemon.js 的重言式三元表达式
-:PROPERTIES:
-:FILE: home/dev/pi-agent/extensions/root-session/daemon.js
-:END:
+### 1. 死代码: root-session/daemon.js 的重言式三元表达式
 
-#+begin_src js
+文件: `home/dev/pi-agent/extensions/root-session/daemon.js`
+
+```js
 proc.on("error", (err) => {
   const msg = `root-session error: ${err.message}\n`;
   try { conn.write(hasOutput ? msg : msg); } catch { /* connection gone */ }
   if (!hasOutput) conn.end();
 });
-#+end_src
+```
 
 `hasOutput ? msg : msg` 两个分支相同。这是重言式 (tautology), 属于死代码。
 
 修改: `conn.write(msg);`
 
-** 2. stateVersion 建议撤回 (原 P0-2)
-:PROPERTIES:
-:FILE: home/default.nix, modules/user.nix
-:END:
+### 2. stateVersion 建议撤回 (原 P0-2)
+
+文件: `home/default.nix`, `modules/user.nix`
 
 原报告建议把两处 stateVersion 提取为共享常量。此建议错误, 已撤回。
 
 原因 (依据官方文档与社区讨论):
+
 - `system.stateVersion` 记录本机首次安装的 NixOS 版本。官方选项文档:
   "Most users should never change this value after the initial install, for any reason"。
 - NixOS wiki FAQ (When do I update stateVersion) 的警告:
@@ -51,43 +52,41 @@ proc.on("error", (err) => {
 结论: 两处字面量是碰巧相同的独立事实, 不是重复代码。保持原样。
 若需改进, 只在两处各加一行注释说明用途与不可改动。
 
-** 3. 硬编码架构 + 绕道 flake input: user.nix 的 sops 包
-:PROPERTIES:
-:FILE: modules/user.nix
-:END:
+### 3. 硬编码架构 + 绕道 flake input: user.nix 的 sops 包
 
-#+begin_src nix
+文件: `modules/user.nix`
+
+```nix
 inputs.sops-nix.packages.x86_64-linux.default
-#+end_src
+```
 
 问题:
+
 - `x86_64-linux` 是硬编码架构字符串。flake 已把 system 固定为 x86_64-linux, 但硬编码
   字符串是代码异味。
 - `pkgs.sops` 就在 nixpkgs 里 (已验证存在)。绕道 sops-nix input 取包没有必要。
 
 修改: `pkgs.sops`。sops-nix 仍需保留作为 NixOS 模块, 但包直接取 nixpkgs。
 
-** 4. DRY 违反: mpv.nix 硬编码 palette 值
-:PROPERTIES:
-:FILE: home/programs/mpv.nix
-:END:
+### 4. DRY 违反: mpv.nix 硬编码 palette 值
+
+文件: `home/programs/mpv.nix`
 
 文件已 import breezeDark palette, 但 osd 颜色仍是字面量:
 
-#+begin_src nix
+```nix
 osd-color = "#FCFCFC";         # 应为 palette.fg
 osd-border-color = "#202326";  # 应为 palette.bg
 osd-back-color = "#202326";    # 应为 palette.bg
-#+end_src
+```
 
 修改: 在 config 内引用 palette 变量 (palette 已在 scriptOpts 的 let 中定义)。
 
-** 5. 命令式 heredoc 替代声明式 wrapper: gui.nix localsend
-:PROPERTIES:
-:FILE: home/misc/gui.nix
-:END:
+### 5. 命令式 heredoc 替代声明式 wrapper: gui.nix localsend
 
-#+begin_src nix
+文件: `home/misc/gui.nix`
+
+```nix
 postBuild = ''
         rm $out/bin/localsend_app
         cat > $out/bin/localsend_app <<'SCRIPT'
@@ -98,27 +97,27 @@ postBuild = ''
   SCRIPT
         chmod +x $out/bin/localsend_app
 '';
-#+end_src
+```
 
 问题:
+
 - heredoc 主体缩进 (2 空格) 小于 Nix 缩进字符串的公共缩进 (8 空格)。Nix 的公共缩进
   剥离算法会让结果依赖最小缩进行。这是已知 footgun, 容易静默出错。
 - 手写 shell 脚本是命令式风格。同文件 kdenlive 已用 makeWrapper, 这里应一致。
 
 修改: 用 wrapProgram 声明式完成。
 
-#+begin_src nix
+```nix
 postBuild = ''
   wrapProgram $out/bin/localsend_app \
     --set GTK_THEME "Breeze:dark" \
     --set GTK_CSD 0
 '';
-#+end_src
+```
 
-** 6. 类型安全与一致性: no-cost-footer.ts
-:PROPERTIES:
-:FILE: home/dev/pi-agent/extensions/no-cost-footer.ts
-:END:
+### 6. 类型安全与一致性: no-cost-footer.ts
+
+文件: `home/dev/pi-agent/extensions/no-cost-footer.ts`
 
 - `enable(ctx: any)` 用 `any` 擦除类型。仓库其他扩展都用具体类型。这是类型安全缺口。
 - 该文件用 tab 缩进, 其他扩展用 2 空格。与仓库风格不一致。
@@ -126,61 +125,58 @@ postBuild = ''
 - `const autoEnabled = true;` 是推断的常量。若 pi 的默认值变化, 此处失真。
   若 API 提供, 应读真实配置; 否则直接内联 true 并加注释说明来源。
 
-** 7. 正则代替谓词: overlays/default.nix
-:PROPERTIES:
-:FILE: overlays/default.nix
-:END:
+### 7. 正则代替谓词: overlays/default.nix
 
-#+begin_src nix
+文件: `overlays/default.nix`
+
+```nix
 builtins.filter (name: name != "default.nix" && builtins.match ".*\\.nix" name != null)
-#+end_src
+```
 
 `builtins.match` 是正则匹配, 语义过强。意图只是后缀判断。
 nixpkgs 惯例是 `lib.hasSuffix` (nix.dev best practices 推荐 lib 而非 builtins, lib 可演进)。
 
 修改:
 
-#+begin_src nix
+```nix
 builtins.filter (name: name != "default.nix" && lib.hasSuffix ".nix" name)
-#+end_src
+```
 
-* P1 — 结构改进
+## P1 — 结构改进
 
-** 8. 死参数: overlays/firefox.nix 的 mkPkg
-:PROPERTIES:
-:FILE: overlays/firefox.nix
-:END:
+### 8. 死参数: overlays/firefox.nix 的 mkPkg
 
-#+begin_src nix
+文件: `overlays/firefox.nix`
+
+```nix
 mkPkg = extra: final.runCommand ... '' ${mkBase} ${extra} ${patch-omni-ja} '';
-#+end_src
+```
 
 `mkPkg` 只被调用一次: `mkPkg ""`。`extra` 参数恒为空字符串, 是死参数。
 抽象没有带来任何扩展点, 反而增加一层间接。
 
 修改: 去掉 `extra` 参数, 直接内联构建脚本。
 
-** 9. 空转发层: flake-modules/default.nix
-:PROPERTIES:
-:FILE: flake-modules/default.nix
-:END:
+### 9. 空转发层: flake-modules/default.nix
 
-#+begin_src nix
+文件: `flake-modules/default.nix`
+
+```nix
 { ... }: {
   imports = [ ./nixos.nix ];
 }
-#+end_src
+```
 
 这是对单个子文件的空转发。flake-parts 允许在 flake 的 attrset 中直接写 imports,
 这一层没有信息量。可以合并, 或者保留作为未来的扩展点 (当模块增多时)。
 优先级低, 保留也可接受。
 
-** 10. 三个 overlay 可合并: kde.nix
-:PROPERTIES:
-:FILE: modules/desktop/kde.nix
-:END:
+### 10. 三个 overlay 可合并: kde.nix
+
+文件: `modules/desktop/kde.nix`
 
 `nixpkgs.overlays` 中列了 3 个条目:
+
 1. kdePackages = unstablePkgs.kdePackages
 2. kdePackages = prev.kdePackages // 打补丁
 3. dolphin 特殊处理
@@ -190,34 +186,34 @@ mkPkg = extra: final.runCommand ... '' ${mkBase} ${extra} ${patch-omni-ja} '';
 appendOverlays, 所以没有重复 import nixpkgs 的成本。合并主要是可读性: 1 和 2
 对同一属性 (kdePackages) 连续操作, 合并成一个 overlay 函数更清晰。
 
-** 11. flake 缺少 perSystem 惯例
-:PROPERTIES:
-:FILE: flake-modules/nixos.nix
-:END:
+### 11. flake 缺少 perSystem 惯例
+
+文件: `flake-modules/nixos.nix`
 
 flake-parts 最佳实践: 大部分构建与测试工作在 perSystem 中进行。
 本 flake 只有 nixosConfigurations, 没有:
+
 - `formatter` (nixfmt 格式化整个仓库)
 - `devShells` (nixd, nixfmt 的开发环境)
 - `checks` (如 `nix flake check`)
 
 建议在 flake-modules 中加一个:
 
-#+begin_src nix
+```nix
 { ... }: {
   perSystem = { pkgs, ... }: {
     formatter = pkgs.nixfmt;
     devShells.default = pkgs.mkShell { packages = [ pkgs.nixd pkgs.nixfmt ]; };
   };
 }
-#+end_src
+```
 
-** 12. lib 抽象的机会
-:PROPERTIES:
-:FILE: lib/default.nix
-:END:
+### 12. lib 抽象的机会
+
+文件: `lib/default.nix`
 
 现有 lib (applyPatches, breezeDark) 是好的抽象, 使用一致。可扩展:
+
 - `system = "x86_64-linux"` 常量, 消除 flake-modules/nixos.nix 与 user.nix 的硬编码
   (stateVersion 除外, 见 P0-2 撤回)
 - 终端/编辑器共享配色 (kitty, vscodium, firefox 目前各写各的颜色)
@@ -225,69 +221,65 @@ flake-parts 最佳实践: 大部分构建与测试工作在 perSystem 中进行�
   "The desktop keeps one theme", 但 kitty 是例外。若是有意为之, 应更新注释;
   若想统一, 可从 palette 生成。
 
-* P2 — 健壮性与未来方向
+## P2 — 健壮性与未来方向
 
-** 13. tmux 电池路径硬编码
-:PROPERTIES:
-:FILE: home/programs/tmux.nix
-:END:
+### 13. tmux 电池路径硬编码
+
+文件: `home/programs/tmux.nix`
 
 status-right 读 `/sys/class/power_supply/BAT0/capacity`。电池名硬编码为 BAT0。
 若硬件改名 (BAT1, BAT2), 状态栏静默显示空。可用 glob 匹配或 shell 遍历。
 低风险, 已知本机是 BAT0 即可。
 
-** 14. housekeeping.nix 的哈希后缀
-:PROPERTIES:
-:FILE: home/misc/housekeeping.nix
-:END:
+### 14. housekeeping.nix 的哈希后缀
+
+文件: `home/misc/housekeeping.nix`
 
 `userapp-transmission-gtk-33DDK3.desktop` — 后缀由桌面环境生成, 可能随版本变化。
 脆弱的命名, 但无更好办法。保留并加注释说明即可。
 
-** 15. vscodium 激活脚本吞错误
-:PROPERTIES:
-:FILE: home/programs/vscodium.nix
-:END:
+### 15. vscodium 激活脚本吞错误
+
+文件: `home/programs/vscodium.nix`
 
 `codium --list-extensions > /dev/null 2>&1 || true` — 每次 rebuild 都运行 codium,
 失败被 `|| true` 吞掉。声明式配置里的命令式激活, 是已知权衡。
 可接受, 但建议注释说明为何需要 (extensions.json 重建)。
 
-** 16. 未来方向: import-tree / dendritic 模式
-:PROPERTIES:
-:URL: https://iampavel.dev/blog/nixos-module-organization
-:END:
+### 16. 未来方向: import-tree / dendritic 模式
+
+参考: <https://iampavel.dev/blog/nixos-module-organization>
 
 高级社区模式: 每个模块文件自注册 (flake.modules.nixos.<name>), host 显式 import。
 优点: 加模块不改 import 列表, host 差异可 diff。
 适用场景: 40+ 模块、多主机。本仓库 1 台机器约 30 个文件, 现有 import 菜单
 (hosts/flowerpot/default.nix) 已足够清晰。可作为多机化时的迁移方向, 现在不必做。
 
-** 17. 模块 options 化 (可选)
-:PROPERTIES:
-:URL: https://flake.parts/best-practices-for-module-writing
-:END:
+### 17. 模块 options 化 (可选)
+
+参考: <https://flake.parts/best-practices-for-module-writing>
 
 flake-parts 官方建议: 可复用模块声明 options, 配置直接赋值。
 本仓库模块是纯配置 (import 即生效), 与 nix-starter-configs 的 simple 风格一致,
 对单机完全够用。若未来想在多个 host 间开关服务, 再迁移到 options 风格。
 
-* 社区对照表
+## 社区对照表
 
 | 实践 (来源)                                   | 本仓库状态           |
-|-----------------------------------------------+----------------------|
-| 不遍历 inputs (flake.parts)                   | 遵守, 只在 nixos.nix inherit inputs |
-| 不假设 inputs 存在 (flake.parts)              | 遵守                 |
-| 使用 perSystem (flake.parts)                  | 缺 formatter/devShell (P1-11) |
-| 模块按功能组织 (nix-starter-configs standard) | 遵守                 |
-| 数据驱动生成配置 (tmux bindKeys 模式)         | 已实践, 应推广       |
-| 优先 lib 而非 builtins (nix.dev)              | 基本遵守, overlays/default.nix 例外 (P0-7) |
-| lib.mkDefault 用于可复用模块 (flake.parts)    | pipewire.nix 在纯配置中用 mkDefault, 可简化为直接赋值 |
-| 单一事实来源 (PL: DRY)                        | mpv 颜色, user.nix 违反; stateVersion 是独立事实, 非重复 (见 P0-2 撤回) |
+|------------------------------------------------|----------------------|
+| 不遍历 inputs (flake.parts)                    | 遵守, 只在 nixos.nix inherit inputs |
+| 不假设 inputs 存在 (flake.parts)               | 遵守                 |
+| 使用 perSystem (flake.parts)                   | 缺 formatter/devShell (P1-11) |
+| 模块按功能组织 (nix-starter-configs standard)  | 遵守                 |
+| 数据驱动生成配置 (tmux bindKeys 模式)          | 已实践, 应推广       |
+| 优先 lib 而非 builtins (nix.dev)               | 基本遵守, overlays/default.nix 例外 (P0-7) |
+| lib.mkDefault 用于可复用模块 (flake.parts)     | pipewire.nix 在纯配置中用 mkDefault, 可简化为直接赋值 |
+| 单一事实来源 (PL: DRY)                         | mpv 颜色, user.nix 违反; stateVersion 是独立事实, 非重复 (见 P0-2 撤回) |
 
-* 修改清单摘要
+## 修改清单摘要
 
 按推荐顺序:
+
 1. daemon.js: 死代码三元表达式 (P0-1)
 2. user.nix: pkgs.sops (P0-3)
 3. mpv.nix: osd 颜色引用 palette (P0-4)
