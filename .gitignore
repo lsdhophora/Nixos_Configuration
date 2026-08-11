@@ -15,3 +15,6 @@ nixpkgs/
 # nix build result symlinks
 result
 nix-build-test/
+
+# pi agent scheduler state
+.pi/
