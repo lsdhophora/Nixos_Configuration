@@ -35,12 +35,6 @@ The exa-gate extension controls the exa tools. The tools are disabled by default
 4. **One-shot scope** — Authorization expires at the end of the round. The next round needs a new prefix.
 5. **The {search} or {exa} prefix authorizes Exa for one round only.**
 
-## Documentation Format
-
-1. Write explanatory documents (reports, summaries, check packages, release notes) in org-mode format by default.
-2. Use the `*.org` file extension.
-3. Use markdown only when the target tool requires it (for example, GitHub README).
-
 ## Pi Configuration Management
 
 Do not modify the `~/.pi/agent/` directory directly. Modify `~/.config/nixos/` instead.
