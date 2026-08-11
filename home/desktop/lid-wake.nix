@@ -11,6 +11,7 @@ in
   # KIdleTime::simulateUserActivity(). On Wayland, this function is a
   # no-op. KWin handles the lid switch only from Plasma 6.8 on. Until
   # then, watch the UPower lid property and force the screen on.
+  # TODO: remove this module when unstable nixpkgs ships Plasma 6.8.
   systemd.user.services.lid-wake = {
     Unit = {
       Description = "Turn the screen on when the laptop lid opens";
