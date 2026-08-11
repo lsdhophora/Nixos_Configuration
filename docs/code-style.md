@@ -36,17 +36,14 @@ Apply these skills when their trigger conditions match:
 - Keep modules flat. Import them from the host menu.
 - Keep `stateVersion` values as independent facts. Never change them after the initial install.
 
-### TypeScript and JavaScript
+### All Languages
 
-- Use 2-space indentation.
-- Type the extension context. Do not use `any`.
+- Use consistent indentation (2 spaces).
+- Keep lines short.
+- Type your code explicitly. Do not erase type information.
 - Write comments in STE English.
 - Match the style of the surrounding code.
-
-### Shell
-
-- Keep lines short.
-- Prefer declarative Nix wrappers over imperative scripts.
+- Do not copy-paste. Extract shared helpers into lib.
 
 ## Commit Messages
 
