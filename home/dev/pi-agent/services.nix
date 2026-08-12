@@ -1,13 +1,16 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   t = "${pkgs.tmux}/bin/tmux";
   pi = "${pkgs.pi-coding-agent}/bin/pi";
+  # Disabled: the HVAuto cron task is disabled, so the resident session
+  # is not needed. Re-enable by setting `enable = true`.
+  enable = false;
 in
 {
   # Restore the hv-farm tmux session automatically on login (and after reboot).
   # It runs a dedicated pi in ~/Projects/HVAuto. pi-scheduler can then
   # restore its cron tasks from ~/Projects/HVAuto/.pi/scheduler.json.
-  systemd.user.services.hv-farm = {
+  systemd.user.services.hv-farm = lib.mkIf enable {
     Unit.Description = "Restore hv-farm tmux session (pi + pi-scheduler)";
     Service = {
       Type = "oneshot";
