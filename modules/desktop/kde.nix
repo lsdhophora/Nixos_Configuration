@@ -64,6 +64,7 @@ in
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
     discover
+    kate # kwrite lives in kate; we use other editors
   ];
 
   services.displayManager.sddm.enable = lib.mkForce false;
