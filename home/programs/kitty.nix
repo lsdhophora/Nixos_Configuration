@@ -26,6 +26,9 @@ in
     settings = {
       enabled_layouts = "splits,stack,tall,fat,grid,horizontal,vertical";
       font_family = "Iosevka";
+      # ①-⑳ / ㉑-㉟ 序号用 CJK 字体渲染（Iosevka 内数字太小）
+      "symbol_map U+2460-U+24FF" = "Noto Sans Mono CJK SC";
+      "symbol_map U+3251-U+32BF" = "Noto Sans Mono CJK SC";
       font_size = 14.0;
       foreground = palette.foreground;
       background = palette.background;

@@ -1,0 +1,17 @@
+--- a/kitty/char-props.c
++++ b/kitty/char-props.c
+@@ -20,7 +20,12 @@ ensure_char_in_range(const char_type value) {
+ 
+ CharProps
+ char_props_for(char_type ch) {
+     ch = ensure_char_in_range(ch);
+-    return CharProps_t3[CharProps_t2[(CharProps_t1[ch >> CharProps_shift] << CharProps_shift) + (ch & CharProps_mask)]];
++    CharProps ans = CharProps_t3[CharProps_t2[(CharProps_t1[ch >> CharProps_shift] << CharProps_shift) + (ch & CharProps_mask)]];
++    // Force Enclosed Alphanumerics (U+2460-U+24FF, e.g. circled 3 / 10 / 0)
++    // to double width. Their glyphs are 2-cell CJK designs; kitty otherwise
++    // lays them out in a single cell, squishing the inner numeral.
++    if (ch >= 0x2460 && ch <= 0x24ff) ans.shifted_width = 6;  // 6 - 4 (width_shift) = 2 cells
++    return ans;
+ }
+ 
+ void
