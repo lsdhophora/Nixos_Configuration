@@ -46,6 +46,10 @@
 
       routing {
         pname(NetworkManager) -> direct
+        # ZeroTier control + hole-punching traffic must stay direct
+        # (pname covers egress; dport covers ingress to the laptop's 9993).
+        pname(zerotier-one) -> direct
+        l4proto(udp) && dport(9993) -> direct
         dip(224.0.0.0/3, 'ff00::/8') -> direct
         l4proto(udp) && dport(443) -> block
         dip(geoip:private) -> direct
