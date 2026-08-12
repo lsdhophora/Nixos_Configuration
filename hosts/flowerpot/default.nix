@@ -27,6 +27,7 @@
     ../../modules/services/cups.nix
     ../../modules/services/dae.nix
     ../../modules/services/openssh.nix
+    ../../modules/services/zerotier.nix
 
     # ---- Desktop ----
     ../../modules/desktop/kde.nix

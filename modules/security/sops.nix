@@ -19,6 +19,9 @@
   # /run/secrets.d gives EACCES and access-tokens stays empty.
   sops.secrets.access-tokens-github = { };
 
+  # ZeroTier network ID, consumed by modules/services/zerotier.nix.
+  sops.secrets.zerotier-network-id = { };
+
   sops.templates."nix-user.conf" = {
     content = ''
       access-tokens = github.com=${config.sops.placeholder.access-tokens-github}
