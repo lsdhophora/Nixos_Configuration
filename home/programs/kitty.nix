@@ -25,7 +25,7 @@ in
     };
     settings = {
       enabled_layouts = "splits,stack,tall,fat,grid,horizontal,vertical";
-      font_family = "JetBrains Maple Mono";
+      font_family = "Iosevka";
       font_size = 14.0;
       foreground = palette.foreground;
       background = palette.background;
