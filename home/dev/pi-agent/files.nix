@@ -42,6 +42,7 @@ in
         text = builtins.toJSON {
           defaultProvider = "deepseek";
           defaultModel = "deepseek-v4-flash";
+          theme = "light";
           packages = [
             "git:github.com/Fletcher-Alderton/exa-pi"
             "npm:pi-subdir-context"
