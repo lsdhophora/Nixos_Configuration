@@ -74,11 +74,11 @@
     "syntaxPunctuation": "text",
 
     "thinkingOff": "border",
-    "thinkingMinimal": "dim",
-    "thinkingLow": "blue",
-    "thinkingMedium": "teal",
-    "thinkingHigh": "purple",
-    "thinkingXhigh": "red",
+    "thinkingMinimal": "border",
+    "thinkingLow": "border",
+    "thinkingMedium": "border",
+    "thinkingHigh": "border",
+    "thinkingXhigh": "border",
 
     "bashMode": "green"
   },

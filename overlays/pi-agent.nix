@@ -6,6 +6,7 @@ final: prev: {
   pi-coding-agent = prev.pi-coding-agent.overrideAttrs (oldAttrs: {
     postInstall = (oldAttrs.postInstall or "") + ''
       node ${../patches/pi-agent/patch-editor-prompt.mjs} "$out"
+      node ${../patches/pi-agent/patch-editor-cursor.mjs} "$out"
     '';
   });
 }
