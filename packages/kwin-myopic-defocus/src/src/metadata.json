@@ -1,0 +1,18 @@
+{
+    "KPlugin": {
+        "Name": "Myopic Defocus",
+        "Description": "Blurs the green and blue channels of the whole screen while keeping red sharp, simulating myopic chromatic defocus (\"red in focus\") for eye care during computer work.",
+        "Category": "Appearance",
+        "Authors": [
+            {
+                "Name": "kwin-myopic-defocus contributors",
+                "Email": ""
+            }
+        ],
+        "License": "GPL-3.0-or-later",
+        "Version": "0.1.0",
+        "EnabledByDefault": false,
+        "Website": "https://emacs-china.org/t/vibe-coding/30816"
+    },
+    "X-KDE-ConfigModule": "kwin_effect_myopicdefocus_config"
+}

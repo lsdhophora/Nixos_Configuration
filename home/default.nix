@@ -22,6 +22,7 @@
     ./desktop/gtk.nix
     ./desktop/session.nix
     ./desktop/lid-wake.nix
+    ./desktop/kwin-myopic-defocus.nix
 
     # ---- Programs ----
     ./programs/firefox.nix

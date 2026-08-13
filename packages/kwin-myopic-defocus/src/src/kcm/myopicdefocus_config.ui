@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MyopicDefocusConfig</class>
+ <widget class="QWidget" name="MyopicDefocusConfig">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="descriptionLabel">
+     <property name="text">
+      <string>Blurs the green and blue color channels of the whole screen while keeping red sharp, simulating myopic chromatic defocus ("red in focus"). See the paper by Swiatczak et al. (2024), doi:10.15626/sjovs.v17i2.4232.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QFormLayout" name="formLayout">
+     <item row="0" column="0">
+      <widget class="QLabel" name="greenLabel">
+       <property name="text">
+        <string>Green blur radius (px):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="kcfg_GreenBlurRadius">
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <double>10.0</double>
+       </property>
+       <property name="singleStep">
+        <double>0.5</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="blueLabel">
+       <property name="text">
+        <string>Blue blur radius (px):</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QDoubleSpinBox" name="kcfg_BlueBlurRadius">
+       <property name="decimals">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <double>20.0</double>
+       </property>
+       <property name="singleStep">
+        <double>0.5</double>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="strengthLabel">
+       <property name="text">
+        <string>Effect strength:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="kcfg_EffectStrength">
+       <property name="decimals">
+        <number>2</number>
+       </property>
+       <property name="maximum">
+        <double>1.0</double>
+       </property>
+       <property name="singleStep">
+        <double>0.05</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="hintLabel">
+     <property name="text">
+      <string>The blur radii follow the longitudinal chromatic aberration of the eye (R −0.23 D, G +0.24 D, B +1.10 D). For a 1920×1080 laptop panel at ~50 cm, green ≈ 2.5 px and blue ≈ 7.0 px; start with strength 0.3 and adjust until comfortable.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

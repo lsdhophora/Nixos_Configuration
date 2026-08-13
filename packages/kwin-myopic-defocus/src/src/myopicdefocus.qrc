@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/effects/myopicdefocus">
+        <file alias="shaders/myopicdefocus.frag">shaders/myopicdefocus.frag</file>
+    </qresource>
+</RCC>

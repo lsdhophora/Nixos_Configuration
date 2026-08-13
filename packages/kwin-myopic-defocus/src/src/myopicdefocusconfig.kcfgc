@@ -1,0 +1,5 @@
+File=myopicdefocus.kcfg
+ClassName=MyopicDefocusSettings
+NameSpace=KWin
+Singleton=true
+Mutators=true
