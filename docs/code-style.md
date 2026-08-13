@@ -47,10 +47,31 @@ Apply these skills when their trigger conditions match:
 
 ## Commit Messages
 
-- Use the format `type(scope): subject`.
-- Examples: `fix(plasma): ...`, `refactor(nix): ...`, `docs: ...`.
-- Keep the subject under 50 characters. Use the imperative mood.
-- Write the body in STE English when present.
+Use the GNU commit message format. The Emacs CONTRIBUTE file and the
+GNU Coding Standards define this format.
+
+- Start with a single unindented summary line.
+- Keep the summary under 50 characters when possible.
+- Do not end the summary line with a period.
+- Use the imperative mood and the present tense.
+- Add an empty line after the summary.
+- Add ChangeLog-style entries after the empty line.
+- Start each entry with `* <file> (<function>): <description>`.
+- End each entry with a period.
+- Keep lines under 78 characters.
+- Describe what the change does, not what the change did.
+- Do not add `Signed-off-by` lines.
+- Write the entries in STE English.
+
+Example:
+
+```
+Use GNU commit message format
+
+Switch the repository to the GNU commit message format.
+* AGENTS.md (Commands): Document the new commit command.
+* docs/code-style.md (Commit Messages): Replace the old format.
+```
 
 ## Review Checklist
 

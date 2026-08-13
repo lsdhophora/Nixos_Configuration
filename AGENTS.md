@@ -8,7 +8,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Ch
 nixos-rebuild dry-build --flake .#flowerpot       # verify
 pkexec nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot   # rebuild & switch (absolute path — pkexec runs as root)
 nix flake update                                   # update inputs
-git add -A && git commit -m "type(scope): subject" # commit
+git add -A && git commit -F -                       # commit (GNU format message via stdin)
 git push                                           # push
 ```
 
