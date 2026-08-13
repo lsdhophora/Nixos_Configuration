@@ -27,6 +27,9 @@ in
       "models.json"
       "skills/exa-search/SKILL.md"
     ])
+    (mkLinks ".pi/agent/themes/" "themes/" [
+      "breeze-light.json"
+    ])
     (mkLinks ".pi/agent/extensions/" "extensions/" [
       "deepseek-balance.ts"
       "exa-gate.ts"
@@ -42,7 +45,7 @@ in
         text = builtins.toJSON {
           defaultProvider = "deepseek";
           defaultModel = "deepseek-v4-flash";
-          theme = "light";
+          theme = "breeze-light";
           packages = [
             "git:github.com/Fletcher-Alderton/exa-pi"
             "npm:pi-subdir-context"
