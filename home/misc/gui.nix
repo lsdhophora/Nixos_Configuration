@@ -29,7 +29,7 @@ let
     buildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/localsend_app \
-        --set GTK_THEME "Breeze:dark" \
+        --set GTK_THEME "Breeze" \
         --set GTK_CSD 0
     '';
   };

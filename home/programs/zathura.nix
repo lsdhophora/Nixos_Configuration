@@ -1,14 +1,14 @@
 { ... }:
 let
-  bg = "#111111";
-  fg = "#cccccc";
-  panel = "#1a1a1a";
+  bg = "#ffffff";
+  fg = "#232627";
+  panel = "#f5f6f7";
 in
 {
   xdg.configFile."zathura/zathurarc".text = ''
     set completion-bg "${panel}"
     set completion-fg "${fg}"
-    set completion-highlight-fg "#000000"
+    set completion-highlight-fg "#ffffff"
     set default-bg "${bg}"
     set default-fg "${fg}"
     set font "IBM Plex Sans 14"

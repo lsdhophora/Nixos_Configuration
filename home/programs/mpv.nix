@@ -1,10 +1,10 @@
 { pkgs, ... }:
 let
-  # Shared Breeze Dark palette with modernz-specific accents.
-  palette = (import ../../lib).breezeDark // {
-    border = "#3D4044";
+  # Shared Breeze Light palette with modernz-specific accents.
+  palette = (import ../../lib).breezeLight // {
+    border = "#d3d3d3";
     handle = "#1D99F3";
-    hover = "#5A5D62";
+    hover = "#7f8c8d";
   };
 in
 {

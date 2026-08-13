@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  palette = (import ../../lib).breezeDark;
+  palette = (import ../../lib).breezeLight;
 
   # Generate "bind-key <flags> <key> <cmd>" lines from a key-command table.
   bindKeys =
@@ -101,19 +101,19 @@ in
       setw -g window-status-format " #I:#W "
       setw -g window-status-current-format " #I:#W "
       setw -g window-status-style 'fg=${palette.inactive} bg=${palette.alt}'
-      setw -g window-status-current-style 'fg=${palette.fg} bg=${palette.accent} bold'
-      setw -g window-status-bell-style 'fg=${palette.fg} bg=${palette.red} bold'
+      setw -g window-status-current-style 'fg=#ffffff bg=${palette.accent} bold'
+      setw -g window-status-bell-style 'fg=#ffffff bg=${palette.red} bold'
 
       # battery on kmscon or TTY only; match any BAT* battery name
       set -g status-right "#(if [ \"\$TERM_SESSION_TYPE\" = kms ] || [ \"\$(tty)\" != \"not a tty\" ]; then for b in /sys/class/power_supply/BAT*; do [ -f \"\$b/capacity\" ] || continue; read c < \"\$b/capacity\"; read s < \"\$b/status\"; echo \"\$c%% \$s |\"; break; done; fi)%H:%M"
       set -g status-right-style 'fg=${palette.inactive} bg=${palette.bg}'
-      set -g status-left "#[bg=${palette.accent},fg=${palette.fg},bold] #S #[default]"
+      set -g status-left "#[bg=${palette.accent},fg=#ffffff,bold] #S #[default]"
       set -g status-left-style 'bg=${palette.bg}'
 
       # messages and modes
-      set -g message-style 'fg=${palette.fg} bg=${palette.accent}'
-      set -g message-command-style 'fg=${palette.fg} bg=${palette.accent}'
-      set -g mode-style 'fg=${palette.fg} bg=${palette.accent}'
+      set -g message-style 'fg=#ffffff bg=${palette.accent}'
+      set -g message-command-style 'fg=#ffffff bg=${palette.accent}'
+      set -g mode-style 'fg=#ffffff bg=${palette.accent}'
     '';
   };
 }
