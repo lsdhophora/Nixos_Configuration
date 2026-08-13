@@ -1,15 +1,16 @@
 diff --git a/desktoppackage/contents/lockscreen/MainBlock.qml b/desktoppackage/contents/lockscreen/MainBlock.qml
-index 7113d81..a45672e 100644
+index 7113d81..0064a09 100644
 --- a/desktoppackage/contents/lockscreen/MainBlock.qml
 +++ b/desktoppackage/contents/lockscreen/MainBlock.qml
-@@ -63,6 +63,10 @@ SessionManagementScreen {
+@@ -63,6 +63,11 @@ SessionManagementScreen {
              text: PasswordSync.password
  
              placeholderText: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:placeholder in text field", "Password")
 +            // The lock screen's Complementary palette renders the placeholder
-+            // near-white, which is invisible on the light lock background.
-+            // Pin it to black so it stays visible in every theme.
++            // near-white and flips the field text to white after resume; both
++            // are invisible on the light lock background. Pin both pure black.
 +            placeholderTextColor: "#000000"
++            color: "#000000"
              focus: true
              enabled: !authenticator.graceLocked
  
