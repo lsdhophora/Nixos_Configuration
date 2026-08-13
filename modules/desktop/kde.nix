@@ -19,6 +19,7 @@ let
       ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
       ./../../patches/plasma-desktop/defer-failable-labels.patch
       ./../../patches/plasma-desktop/kcm-splash-dedup.patch
+      ./../../patches/plasma-desktop/lockscreen-field-colors.patch
     ];
     plasma-workspace = [
       ./../../patches/plasma-workspace/jobitem-null-check.patch
