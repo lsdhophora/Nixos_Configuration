@@ -44,6 +44,7 @@ in
           defaultModel = "deepseek-v4-flash";
           packages = [
             "git:github.com/Fletcher-Alderton/exa-pi"
+            "npm:pi-subdir-context"
           ];
         };
       };
