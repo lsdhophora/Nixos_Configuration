@@ -1,0 +1,27 @@
+diff --git a/app/linux/main.cc b/app/linux/main.cc
+--- a/app/linux/main.cc
++++ b/app/linux/main.cc
+@@ -1,6 +1,12 @@
+ #include "my_application.h"
+ 
+ int main(int argc, char** argv) {
++  // Set the program name explicitly so the Wayland app_id / X11 WM_CLASS is
++  // "localsend_app" (matching StartupWMClass in the desktop file) instead of
++  // deriving it from the argv[0] basename, which after nixpkgs makeWrapper
++  // becomes the hidden ".localsend_app-wrapped_" path. Without this Plasma
++  // cannot map the window to LocalSend.desktop and shows the default icon.
++  g_set_prgname("localsend_app");
+   g_autoptr(MyApplication) app = my_application_new();
+   return g_application_run(G_APPLICATION(app), argc, argv);
+ }
+diff --git a/app/linux/my_application.cc b/app/linux/my_application.cc
+--- a/app/linux/my_application.cc
++++ b/app/linux/my_application.cc
+@@ -55,6 +55,7 @@
+   }
+ 
+   gtk_window_set_default_size(window, 400, 500);
++  gtk_window_set_icon_name(GTK_WINDOW(window), "localsend");
+   gtk_widget_show(GTK_WIDGET(window));
+ 
+   g_autoptr(FlDartProject) project = fl_dart_project_new();
