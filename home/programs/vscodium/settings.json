@@ -7,5 +7,6 @@
     "editor.fontSize": 14,
     "editor.fontLigatures": true,
     "terminal.integrated.fontFamily": "'Iosevka', 'Noto Sans Mono CJK SC', 'monospace'",
-    "terminal.integrated.fontSize": 14
+    "terminal.integrated.fontSize": 14,
+    "workbench.statusBar.visible": false
 }
