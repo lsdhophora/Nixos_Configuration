@@ -68,6 +68,19 @@ let
     license = pkgs.lib.licenses.gpl3Plus;
   };
 
+  # Foam: personal knowledge management / Zettelkasten with
+  # [[wiki links]], backlinks and graph view (Open VSX)
+  foam = buildVsix {
+    publisher = "foam";
+    name = "foam-vscode";
+    version = "0.44.5";
+    url = "https://open-vsx.org/api/foam/foam-vscode/0.44.5/file/foam.foam-vscode-0.44.5.vsix";
+    hash = "sha256-MiQ1Ze0vW0JCfmKVFe6eAWBbHhZqDKtRhhiQMkBgRe4=";
+    description = "Personal knowledge management with Markdown, Zettelkasten, [[wiki links]], graph view";
+    homepage = "https://github.com/foambubble/foam";
+    license = pkgs.lib.licenses.mit;
+  };
+
   # Nix IDE: nixd/nil LSP client (Open VSX)
   nixIde = buildVsix {
     publisher = "jnoortheen";
@@ -82,6 +95,7 @@ let
 
   extensions = [
     competitiveProgrammingHelper
+    foam
     nixIde
   ];
 in
