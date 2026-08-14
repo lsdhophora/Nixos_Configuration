@@ -131,6 +131,12 @@ in
           applyPatches
             [
               ./../../patches/dolphin/hide-current-dir-path-selector.patch
+              # Race fix: a stale currentDirectoryChanged report for the
+              # previous directory used to drain the whole "cd" queue and
+              # yank the view back (brief enter -> jump back -> re-enter).
+              # Only matching reports are now consumed from the queue; while
+              # the queue is non-empty the view never follows the terminal.
+              ./../../patches/dolphin/terminal-sync-keep-queue-on-mismatch.patch
             ]
             (
               prev.kdePackages.dolphin.override {
