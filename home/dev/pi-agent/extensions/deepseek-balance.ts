@@ -2,10 +2,20 @@
  * DeepSeek Balance
  *
  * Shows the DeepSeek API balance in the footer extension status line.
- * Refreshes once per conversation round (agent_end) plus on session start.
+ * Pure event-driven refresh (no time throttling), matching how
+ * DeepSeek-TUI implements it: billing settles when a turn completes, so
+ * the balance is fetched once per completed turn instead of following
+ * the output stream.
+ *
+ * Refresh points:
+ *   - once per conversation round (agent_end) - the balance only changes
+ *     when a request finishes and usage is billed,
+ *   - at the start of every turn (turn_start),
+ *   - on session start,
+ *   - on demand via /balance.
  *
  * Usage:
- *   - Status auto-refreshes after each conversation round.
+ *   - Status shows the current balance, updated after each completed turn.
  *   - /balance forces a refresh and shows the value.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -48,9 +58,12 @@ async function fetchBalance(key: string): Promise<string | null> {
 export default function (pi: ExtensionAPI) {
   let key = readDeepseekKey();
   let balance = "—";
+  // Guard against overlapping fetches (concurrency safety, not throttling).
   let refreshing = false;
 
-  async function refresh(ctx: { ui: { setStatus(k: string, t: string | undefined): void } }) {
+  async function refresh(ctx: {
+    ui: { setStatus(k: string, t: string | undefined): void };
+  }) {
     if (refreshing || !key) return;
     refreshing = true;
     try {
@@ -69,7 +82,13 @@ export default function (pi: ExtensionAPI) {
     await refresh(ctx);
   });
 
-  // Refresh once per conversation round.
+  // Catch each model turn start, incl. responses delivered in one shot.
+  pi.on("turn_start", async (_event, ctx) => {
+    await refresh(ctx);
+  });
+
+  // Refresh once per conversation round: usage is billed when the turn
+  // ends, so this is the moment the balance actually changes.
   pi.on("agent_end", async (_event, ctx) => {
     await refresh(ctx);
   });
