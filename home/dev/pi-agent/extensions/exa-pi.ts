@@ -15,7 +15,7 @@
  * (ProxyAgent unavailable), fall back to direct fetch.
  */
 import { StringEnum, Type } from "@mariozechner/pi-ai";
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import { readStoredCredential, type ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { createRequire } from "node:module";
 
 // Resolve undici from pi's bundled node_modules (stable across pi updates
@@ -57,12 +57,24 @@ export async function getApiKey(modelRegistry: unknown): Promise<string> {
   const registry = modelRegistry as {
     getApiKeyForProvider?: (provider: string) => Promise<string | undefined>;
   };
-  if (!registry || typeof registry.getApiKeyForProvider !== "function") {
-    throw new Error(
-      "Exa extension: modelRegistry.getApiKeyForProvider is unavailable in this pi version.",
-    );
+  // getApiKeyForProvider resolves auth for LLM providers in the models
+  // catalog; "exa" is not one, so it typically returns undefined. Fall back
+  // to a direct read of the auth.json credential (same as upstream did via
+  // authStorage.get()).
+  let key: string | undefined;
+  if (registry && typeof registry.getApiKeyForProvider === "function") {
+    try {
+      key = await registry.getApiKeyForProvider(EXA_AUTH_PROVIDER);
+    } catch {
+      key = undefined;
+    }
   }
-  const key = await registry.getApiKeyForProvider(EXA_AUTH_PROVIDER);
+  if (!key) {
+    const cred = readStoredCredential(EXA_AUTH_PROVIDER) as
+      | { type?: string; key?: unknown }
+      | undefined;
+    if (cred && typeof cred.key === "string") key = cred.key;
+  }
   if (!key) {
     throw new Error(
       'Missing Exa API key. Add { "exa": { "type": "api_key", "key": "YOUR_KEY" } } to ~/.pi/agent/auth.json.',
