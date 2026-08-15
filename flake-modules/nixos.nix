@@ -18,7 +18,17 @@ in
     inherit system;
     pkgs = import inputs.nixpkgs {
       inherit system;
-      overlays = (import ../overlays/default.nix) inputs.nixpkgs.lib;
+      overlays =
+        [
+          # Build pi-coding-agent from nixpkgs-unstable.
+          # Must come before the auto-discovered overlays so that
+          # overlays/pi-agent.nix applies its editor patches on top of the
+          # unstable build.
+          (final: prev: {
+            pi-coding-agent = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux.pi-coding-agent;
+          })
+        ]
+        ++ (import ../overlays/default.nix) inputs.nixpkgs.lib;
     };
     specialArgs = { inherit inputs; };
     modules = [
