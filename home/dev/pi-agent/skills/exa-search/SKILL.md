@@ -76,17 +76,21 @@ Parameters:
 - `startPublishedDate` / `endPublishedDate` — date filters (YYYY-MM-DD).
 - `text`, `highlights`, `summary` — include additional page content.
 
-## exa-pi Setup
+## exa Extension — Self-Maintained (vendored)
 
-The exa-pi extension adds the Exa tools to pi.
+The Exa tools are **no longer installed from upstream**. Upstream
+`git:github.com/Fletcher-Alderton/exa-pi` broke on pi 0.84.x (removed
+`modelRegistry.authStorage` API). We vendor and maintain our own copy:
 
-Install:
-
-```bash
-pi install https://github.com/Fletcher-Alderton/exa-pi
-```
-
-Restart pi or run `/reload` after install.
+- Source: `~/.config/nixos/home/dev/pi-agent/extensions/exa-pi.ts`
+  (symlinked into `~/.pi/agent/extensions/` via Home Manager `files.nix`)
+- The upstream git package was removed from `settings.json` packages; the
+  orphaned checkout `~/.pi/agent/git/github.com/Fletcher-Alderton/exa-pi`
+  can be deleted.
+- Maintenance: fix this file in the repo when the pi extension API changes.
+  Do not reinstall the upstream package (would double-register the tools).
+- Activation: content is `mkOutOfStore` — after editing the file in the
+  repo, run `/reload` in pi (no rebuild needed).
 
 API key:
 

@@ -48,6 +48,7 @@ in
           defaultModel = "deepseek-v4-flash";
           theme = "breeze-light";
           packages = [
+            "npm:@mistgc/pi-voice-input"
             "npm:pi-subdir-context"
           ];
         };
