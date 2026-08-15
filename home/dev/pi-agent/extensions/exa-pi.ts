@@ -8,16 +8,31 @@
  *
  * Fix: resolve the API key via `modelRegistry.getApiKeyForProvider("exa")`,
  * which is the supported API in pi 0.84.1.
+ *
+ * Dep note: `undici` is NOT resolvable from ~/.pi/agent/extensions/ (pi runs
+ * on Node; the loader only aliases pi's own packages). Load it lazily from
+ * pi's own node_modules via process.argv[1] (the pi cli entry). If that fails
+ * (ProxyAgent unavailable), fall back to direct fetch.
  */
 import { StringEnum, Type } from "@mariozechner/pi-ai";
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { ProxyAgent } from "undici";
+import { createRequire } from "node:module";
+
+// Resolve undici from pi's bundled node_modules (stable across pi updates
+// because the path is derived at runtime, not hardcoded).
+const piRequire = createRequire(process.argv[1] ?? import.meta.filename);
+let ProxyAgent: any;
+try {
+  ({ ProxyAgent } = piRequire("undici"));
+} catch {
+  ProxyAgent = undefined; // direct fetch fallback below
+}
 
 const EXA_BASE = "https://api.exa.ai";
 const EXA_AUTH_PROVIDER = "exa";
 const PROXY_ENV_KEYS = ["HTTPS_PROXY", "https_proxy", "ALL_PROXY", "all_proxy"] as const;
 
-type FetchInitWithDispatcher = RequestInit & { dispatcher?: ProxyAgent };
+type FetchInitWithDispatcher = RequestInit & { dispatcher?: any };
 export function getProxyUrlFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
   for (const key of PROXY_ENV_KEYS) {
     const value = env[key]?.trim();
@@ -58,7 +73,8 @@ export async function getApiKey(modelRegistry: unknown): Promise<string> {
 
 let cachedProxyAgent: { url: string; agent: ProxyAgent } | undefined;
 
-function getProxyAgent(proxyUrl: string): ProxyAgent {
+function getProxyAgent(proxyUrl: string): any {
+  if (!ProxyAgent) return undefined;
   if (cachedProxyAgent?.url !== proxyUrl) cachedProxyAgent = { url: proxyUrl, agent: new ProxyAgent(proxyUrl) };
   return cachedProxyAgent.agent;
 }
@@ -74,13 +90,14 @@ async function exaFetch(path: string, modelRegistry: unknown, body: Record<strin
     body: JSON.stringify(body),
     signal,
   };
-  if (proxyUrl) init.dispatcher = getProxyAgent(proxyUrl);
+  const dispatcher = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
+  if (dispatcher) init.dispatcher = dispatcher;
 
   let resp: Response;
   try {
     resp = await fetch(`${EXA_BASE}${path}`, init);
   } catch (error) {
-    if (!proxyUrl || signal?.aborted) throw error;
+    if (!proxyUrl || !dispatcher || signal?.aborted) throw error;
     const { dispatcher: _dispatcher, ...directInit } = init;
     resp = await fetch(`${EXA_BASE}${path}`, directInit);
   }
