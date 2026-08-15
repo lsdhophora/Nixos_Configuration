@@ -33,6 +33,7 @@ in
     (mkLinks ".pi/agent/extensions/" "extensions/" [
       "deepseek-balance.ts"
       "exa-gate.ts"
+      "exa-pi.ts"
       "exa-prefix.ts"
       "no-cost-footer.ts"
       "root-session/index.ts"
@@ -47,7 +48,6 @@ in
           defaultModel = "deepseek-v4-flash";
           theme = "breeze-light";
           packages = [
-            "git:github.com/Fletcher-Alderton/exa-pi"
             "npm:pi-subdir-context"
           ];
         };
