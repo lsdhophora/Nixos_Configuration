@@ -2,9 +2,10 @@
 // mermaid-ascii: render Mermaid graph language to ASCII/Unicode text.
 // Also renders Markdown tables to aligned ASCII box tables.
 //
-// Uses beautiful-mermaid (the same renderer pi's pi-mermaid extension uses,
-// see ~/.pi/agent/npm/node_modules/pi-mermaid/index.ts). Auto-layout means
-// output is always aligned — no manual width math, no post-fix tools.
+// Uses the CJK-fixed ASCII engine from beautiful-mermaid-cli v0.2.4
+// (dist/ascii, vendored from beautiful-mermaid@1.1.3 + display-width fixes:
+// get-east-asian-width, CJK=2 cells). Auto-layout means output is always
+// aligned — no manual width math, no post-fix tools.
 //
 // Usage:
 //   mermaid-ascii [options] [FILE|-]        render Mermaid source (stdin if -)
@@ -20,9 +21,12 @@
 //   -h, --help             show this help
 
 import { readFileSync } from "node:fs";
-import { renderMermaidASCII } from "./dist/index.js";
+import { renderMermaidASCII } from "./dist/ascii/index.js";
 
-// ---- CJK/wide character width (East Asian Wide + Fullwidth + emoji) ----
+// ---- CJK/wide character width (East Asian Wide + Fullwidth + emoji + symbols) ----
+// Iosevka (editor font) renders the symbol blocks below at full width (2 cells)
+// while ASCII / box drawing / math operators stay 1 cell — mirrors the rules in
+// dist/ascii/width.js (SYMBOL_WIDE).
 function charWidth(ch) {
   const c = ch.codePointAt(0);
   if (
@@ -33,7 +37,16 @@ function charWidth(ch) {
     (c >= 0xfe30 && c <= 0xfe4f) || // CJK Compatibility Forms
     (c >= 0xff00 && c <= 0xff60) || // Fullwidth Forms
     (c >= 0xffe0 && c <= 0xffe6) || // Fullwidth Signs
-    (c >= 0x1f300 && c <= 0x1faff) // Emoji
+    (c >= 0x1f300 && c <= 0x1faff) || // Emoji
+    (c >= 0x2014 && c <= 0x2015) || // em dash —
+    (c >= 0x2026 && c <= 0x2026) || // ellipsis …
+    (c >= 0x2030 && c <= 0x2030) || // per mille ‰
+    (c >= 0x2190 && c <= 0x21ff) || // arrows → ↔ ↓
+    (c >= 0x2211 && c <= 0x2211) || // ∑
+    (c >= 0x221e && c <= 0x221e) || // ∞
+    (c >= 0x2460 && c <= 0x24ff) || // ① ② …
+    (c >= 0x25a0 && c <= 0x27bf) || // geometric + dingbats ►◇▼★✓
+    (c >= 0x2b00 && c <= 0x2bff) // misc symbols ⬤
   ) {
     return 2;
   }
