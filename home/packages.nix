@@ -13,5 +13,7 @@
     mosh
     clang
     clang-tools
+    ascii-align
+    ascii-box-aligner
   ];
 }

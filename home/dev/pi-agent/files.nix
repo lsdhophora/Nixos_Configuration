@@ -26,6 +26,7 @@ in
       "AGENTS.md"
       "models.json"
       "skills/exa-search/SKILL.md"
+      "skills/ascii-art/SKILL.md"
     ])
     (mkLinks ".pi/agent/themes/" "themes/" [
       "breeze-light.json"
@@ -50,6 +51,7 @@ in
           packages = [
             "npm:@mistgc/pi-voice-input"
             "npm:pi-subdir-context"
+            "npm:pi-mermaid"
           ];
         };
       };
