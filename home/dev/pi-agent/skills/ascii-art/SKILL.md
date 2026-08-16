@@ -1,6 +1,6 @@
 ---
 name: ascii-art
-description: 把图语言（Mermaid / DOT / PlantUML 等）和 Markdown 表格转成 ASCII/Unicode 文本图的技能。遇到图语言转 ASCII 图、表格转 ASCII 盒表时必须使用本技能。一律用 mermaid-ascii CLI 转换，禁止手工画图、手工对齐、手工算宽度。
+description: 把图语言（Mermaid / DOT / PlantUML 等）和 Markdown 表格转成 ASCII/Unicode 文本图的技能。需要输出 ASCII 图时使用本技能，一律用 mermaid-ascii CLI 转换，禁止手工画图、手工对齐、手工算宽度。
 ---
 
 # 图语言 → ASCII 技能（全靠 CLI 转换）
