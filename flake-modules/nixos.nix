@@ -40,4 +40,15 @@ in
       }
     ];
   };
+
+  # Standalone entry point for fast home-only rebuilds.
+  # Shares the same ../home/default.nix as the NixOS module above.
+  flake.homeConfigurations.lophophora = inputs.home-manager.lib.homeManagerConfiguration {
+    pkgs = import inputs.nixpkgs {
+      inherit system;
+      overlays = (import ../overlays/default.nix) inputs;
+    };
+    extraSpecialArgs = { inherit inputs; };
+    modules = [ ../home/default.nix ];
+  };
 }

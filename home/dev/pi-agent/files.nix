@@ -28,6 +28,7 @@ in
       "lsp.json"
       "skills/exa-search/SKILL.md"
       "skills/ascii-art/SKILL.md"
+      "skills/nix/SKILL.md"
     ])
     (mkLinks ".pi/agent/themes/" "themes/" [
       "breeze-light.json"
