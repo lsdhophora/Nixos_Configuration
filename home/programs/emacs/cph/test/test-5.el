@@ -23,6 +23,21 @@
           (string= (cph--short-name '(("url" . "https://example.com/x") ("name" . "A. Weird Name!")))
                    "a_weird_name_"))
 
+;; --- unit: title naming (cph-naming-style 'title) ---
+(assert-t "atcoder title" (string= (cph--title-name '(("name" . "ABC087B - Coins"))) "Coins"))
+(assert-t "cf title" (string= (cph--title-name '(("name" . "A. Theatre Square"))) "Theatre_Square"))
+(assert-t "luogu title" (string= (cph--title-name '(("name" . "P1001 A+B Problem"))) "P1001_A_B_Problem"))
+(assert-t "no prefix title" (string= (cph--title-name '(("name" . "Plain Title"))) "Plain_Title"))
+(let ((cph-naming-style 'title))
+  (assert-t "title style file name"
+            (string= (cph--problem-file-name '(("url" . "https://atcoder.jp/contests/abs/tasks/abc087_b")
+                                               ("name" . "ABC087B - Coins"))
+                                              "cpp")
+                     "Coins.cpp"))
+  (assert-t "title style keeps case"
+            (string= (cph--problem-file-name '(("name" . "Placing Marbles")) "cpp")
+                     "Placing_Marbles.cpp")))
+
 ;; --- unit: .prob round trip ---
 (let* ((src (expand-file-name "roundtrip/X.cpp" cph-test-dir))
        (problem '(("name" . "X") ("url" . "https://codeforces.com/problemset/problem/1/X")

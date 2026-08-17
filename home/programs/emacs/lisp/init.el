@@ -209,6 +209,7 @@
 (add-to-list 'load-path (expand-file-name "cph" user-emacs-directory))
 (require 'cph)
 (setq cph-default-language "cpp")
+(setq cph-naming-style (quote title))
 (setq cph-timeout 3000)
 ;; Start the problem-fetch server.  Ignore failure: the port may already
 ;; be taken by another Emacs instance.

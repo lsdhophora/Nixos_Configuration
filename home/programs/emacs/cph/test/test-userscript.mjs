@@ -45,7 +45,19 @@ class Node {
     return child;
   }
   addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
-  getElementById(id) { return this.byId[id] || null; }
+  getElementById(id) {
+    const walk = (n) => {
+      if (n.attrs.id === id) return n;
+      for (const c of n.children) {
+        if (typeof c !== "string") {
+          const r = walk(c);
+          if (r) return r;
+        }
+      }
+      return null;
+    };
+    return walk(this);
+  }
   createElement(tag) { return new Node(tag); }
   compoundMatch(comp) {
     let rest = comp;
@@ -143,12 +155,19 @@ globalThis.location = { hostname: "codeforces.com", href: "https://codeforces.co
 eval(readFileSync(new URL("../cph.user.js", import.meta.url), "utf8"));
 const C = globalThis.__CPH_COMPANION__;
 
-// auto-send fired at load with the CF payload
-assertT("auto POST sent", captured.length === 1 && captured[0].method === "POST");
-assertT("auto POST url", captured[0].url === "http://127.0.0.1:27121/");
+// no auto-send at load: the + button must be clicked manually
+assertT("no auto POST at load", captured.length === 0);
+
+// clicking the + widget sends the CF problem
+const widget = body.getElementById("cph-emacs-widget");
+assertT("widget exists", !!widget);
+widget.listeners.click[0]();
+assertT("manual POST sent", captured.length === 1 && captured[0].method === "POST");
+assertT("manual POST url", captured[0].url === "http://127.0.0.1:27121/");
 const sentData = JSON.parse(captured[0].data);
-assertT("auto POST payload name", sentData.name === "A. Theatre Square");
-assertT("auto POST payload tests", sentData.tests.length === 2);
+assertT("manual POST payload name", sentData.name === "A. Theatre Square");
+assertT("manual POST payload tests", sentData.tests.length === 2);
+assertT("widget has + button", !!body.getElementById("cph-emacs-plus"));
 
 /* ---------------- Codeforces parser (direct) ---------------- */
 
@@ -257,10 +276,9 @@ body.appendChild(el("div", {}, txt("nothing")));
 globalThis.location = { hostname: "example.com", href: "https://example.com/" };
 assertT("unsupported site returns null", C.parseCodeforces() === null && C.parseAtCoder() === null && C.parseLuogu() === null);
 
-/* ---------------- auto-send retry + widget position ---------------- */
+/* ---------------- manual only: failure does NOT retry ---------------- */
 
-// Rebuild a Codeforces page; auto-send must fire, fail once (server
-// down), then retry automatically and succeed.
+// Rebuild a Codeforces page; a failed click must NOT auto-retry.
 reset();
 captured.length = 0;
 body.appendChild(
@@ -280,25 +298,20 @@ body.appendChild(
 );
 globalThis.location = { hostname: "codeforces.com", href: "https://codeforces.com/problemset/problem/1/B" };
 
-let failOnce = true;
 globalThis.GM_xmlhttpRequest = (opts) => {
-  if (failOnce) {
-    failOnce = false;
-    opts.onerror();
-  } else {
-    captured.push(opts);
-    opts.onload({ status: 200, responseText: '{"empty":true}' });
-  }
+  captured.push(opts);
+  opts.onerror(); // server down: report failure, no retry
 };
 
-C.maybeAutoSend(); // auto-send: first attempt fails, retry fires ~4s later
+C.maybeAutoSend(); // prepares the widget, never sends
+const w2 = body.getElementById("cph-emacs-widget");
+w2.listeners.click[0](); // failed manual click
+assertT("failed click sends once", captured.length === 1);
 
 setTimeout(() => {
-  assertT("auto retry sent after failure", captured.length === 1 && captured[0].method === "POST");
-  assertT("auto retry payload", JSON.parse(captured[0].data).name === "B. Problem");
+  assertT("no auto retry after failure", captured.length === 1);
   const w = body.getElementById("cph-emacs-widget");
-  assertT("widget exists", !!w);
   assertT("widget at bottom-left", !!w && /left:12px/.test(w.style.cssText) && !/right:12px/.test(w.style.cssText));
   console.log(failures === 0 ? "ALL USERScript TESTS PASS" : `USERScript FAILURES: ${failures}`);
   process.exit(failures === 0 ? 0 : 1);
-}, 4500);
+}, 2500);

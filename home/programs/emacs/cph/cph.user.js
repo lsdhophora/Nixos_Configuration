@@ -53,7 +53,6 @@
 
   const state = {
     site: null,
-    sentUrl: null,
     sending: false,
   };
 
@@ -70,27 +69,31 @@
       "box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;" +
       "max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
       "user-select:none;";
-    w.title = "Click to send the problem to Emacs CPH again";
-    const dot = document.createElement("span");
-    dot.id = "cph-emacs-dot";
-    dot.style.cssText =
-      "display:inline-block;width:9px;height:9px;border-radius:50%;" +
-      "background:#666;margin-right:7px;vertical-align:middle;";
+    w.title = "Click + to send the problem to Emacs CPH";
+    w.style.display = "flex";
+    w.style.alignItems = "center";
+    w.style.gap = "7px";
+    const plus = document.createElement("span");
+    plus.id = "cph-emacs-plus";
+    plus.textContent = "+";
+    plus.style.cssText =
+      "flex:0 0 auto;width:20px;height:20px;line-height:18px;text-align:center;" +
+      "border-radius:50%;background:#1f883d;color:#fff;font-weight:700;font-size:15px;";
     const label = document.createElement("span");
     label.id = "cph-emacs-label";
     label.textContent = "CPH idle";
-    w.appendChild(dot);
+    w.appendChild(plus);
     w.appendChild(label);
-    w.addEventListener("click", () => sendProblem(true));
+    w.addEventListener("click", () => sendProblem());
     document.body.appendChild(w);
   }
 
   function setStatus(kind, text) {
-    const dot = document.getElementById("cph-emacs-dot");
+    const plus = document.getElementById("cph-emacs-plus");
     const label = document.getElementById("cph-emacs-label");
-    if (!dot || !label) return;
-    const colors = { idle: "#8b949e", sending: "#e6a23c", ok: "#2da44e", fail: "#e5484d" };
-    dot.style.background = colors[kind] || colors.idle;
+    if (!plus || !label) return;
+    const colors = { idle: "#1f883d", sending: "#e6a23c", ok: "#1f883d", fail: "#cf222e" };
+    plus.style.background = colors[kind] || colors.idle;
     label.textContent = text;
   }
 
@@ -291,7 +294,9 @@
     return null;
   }
 
-  function sendProblem(manual) {
+  // Manual send only: the user clicks the + button.  No auto-send, no
+  // retries - a failed attempt just reports the status.
+  function sendProblem() {
     const site = state.site || detectSite();
     if (!site) {
       setStatus("fail", "Unsupported site");
@@ -320,9 +325,7 @@
       timeout: 5000,
       onload: (r) => {
         state.sending = false;
-        stopRetry();
         if (r.status >= 200 && r.status < 300) {
-          state.sentUrl = location.href;
           let extra = "";
           try {
             const resp = JSON.parse(r.responseText);
@@ -335,51 +338,21 @@
       },
       onerror: () => {
         state.sending = false;
-        setStatus("fail", "Emacs unreachable — retrying…");
-        scheduleRetry();
+        setStatus("fail", "Emacs unreachable — click + to retry");
       },
       ontimeout: () => {
         state.sending = false;
-        setStatus("fail", "Timed out — retrying…");
-        scheduleRetry();
+        setStatus("fail", "Timed out — click + to retry");
       },
     });
-  }
-
-  // Auto-send must survive the server starting late: when the first
-  // attempt fails (Emacs not up yet), retry a few times, then wait for
-  // a click.
-  let retryTimer = null;
-  let retryCount = 0;
-  const MAX_RETRIES = 4;
-
-  function scheduleRetry() {
-    if (retryCount >= MAX_RETRIES) {
-      setStatus("fail", "Emacs unreachable — click to retry");
-      return;
-    }
-    retryCount += 1;
-    clearTimeout(retryTimer);
-    retryTimer = setTimeout(() => sendProblem(false), 4000);
-  }
-
-  function stopRetry() {
-    clearTimeout(retryTimer);
-    retryCount = 0;
   }
 
   function maybeAutoSend() {
     const site = detectSite();
     if (!site) return;
     state.site = site;
-    state.sentUrl = null;
-    stopRetry();
     ensureWidget();
-    if (CONFIG.autoSend && state.sentUrl !== location.href) {
-      sendProblem(false);
-    } else {
-      setStatus("idle", "CPH · click to send");
-    }
+    setStatus("idle", "CPH · click + to send");
   }
 
   /* ---------------------------------------------------------------- menus */
@@ -403,7 +376,7 @@
     setStatus("idle", "Auto-send " + (CONFIG.autoSend ? "on" : "off"));
   }
 
-  GM_registerMenuCommand("Send problem to Emacs", () => sendProblem(true));
+  GM_registerMenuCommand("Send problem to Emacs", () => sendProblem());
   GM_registerMenuCommand("Set Emacs CPH port", setPort);
   GM_registerMenuCommand("Toggle auto-send", toggleAutoSend);
 

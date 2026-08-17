@@ -120,6 +120,15 @@ Empty means: next to the solution file, in a `.cph` subdirectory."
   :type 'boolean
   :group 'cph)
 
+(defcustom cph-naming-style 'short
+  "File naming style for new solution files.
+`short' uses the URL-derived short name (CPH-compatible, e.g. 4A,
+abc087b, P1001).  `title' uses the problem title with the contest
+prefix stripped and non-alphanumeric runs replaced by underscores
+(e.g. ABC087B - Coins -> Coins)."
+  :type '(choice (const short) (const title))
+  :group 'cph)
+
 (defvar cph-languages
   '(("c"   . (:compiler "clang"   :args ("-std=c11" "-O2" "-Wall")         :skip-compile nil))
     ("cpp" . (:compiler "clang++" :args ("-std=c++17" "-O2" "-Wall")       :skip-compile nil))
@@ -392,9 +401,22 @@ Codeforces: contest+letter (e.g. 1234A).  AtCoder: contest+task
       (match-string 1 url))
      (t (cph--slugify (cph--get "name" problem))))))
 
+(defun cph--title-name (problem)
+  "Return the problem title, prefix stripped and slugified.
+`ABC087B - Coins' -> `Coins', `A. Theatre Square' -> `Theatre_Square'."
+  (let ((name (or (cph--get "name" problem) "problem")))
+    (when (string-match "^\\([^ ]+\\)\\s-*-\\s-*\\(.*\\)$" name)
+      (setq name (match-string 2 name)))
+    (when (string-match "^\\([^ ]+\\)\\.\\s-*\\(.*\\)$" name)
+      (setq name (match-string 2 name)))
+    (replace-regexp-in-string "[^[:alnum:]]+" "_" name)))
+
 (defun cph--problem-file-name (problem lang)
   "Return the solution file name for PROBLEM and LANG."
-  (concat (cph--short-name problem) "." lang))
+  (concat (pcase cph-naming-style
+            ('short (cph--short-name problem))
+            ('title (cph--title-name problem)))
+          "." lang))
 
 (defun cph--language-for-src (src)
   "Return the language key for SRC from its extension."
@@ -770,8 +792,7 @@ Return a list of (status . line) with status match|extra|missing."
                         (or (cph--get "timeLimit" cph--problem) "?")
                         (or (cph--get "memoryLimit" cph--problem) "?")
                         (if (cph--interactive-p cph--problem) "yes" "no")))
-        (insert (format "  ONLINE_JUDGE: %s · server: %s\n\n"
-                        (if cph-online-judge "on" "off")
+        (insert (format "  server: %s\n\n"
                         (if (process-live-p cph--server-process)
                             (format "%s:%s" cph-host cph-port)
                           "stopped")))
