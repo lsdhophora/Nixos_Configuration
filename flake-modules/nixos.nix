@@ -25,7 +25,29 @@ in
           # overlays/pi-agent.nix applies its editor patches on top of the
           # unstable build.
           (final: prev: {
-            pi-coding-agent = inputs.nixpkgs-unstable.legacyPackages.x86_64-linux.pi-coding-agent;
+            # pi-coding-agent from nixpkgs-unstable, pinned to 0.84.2 (nixpkgs
+            # lags behind). 0.84.2 fixes DeepSeek models sending output limits
+            # through an unsupported field (truncated responses) and adds
+            # automatic retries for upstream request buffer failures.
+            pi-coding-agent = (inputs.nixpkgs-unstable.legacyPackages.x86_64-linux.pi-coding-agent).overrideAttrs (old: let
+              src = prev.fetchFromGitHub {
+                owner = "earendil-works";
+                repo = "pi";
+                tag = "v0.84.2";
+                hash = "sha256-d29ft9otYxdHRWYIAX8KMHPpppToX9ME5LbPb1rPcYo=";
+              };
+            in {
+              version = "0.84.2";
+              inherit src;
+              modelData = prev.fetchurl {
+                url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-0.84.2.tgz";
+                hash = "sha256-AmJ4Wnaw6y7sWWzYp6su4j7vidLvG7EhHE8KGUTaz0E=";
+              };
+              npmDeps = prev.fetchNpmDeps {
+                inherit src;
+                hash = "sha256-6J5Efe+6ptCuR3VZojwYPZO8BBnnZsOQ4OAeB64uYOY=";
+              };
+            });
           })
         ]
         ++ (import ../overlays/default.nix) inputs.nixpkgs.lib;
