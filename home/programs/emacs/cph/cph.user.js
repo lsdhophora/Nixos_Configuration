@@ -154,14 +154,23 @@
   /* -------------------------------------------------------------- AtCoder */
 
   function parseAtCoder() {
-    const h1 = document.querySelector("#main-container h1");
+    const title =
+      document.querySelector("#main-container h1") ||
+      document.querySelector("#main-container .h2");
     const statement = document.querySelector("#task-statement");
-    if (!h1 || !statement) return null;
+    if (!title || !statement) return null;
 
-    const name = h1.textContent.trim();
+    // AtCoder task pages have no <h1>: the title is a .h2 span whose
+    // text also contains the trailing "Editorial" link.  Take the first
+    // non-empty line of text.
+    const name =
+      title.textContent
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)[0] || "AtCoder";
     const intro = statement.textContent;
     const timeM = intro.match(/Time Limit:\s*([\d.]+)\s*sec/);
-    const memM = intro.match(/Memory Limit:\s*([\d.]+)\s*MB/);
+    const memM = intro.match(/Memory Limit:\s*([\d.]+)\s*(MB|MiB)/);
 
     const inputs = [];
     const outputs = [];

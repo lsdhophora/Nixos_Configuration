@@ -69,13 +69,16 @@ class Node {
     return true;
   }
   querySelectorAll(sel) {
-    const parts = sel.trim().split(/\s+/);
     const out = [];
-    const walk = (n) => {
-      if (n.tag && n.matchSel(parts)) out.push(n);
-      for (const c of n.children) if (typeof c !== "string") walk(c);
-    };
-    walk(this);
+    // Support comma-separated selector groups, e.g. ".a, .b".
+    for (const group of sel.split(",")) {
+      const parts = group.trim().split(/\s+/);
+      const walk = (n) => {
+        if (n.tag && n.matchSel(parts)) out.push(n);
+        for (const c of n.children) if (typeof c !== "string") walk(c);
+      };
+      walk(this);
+    }
     return out;
   }
   querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
@@ -157,14 +160,21 @@ assertT("cf schema fields", cf.testType === "single" && cf.input.type === "stdin
 
 /* ---------------- AtCoder ---------------- */
 
+// Real AtCoder task pages: the title is a .h2 span (no <h1>) with a
+// trailing "Editorial" link, and limits use MiB.
 reset();
 body.appendChild(
   el("div", { id: "main-container" },
-    el("h1", {}, txt("A - Welcome to AtCoder")),
+    el("div", { class: "contest-title" }, txt("AtCoder Beginners Selection")),
+    el("span", { class: "h2" },
+      txt("\n\t\t\tA - Welcome to AtCoder\n\t\t\t"),
+      el("a", { class: "btn" }, txt("Editorial")),
+      txt("\n\t\t"),
+    ),
     el("div", { id: "task-statement" },
       el("div", { class: "part" }, el("section", {},
         el("h3", {}, txt("Problem Statement")),
-        el("p", {}, txt("Time Limit: 2 sec / Memory Limit: 1024 MB")),
+        el("p", {}, txt("Time Limit: 2 sec / Memory Limit: 1024 MiB")),
       )),
       el("div", { class: "part" }, el("section", {},
         el("h3", {}, txt("Sample Input 1")),
@@ -173,14 +183,16 @@ body.appendChild(
       el("div", { class: "part" }, el("section", {},
         el("h3", {}, txt("Sample Output 1")),
         el("pre", {}, txt("\n6")),
+        el("p", {}, txt("Explanation text after the sample.")),
       )),
     ),
   ),
 );
-globalThis.location = { hostname: "atcoder.jp", href: "https://atcoder.jp/contests/abc123/tasks/abc123_a" };
+globalThis.location = { hostname: "atcoder.jp", href: "https://atcoder.jp/contests/abs/tasks/abc087_b" };
 const ac = C.parseAtCoder();
 assertT("atcoder parsed", !!ac);
 assertT("atcoder name", ac.name === "A - Welcome to AtCoder");
+assertT("atcoder group", ac.group === "AtCoder Beginners Selection");
 assertT("atcoder timeLimit", ac.timeLimit === 2000);
 assertT("atcoder memoryLimit", ac.memoryLimit === 1024);
 assertT("atcoder 1 test", ac.tests.length === 1);
