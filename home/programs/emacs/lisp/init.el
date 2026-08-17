@@ -1,7 +1,5 @@
 ;;; init.el -- Main Emacs configuration -*- lexical-binding: t -*-
 (setq package-enable-at-startup nil)
-(require 'straight)
-(straight-use-package-mode +1)
 
 (setq custom-file "~/.config/emacs/custom.el")
 (when (file-exists-p custom-file)
@@ -27,7 +25,7 @@
 (setq use-file-dialog nil)
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
-(load-theme 'modus-vivendi)
+(load-theme 'modus-operandi)
 
 (defun on-after-init ()
   (unless (display-graphic-p (selected-frame))
@@ -46,7 +44,6 @@
                 (funcall orig))))
 
 (use-package eglot
-  :ensure t
   :config
   (setq eglot-sync-connect 5)
   (setq eglot-autoshutdown t)
@@ -65,20 +62,17 @@
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab"))))
 
 (use-package corfu
-  :ensure t
   :config
   (setq corfu-auto t)
   (setq corfu-auto-delay 0.2)
   (setq corfu-auto-prefix 1))
 
 (use-package corfu-terminal
-  :ensure t
   :config
   (unless (display-graphic-p)
     (corfu-terminal-mode 1)))
 
 (use-package nix-mode
-  :ensure t
   :hook
   (nix-mode . eglot-ensure)
   (nix-mode . corfu-mode)
@@ -93,7 +87,6 @@
         "(builtins.getFlake \"/home/lophophora/.config/nixos\").nixosConfigurations.flowerpot.options"))
 
 (use-package magit
-  :ensure t
   :bind (("C-x g" . magit-status))
   :config
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
@@ -106,12 +99,10 @@
               (corfu-mode 1))))
 
 (use-package direnv
-  :ensure t
   :config
   (direnv-mode))
 
 (use-package dashboard
-  :ensure t
   :config
   (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 2)
@@ -140,7 +131,6 @@
 (add-hook 'dashboard-mode-hook #'my/disable-text-scale-commands-in-dashboard)
 
 (use-package auctex
-  :ensure t
   :defer t
   :hook (LaTeX-mode . (lambda ()
                         (TeX-engine-set 'luatex)
@@ -167,7 +157,6 @@
   (setq TeX-source-correlate-start-server t))
 
 (use-package nerd-icons
-  :ensure t
   :custom
   (nerd-icons-font-family "Hack Nerd Font"))
 
@@ -190,10 +179,6 @@
             (file-name-sans-extension
              (file-name-nondirectory (emms-track-get track 'name))))))
 
-
- (use-package kkp
-   :straight (:host github :repo "benotn/kkp" :branch "master")
-   :hook (tty-setup . global-kkp-mode))
 
 ;; hydra removed
 

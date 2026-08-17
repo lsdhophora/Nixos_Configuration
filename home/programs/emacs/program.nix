@@ -13,7 +13,8 @@
         dashboard
         trashed
         emms
-        straight
+        corfu
+        corfu-terminal
       ];
     extraConfig = ''
       (add-to-list 'load-path

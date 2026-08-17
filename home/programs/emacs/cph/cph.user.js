@@ -64,10 +64,10 @@
     const w = document.createElement("div");
     w.id = "cph-emacs-widget";
     w.style.cssText =
-      "position:fixed;right:12px;bottom:12px;z-index:2147483647;" +
-      "font:13px/1.4 sans-serif;background:#1f2430;color:#ccc;" +
-      "border:1px solid #3a4050;border-radius:6px;padding:8px 10px;" +
-      "box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;" +
+      "position:fixed;left:12px;bottom:12px;z-index:2147483647;" +
+      "font:13px/1.4 sans-serif;background:#f6f8fa;color:#1f2328;" +
+      "border:1px solid #d0d7de;border-radius:6px;padding:8px 10px;" +
+      "box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;" +
       "max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" +
       "user-select:none;";
     w.title = "Click to send the problem to Emacs CPH again";
@@ -89,7 +89,7 @@
     const dot = document.getElementById("cph-emacs-dot");
     const label = document.getElementById("cph-emacs-label");
     if (!dot || !label) return;
-    const colors = { idle: "#666", sending: "#e6a23c", ok: "#4caf50", fail: "#e5484d" };
+    const colors = { idle: "#8b949e", sending: "#e6a23c", ok: "#2da44e", fail: "#e5484d" };
     dot.style.background = colors[kind] || colors.idle;
     label.textContent = text;
   }
@@ -320,6 +320,7 @@
       timeout: 5000,
       onload: (r) => {
         state.sending = false;
+        stopRetry();
         if (r.status >= 200 && r.status < 300) {
           state.sentUrl = location.href;
           let extra = "";
@@ -334,19 +335,45 @@
       },
       onerror: () => {
         state.sending = false;
-        setStatus("fail", "Emacs unreachable — start cph-server");
+        setStatus("fail", "Emacs unreachable — retrying…");
+        scheduleRetry();
       },
       ontimeout: () => {
         state.sending = false;
-        setStatus("fail", "Timed out — is Emacs listening?");
+        setStatus("fail", "Timed out — retrying…");
+        scheduleRetry();
       },
     });
+  }
+
+  // Auto-send must survive the server starting late: when the first
+  // attempt fails (Emacs not up yet), retry a few times, then wait for
+  // a click.
+  let retryTimer = null;
+  let retryCount = 0;
+  const MAX_RETRIES = 4;
+
+  function scheduleRetry() {
+    if (retryCount >= MAX_RETRIES) {
+      setStatus("fail", "Emacs unreachable — click to retry");
+      return;
+    }
+    retryCount += 1;
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(() => sendProblem(false), 4000);
+  }
+
+  function stopRetry() {
+    clearTimeout(retryTimer);
+    retryCount = 0;
   }
 
   function maybeAutoSend() {
     const site = detectSite();
     if (!site) return;
     state.site = site;
+    state.sentUrl = null;
+    stopRetry();
     ensureWidget();
     if (CONFIG.autoSend && state.sentUrl !== location.href) {
       sendProblem(false);
@@ -391,6 +418,8 @@
     parseLuogu,
     buildProblem,
     sendProblem,
+    ensureWidget,
+    maybeAutoSend,
   };
 
   /* ----------------------------------------------------------------- boot */

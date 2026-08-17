@@ -32,6 +32,12 @@ class Node {
   set textContent(s) {
     this.children = [String(s)];
   }
+  get id() {
+    return this.attrs.id;
+  }
+  set id(v) {
+    this.attrs.id = v;
+  }
   appendChild(child) {
     child.parent = this;
     this.children.push(child);
@@ -251,5 +257,48 @@ body.appendChild(el("div", {}, txt("nothing")));
 globalThis.location = { hostname: "example.com", href: "https://example.com/" };
 assertT("unsupported site returns null", C.parseCodeforces() === null && C.parseAtCoder() === null && C.parseLuogu() === null);
 
-console.log(failures === 0 ? "ALL USERScript TESTS PASS" : `USERScript FAILURES: ${failures}`);
-process.exit(failures === 0 ? 0 : 1);
+/* ---------------- auto-send retry + widget position ---------------- */
+
+// Rebuild a Codeforces page; auto-send must fire, fail once (server
+// down), then retry automatically and succeed.
+reset();
+captured.length = 0;
+body.appendChild(
+  el("div", { class: "problem-statement" },
+    el("div", { class: "header" },
+      el("div", { class: "title" }, txt("B. Problem")),
+      el("div", { class: "time-limit" }, txt("time limit per test: 2 seconds")),
+      el("div", { class: "memory-limit" }, txt("memory limit per test: 256 megabytes")),
+    ),
+    el("div", { class: "sample-tests" },
+      el("div", { class: "sample-test" },
+        el("div", { class: "input" }, el("pre", {}, txt("\n1"))),
+        el("div", { class: "output" }, el("pre", {}, txt("\n1"))),
+      ),
+    ),
+  ),
+);
+globalThis.location = { hostname: "codeforces.com", href: "https://codeforces.com/problemset/problem/1/B" };
+
+let failOnce = true;
+globalThis.GM_xmlhttpRequest = (opts) => {
+  if (failOnce) {
+    failOnce = false;
+    opts.onerror();
+  } else {
+    captured.push(opts);
+    opts.onload({ status: 200, responseText: '{"empty":true}' });
+  }
+};
+
+C.maybeAutoSend(); // auto-send: first attempt fails, retry fires ~4s later
+
+setTimeout(() => {
+  assertT("auto retry sent after failure", captured.length === 1 && captured[0].method === "POST");
+  assertT("auto retry payload", JSON.parse(captured[0].data).name === "B. Problem");
+  const w = body.getElementById("cph-emacs-widget");
+  assertT("widget exists", !!w);
+  assertT("widget at bottom-left", !!w && /left:12px/.test(w.style.cssText) && !/right:12px/.test(w.style.cssText));
+  console.log(failures === 0 ? "ALL USERScript TESTS PASS" : `USERScript FAILURES: ${failures}`);
+  process.exit(failures === 0 ? 0 : 1);
+}, 4500);
