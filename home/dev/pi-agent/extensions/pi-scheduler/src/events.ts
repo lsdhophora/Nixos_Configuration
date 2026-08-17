@@ -8,12 +8,12 @@ export function registerEvents(pi: ExtensionAPI, runtime: SchedulerRuntime) {
 		runtime.updateStatus();
 	});
 
-	pi.on("session_switch", async (_event, ctx) => {
+	pi.on("session_before_switch", async (_event, ctx) => {
 		runtime.setRuntimeContext(ctx);
 		runtime.updateStatus();
 	});
 
-	pi.on("session_fork", async (_event, ctx) => {
+	pi.on("session_before_fork", async (_event, ctx) => {
 		runtime.setRuntimeContext(ctx);
 		runtime.updateStatus();
 	});

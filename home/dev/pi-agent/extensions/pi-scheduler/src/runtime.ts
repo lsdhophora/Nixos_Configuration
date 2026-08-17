@@ -13,7 +13,8 @@ import type { ScheduleTask } from "./types";
 
 interface SchedulerStore {
 	version: 1;
-	tasks: ScheduleTask[];
+	// Storage format serializes missing expiry as null (JSON drops undefined).
+	tasks: Array<Omit<ScheduleTask, "expiresAt"> & { expiresAt: number | null }>;
 }
 
 export class SchedulerRuntime {

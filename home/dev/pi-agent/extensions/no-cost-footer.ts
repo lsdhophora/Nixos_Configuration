@@ -2,7 +2,8 @@
  * No Cost Footer - replicates the default footer format without the $cost part.
  * Enabled automatically at startup. Run /no-cost to toggle back to default.
  */
-import type { AssistantMessage, ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { AssistantMessage } from "@earendil-works/pi-ai";
+import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 function fmtTokens(n: number): string {

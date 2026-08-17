@@ -27,7 +27,7 @@ const EXIT = "__EXIT__";
 const EXIT_FRAME_RE = /\u0000EXIT:([^\u0000]*)\u0000/g;
 
 function socketPath(sid: string): string {
-  const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid()}`;
+  const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid?.() ?? 0}`;
   return path.join(runtime, `root-session-${sid}.sock`);
 }
 
@@ -108,7 +108,7 @@ export default function (pi: ExtensionAPI) {
 
   function startDaemon(): Promise<boolean> {
     return new Promise((resolve) => {
-      const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid()}`;
+      const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid?.() ?? 0}`;
       let child;
       try {
         child = spawn("pkexec", [node, DAEMON_JS, sid, runtime], {
@@ -153,7 +153,7 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_start", async () => {
     try {
-      const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid()}`;
+      const runtime = process.env.XDG_RUNTIME_DIR || `/run/user/${process.getuid?.() ?? 0}`;
       const stale = await fs.promises.readdir(runtime).catch(() => [] as string[]);
       for (const f of stale) {
         if (f.startsWith("root-session-") && f.endsWith(".sock")) {
@@ -261,7 +261,7 @@ export default function (pi: ExtensionAPI) {
         if (!onUpdate || !updateDirty) return;
         updateDirty = false;
         lastUpdateAt = Date.now();
-        onUpdate({ content: [{ type: "text", text: acc }] });
+        onUpdate({ content: [{ type: "text", text: acc }], details: undefined });
       };
 
       const scheduleUpdate = () => {

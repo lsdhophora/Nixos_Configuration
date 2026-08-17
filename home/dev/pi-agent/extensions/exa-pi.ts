@@ -83,7 +83,7 @@ export async function getApiKey(modelRegistry: unknown): Promise<string> {
   return normalizeApiKey(key, 'Pi auth.json provider "exa"');
 }
 
-let cachedProxyAgent: { url: string; agent: ProxyAgent } | undefined;
+let cachedProxyAgent: { url: string; agent: any } | undefined;
 
 function getProxyAgent(proxyUrl: string): any {
   if (!ProxyAgent) return undefined;

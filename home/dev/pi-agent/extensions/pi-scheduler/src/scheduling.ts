@@ -94,6 +94,7 @@ export function parseDuration(text: string): number | undefined {
 
 	match = raw.match(/^(\d+)\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?|days?|weeks?|wks?)$/i);
 	if (!match) return undefined;
+	const n = Number.parseInt(match[1], 10);
 	const unit = match[2].toLowerCase();
 	if (unit.startsWith("sec")) return n * 1000;
 	if (unit.startsWith("min")) return n * ONE_MINUTE;
