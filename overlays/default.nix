@@ -1,11 +1,27 @@
 # Find all overlay files in this directory automatically.
 # Add a new .nix file here and it is applied automatically.
-# Takes nixpkgs lib for the suffix predicate.
-lib:
+#
+# Takes the flake output arguments (the flake inputs plus `self`, as the flake
+# outputs function receives them). The loader strips `self`, so overlay files
+# see the flake inputs only. lib comes from the nixpkgs input.
+#
+# An overlay file has the plain `final: prev:` signature by default.
+# A file that needs flake inputs (for example nixpkgs-unstable) uses the
+# pattern `{ inputs }: final: prev:` instead. The loader passes the inputs
+# set to such a file.
+args:
 let
+  inputs = args.nixpkgs.lib.removeAttrs args [ "self" ];
+  lib = inputs.nixpkgs.lib;
   files = builtins.readDir ./.;
   nixFiles = builtins.filter (name: name != "default.nix" && lib.hasSuffix ".nix" name) (
     builtins.attrNames files
   );
+  load =
+    name:
+    let
+      overlay = import (./. + "/${name}");
+    in
+    if lib.functionArgs overlay ? inputs then overlay { inherit inputs; } else overlay;
 in
-map (name: import (./. + "/${name}")) (builtins.sort (a: b: a < b) nixFiles)
+map load (builtins.sort (a: b: a < b) nixFiles)
