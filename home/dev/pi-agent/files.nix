@@ -25,6 +25,7 @@ in
     (mkLinks ".pi/agent/" "" [
       "AGENTS.md"
       "models.json"
+      "lsp.json"
       "skills/exa-search/SKILL.md"
       "skills/ascii-art/SKILL.md"
     ])
@@ -50,6 +51,7 @@ in
           theme = "breeze-light";
           packages = [
             "npm:@mistgc/pi-voice-input"
+            "npm:pi-lsp"
             "npm:pi-subdir-context"
             "npm:pi-mermaid"
           ];
