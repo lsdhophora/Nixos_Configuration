@@ -22,9 +22,9 @@
 #include <link.h>
 #include <sys/stat.h>
 
-// List of arguments and number of them is saved for GTK applications, in case
-// of crash, to restart them without the library
-char **GTKNoCSDArguments = NULL;
+// List of arguments, full binary and number of them is saved for GTK
+// applications, in case of crash, to restart them without the library
+char **GTKNoCSDArguments = NULL, *GTKNoCSDBinary = NULL;
 size_t GTKNoCSDArgumentNumber = 0;
 
 void GTKNoCSDSaveArguments(void) {
@@ -77,6 +77,13 @@ void GTKNoCSDSaveArguments(void) {
 	}
 	GTKNoCSDArguments[Number] = NULL;
 	GTKNoCSDArgumentNumber = Number;
+
+	// Save binary with full path
+	Length = readlink("/proc/self/exe", Buffer, sizeof(Buffer) - 1);
+	if (0 < Length) {
+		Buffer[Length] = '\0';
+		GTKNoCSDBinary = strdup(Buffer);
+	}
 }
 
 // Copies for the crash handler to use, since it loses the originals
@@ -290,7 +297,8 @@ void GTKNoCSDUnsetLDPreload(void) {
 	}
 }
 
-bool GTKNoCSDOnLomiri = false;
+bool GTKNoCSDOnLomiri = false, GTKNoCSDCSD = false, GTKNoCSDCSDPadding = false,
+	GTKNoCSDNoCSS = false;
 void *(*o_dlsym)(void *, const char *) = NULL;
 char *GTKNoCSDLD = NULL, *GTKNoCSDLibC = NULL, *GTKNoCSDTheme = NULL;
 
@@ -392,7 +400,8 @@ void GTKNoCSDInitDLSym(bool Unload) {
 		}
 		if (GTKNoCSDArguments != NULL) {
 			GTKNoCSDUnsetLDPreload();
-			execve(GTKNoCSDArguments[0], GTKNoCSDArguments, environ);
+			execve(GTKNoCSDBinary != NULL ? GTKNoCSDBinary :
+				GTKNoCSDArguments[0], GTKNoCSDArguments, environ);
 			_exit(0);
 		}
 	}
@@ -409,13 +418,15 @@ static void GTKNoCSDInit(void) {
 	GTKNoCSDSaveArguments();
 
 	// If already checked appimage, then no longer check it and unload if needed
+	// GTK_CSD=1 disables the library
 	char *AppImage = getenv("GTK-NoCSDAppImage");
-	bool Disable = false;
+	const char *CSD = getenv("GTK_CSD");
+	bool Disable = CSD != NULL && CSD[0] == '1';
 
 	// AppImages might use GLib functions while not being GTK applications and
 	// not supplying the needed functions. They are dealt with here
-	for (size_t Index = 0; AppImage == NULL && Index < GTKNoCSDArgumentNumber;
-		++Index) {
+	for (size_t Index = 0; !Disable && AppImage == NULL &&
+		Index < GTKNoCSDArgumentNumber; ++Index) {
 		// Go through all arguments
 
 		// If argument ends with AppRun or starts with /tmp/.mount_, it most
@@ -451,16 +462,22 @@ static void GTKNoCSDInit(void) {
 
 	// Check if the library is loaded into the Cambalache internal app, Merengue
 	// This is a development environment and the library is not needed to run
-	if (GTKNoCSDArguments != NULL) {
-		char *Application = GTKNoCSDArguments[1];
-		Disable = Disable || (Application != NULL && strstr(Application,
-			"/merengue\0") != NULL);
+	// Or if loaded into sbuild, a Debian build tool, where it produces spam
+	if (GTKNoCSDArguments != NULL && GTKNoCSDArguments[0] != NULL &&
+		GTKNoCSDArguments[1] != NULL && !Disable) {
+		Disable = strstr(GTKNoCSDArguments[0], "python") != NULL &&
+			strstr(GTKNoCSDArguments[1], "/merengue\0") != NULL;
+		Disable = Disable || (strstr(GTKNoCSDArguments[0], "perl") != NULL &&
+			strstr(GTKNoCSDArguments[1], "/sbuild\0") != NULL);
 	}
 
 	// For package level loading disable on everything GNOME except Flashback
+	// GTK_NOCSD_GNOME=1 disables this check and enables the library for GNOME
 	const char *Desktop = getenv("XDG_CURRENT_DESKTOP");
-	Disable = Disable || (Desktop != NULL && strstr(Desktop,
-		"GNOME") != NULL && strstr(Desktop, "GNOME-Flashback") == NULL);
+	const char *GNOME = getenv("GTK_NOCSD_GNOME");
+	Disable = Disable || ((GNOME == NULL || GNOME[0] != '1')
+		&& (Desktop != NULL && strstr(Desktop, "GNOME") != NULL
+		&& strstr(Desktop, "GNOME-Flashback") == NULL));
 
 	// Do not unload from gnome-session
 	for (size_t Index = 0; Index < GTKNoCSDArgumentNumber && Disable; ++Index) {
@@ -475,6 +492,18 @@ static void GTKNoCSDInit(void) {
 
 	// In Lomiri transient-for changes have to be delayed
 	GTKNoCSDOnLomiri = Desktop != NULL && strstr(Desktop, "Lomiri") != NULL;
+
+	// Whether the user wants to retain internal GTK CSD
+	const char *NoCSDCSD = getenv("GTK_NOCSD_CSD");
+	GTKNoCSDCSD = NoCSDCSD != NULL && NoCSDCSD[0] == '1';
+
+	// Whether the user wants to remove padding from internal GTK CSD
+	const char *NoCSDCSDPadding = getenv("GTK_NOCSD_CSD_PADDING");
+	GTKNoCSDCSDPadding = NoCSDCSDPadding != NULL && NoCSDCSDPadding[0] == '1';
+
+	// Whether the user wants to disable loading any CSS
+	const char *NoCSDNoCSS = getenv("GTK_NOCSD_NO_CSS");
+	GTKNoCSDNoCSS = NoCSDNoCSS != NULL && NoCSDNoCSS[0] == '1';
 
 	// Set the GTK_CSD environment variable for applications that recognize it
 	setenv("GTK_CSD", "0", 1);
@@ -505,10 +534,12 @@ GType GTKNoCSDGTKImage = 0;
 GType GTKNoCSDADWWindowTitle = 0;
 GType GTKNoCSDGTKFileChooserDialog = 0;
 GType GTKNoCSDGTKFileChooserWidget = 0;
+GType GTKNoCSDGTKButton = 0;
 
 // All GTK/GLib functions overwritten or used from GTK3
 void (*o_gtk_window_present)(GtkWindow *) = NULL;
 void (*o_gtk_widget_set_visible)(GtkWidget *, gboolean) = NULL;
+gboolean (*o_gtk_widget_get_visible)(GtkWidget *) = NULL;
 GtkWidget * (*o_gtk_window_get_child)(GtkWindow *) = NULL;
 void (*o_gtk_window_set_child)(GtkWindow *, GtkWidget *) = NULL;
 GtkWidget * (*o_gtk_widget_get_parent)(GtkWidget *) = NULL;
@@ -539,6 +570,7 @@ GType (*o_gtk_image_get_type)(void) = NULL;
 GType (*o_adw_window_title_get_type)(void) = NULL;
 GType (*o_gtk_file_chooser_dialog_get_type)(void) = NULL;
 GType (*o_gtk_file_chooser_widget_get_type)(void) = NULL;
+GType (*o_gtk_button_get_type)(void) = NULL;
 gboolean (*o_gtk_css_provider_load_from_data) (GtkCssProvider *, const gchar *,
 	gssize, GError **) = NULL;
 void (*o_gtk_style_context_add_provider_for_screen) (void *,
@@ -601,7 +633,6 @@ void (*o_gtk_widget_set_layout_manager) (GtkWidget *,
 GtkWidget *(*o_gtk_box_new) (GtkOrientation, gint) = NULL;
 void (*o_gtk_widget_set_name) (GtkWidget *, const gchar *) = NULL;
 void (*o_gtk_label_set_label) (GtkLabel *, const char *) = NULL;
-const char *(*o_gtk_label_get_label) (GtkLabel *) = NULL;
 void (*o_gtk_window_set_title) (GtkWindow *, const char *) = NULL;
 GtkWidget * (*o_gtk_header_bar_get_title_widget) (GtkHeaderBar *) = NULL;
 gboolean (*o_gtk_window_get_decorated) (GtkWindow *);
@@ -665,8 +696,6 @@ GType (*o_g_type_register_static) (GType, const gchar *, const GTypeInfo *,
 	GTypeFlags) = NULL;
 GType (*o_g_type_register_static_simple) (GType, const gchar *, guint,
 	GClassInitFunc, guint, GInstanceInitFunc, GTypeFlags) = NULL;
-typedef void (*GtkCallback)(GtkWidget *widget, gpointer data);
-void (*o_gtk_container_forall) (GtkWidget *, GtkCallback, gpointer) = NULL;
 void (*o_gtk_widget_set_no_show_all) (GtkWidget *, gboolean) = NULL;
 void (*o_gtk_grid_attach) (GtkGrid *, GtkWidget *, int, int, int, int) = NULL;
 void (*o_hdy_style_manager_set_color_scheme) (AdwStyleManager *,
@@ -691,6 +720,7 @@ gulong (*o_g_signal_add_emission_hook) (guint, GQuark, GSignalEmissionHook,
 GTypeInstance * (*o_g_type_check_instance_cast) (GTypeInstance *, GType) = NULL;
 gchar * (*o_g_find_program_in_path) (const gchar *) = NULL;
 void (*o_g_object_set) (GObject *, const gchar *, ...) = NULL;
+void (*o_g_object_get) (GObject *, const gchar *, ...) = NULL;
 GObject * (*o_g_object_ref) (GObject *) = NULL;
 void (*o_g_object_unref)(GObject *) = NULL;
 gpointer (*o_g_malloc0_n) (gsize, gsize) = NULL;
@@ -732,15 +762,18 @@ const gchar * (*o_g_get_application_name) (void) = NULL;
 void (*o_g_type_class_adjust_private_offset) (gpointer, gint *) = NULL;
 gpointer (*o_g_malloc0) (gsize) = NULL;
 const gchar * (*o_gtk_header_bar_get_title) (GtkHeaderBar *) = NULL;
-const gchar * (*o_hdy_header_bar_get_title) (GtkWidget *) = NULL;
-PangoLayout *(*o_gtk_widget_create_pango_layout) (GtkWidget *,
-	const gchar *) = NULL;
-void (*o_pango_layout_get_pixel_size) (PangoLayout *, int *, int *) = NULL;
 void (*o_gtk_widget_set_size_request) (GtkWidget *, gint, gint) = NULL;
 void (*o_gtk_file_chooser_set_extra_widget) (GtkFileChooser *,
 	GtkWidget *) = NULL;
 GtkWidget * (*o_gtk_file_chooser_get_extra_widget) (GtkFileChooser *) = NULL;
 void (*o_gtk_grid_remove_column) (GtkGrid *, gint) = NULL;
+gboolean (*o_adw_dialog_close) (AdwDialog *) = NULL;
+void (*o_adw_dialog_force_close) (AdwDialog *) = NULL;
+void (*o_gtk_im_context_set_cursor_location) (GtkIMContext *,
+	const GdkRectangle *) = NULL;
+void (*o_gtk_im_context_set_client_window) (GtkIMContext *, void *) = NULL;
+gboolean (*o_gtk_window_is_active) (GtkWindow *) = NULL;
+void (*o_gtk_widget_get_preferred_width) (GtkWidget *, gint *, gint *) = NULL;
 
 // This is needed by an unavoidable GTK macros for type registration
 #define gtk_widget_get_type(...) o_gtk_widget_get_type(__VA_ARGS__)
@@ -766,119 +799,36 @@ void (*o_gtk_grid_remove_column) (GtkGrid *, gint) = NULL;
 int GTKNoCSDGTKVersion = -1, GTKNoCSDNewGTKVersion = -1;
 const char *GTKNoCSDNewGTKName = RTLD_NEXT;
 
+// Macro for generating type checking functions
+// WARNING: Macro
+#define CHECK_TYPE(Function, Type)								 \
+		bool Function(GObject * Object) {						 \
+			if ((Type) == 0 || Object == NULL) {				 \
+				return false;									 \
+			}													 \
+			return o_g_type_is_a(G_OBJECT_TYPE(Object), (Type)); \
+		}
+
 // These are used instead of the GTK_IS functions
-bool GTKNoCSDGtkWindow(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKWindow);
-}
-bool GTKNoCSDGtkApplicatonWindow(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKApplicationWindow);
-}
-bool GTKNoCSDGtkHeaderBar(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKHeaderBar);
-}
-bool GTKNoCSDGtkContainer(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDContainer);
-}
-bool GTKNoCSDGtkShortcutsWindow(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKShortcutsWindow);
-}
-bool GTKNoCSDGtkBuilder(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKBuilder);
-}
-bool GTKNoCSDGtkLabel(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKLabel);
-}
-bool GTKNoCSDGtkSearchBar(GObject *Object) {
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKSearchBar);
-}
-bool GTKNoCSDAdwWindow(GObject *Object) {
-	if (GTKNoCSDADWWindow == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDADWWindow);
-}
-bool GTKNoCSDAdwApplicatonWindow(GObject *Object) {
-	if (GTKNoCSDADWApplicationWindow == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDADWApplicationWindow);
-}
-bool GTKNoCSDAdwHeaderBar(GObject *Object) {
-	if (GTKNoCSDADWHeaderBar == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDADWHeaderBar);
-}
-bool GTKNoCSDAdwDialog(GObject *Object) {
-	if (GTKNoCSDADWDialog == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDADWDialog);
-}
-bool GTKNoCSDAdwWindowTitle(GObject *Object) {
-	if (GTKNoCSDADWWindowTitle == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDADWWindowTitle);
-}
-bool GTKNoCSDHdyWindow(GObject *Object) {
-	if (GTKNoCSDHDYWindow == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDHDYWindow);
-}
-bool GTKNoCSDHdyApplicatonWindow(GObject *Object) {
-	if (GTKNoCSDHDYApplicationWindow == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDHDYApplicationWindow);
-}
-bool GTKNoCSDHdyHeaderBar(GObject *Object) {
-	if (GTKNoCSDHDYHeaderBar == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDHDYHeaderBar);
-}
-bool GTKNoCSDGtkFileChooserDialog(GObject *Object) {
-	if (GTKNoCSDGTKFileChooserDialog == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKFileChooserDialog);
-}
-bool GTKNoCSDGtkFileChooserWidget(GObject *Object) {
-	if (GTKNoCSDGTKFileChooserWidget == 0) {
-		return false;
-	}
-
-	// WARNING: Macro
-	return o_g_type_is_a(G_OBJECT_TYPE(Object), GTKNoCSDGTKFileChooserWidget);
-}
+CHECK_TYPE(GTKNoCSDGtkWindow, GTKNoCSDGTKWindow)
+CHECK_TYPE(GTKNoCSDGtkApplicatonWindow, GTKNoCSDGTKApplicationWindow)
+CHECK_TYPE(GTKNoCSDGtkHeaderBar, GTKNoCSDGTKHeaderBar)
+CHECK_TYPE(GTKNoCSDGtkContainer, GTKNoCSDContainer)
+CHECK_TYPE(GTKNoCSDGtkShortcutsWindow, GTKNoCSDGTKShortcutsWindow)
+CHECK_TYPE(GTKNoCSDGtkBuilder, GTKNoCSDGTKBuilder)
+CHECK_TYPE(GTKNoCSDGtkLabel, GTKNoCSDGTKLabel)
+CHECK_TYPE(GTKNoCSDGtkBox, GTKNoCSDGTKBox)
+CHECK_TYPE(GTKNoCSDGtkSearchBar, GTKNoCSDGTKSearchBar)
+CHECK_TYPE(GTKNoCSDGtkFileChooserDialog, GTKNoCSDGTKFileChooserDialog)
+CHECK_TYPE(GTKNoCSDGtkFileChooserWidget, GTKNoCSDGTKFileChooserWidget)
+CHECK_TYPE(GTKNoCSDHdyWindow, GTKNoCSDHDYWindow)
+CHECK_TYPE(GTKNoCSDHdyApplicatonWindow, GTKNoCSDHDYApplicationWindow)
+CHECK_TYPE(GTKNoCSDHdyHeaderBar, GTKNoCSDHDYHeaderBar)
+CHECK_TYPE(GTKNoCSDAdwWindow, GTKNoCSDADWWindow)
+CHECK_TYPE(GTKNoCSDAdwApplicatonWindow, GTKNoCSDADWApplicationWindow)
+CHECK_TYPE(GTKNoCSDAdwHeaderBar, GTKNoCSDADWHeaderBar)
+CHECK_TYPE(GTKNoCSDAdwDialog, GTKNoCSDADWDialog)
+CHECK_TYPE(GTKNoCSDAdwWindowTitle, GTKNoCSDADWWindowTitle)
 
 void *GTKNoCSDGetLibrary(const char *Name, bool Fatal) {
 	// Load in a library with fatal error reporting
@@ -900,12 +850,22 @@ void *GTKNoCSDGetLibrary(const char *Name, bool Fatal) {
 		}										   \
 
 
-// Macro for simplifying function getting
+// Macros for simplifying function getting
 #define LOAD_SYMBOL(LIBRARY, NAME)										\
 		*(void **) (&o_ ## NAME) = o_dlsym(LIBRARY, #NAME);				\
 		if (o_ ## NAME == NULL) {										\
 			fprintf(stderr, "GTK-NoCSD: dlsym failed for %s\n", #NAME);	\
 		}																\
+
+#define LOAD_SYMBOL2(HANDLE, NAME, USE_GMODULE)							  \
+		if (USE_GMODULE) {												  \
+			o_g_module_symbol((HANDLE), #NAME, (gpointer *) &o_ ## NAME); \
+		} else {														  \
+			*(void **) (&o_ ## NAME) = o_dlsym((HANDLE), #NAME);		  \
+		}																  \
+		if (o_ ## NAME == NULL) {										  \
+			fprintf(stderr, "GTK-NoCSD: failed for %s\n", #NAME);		  \
+		}																  \
 
 int GTKNoCSDGetLinkedLibraries(struct dl_phdr_info *Information,
 	G_GNUC_UNUSED size_t Size, G_GNUC_UNUSED void *Data) {
@@ -954,6 +914,43 @@ void GTKNoCSDGetHdyTypes(void) {
 	GET_TYPE(GTKNoCSDHDYHeaderBar, hdy_header_bar_get_type);
 }
 
+void GTKNoCSDGetAdwSymbols(void *Library, bool GModule) {
+	// Get all used LibAdwaita symbols
+
+	LOAD_SYMBOL2(Library, adw_window_get_type, GModule);
+	LOAD_SYMBOL2(Library, adw_application_window_get_type, GModule);
+	LOAD_SYMBOL2(Library, adw_header_bar_get_type, GModule);
+	LOAD_SYMBOL2(Library, adw_header_bar_get_title_widget, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_get_type, GModule);
+	LOAD_SYMBOL2(Library, adw_header_bar_set_decoration_layout, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_present, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_set_content_height, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_set_content_width, GModule);
+	LOAD_SYMBOL2(Library, adw_window_title_get_type, GModule);
+	LOAD_SYMBOL2(Library, adw_application_window_get_visible_dialog, GModule);
+	LOAD_SYMBOL2(Library, adw_window_get_visible_dialog, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_get_content_width, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_get_content_height, GModule);
+	LOAD_SYMBOL2(Library, adw_header_bar_set_title_widget, GModule);
+	LOAD_SYMBOL2(Library, adw_style_manager_get_default, GModule);
+	LOAD_SYMBOL2(Library, adw_style_manager_set_color_scheme, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_close, GModule);
+	LOAD_SYMBOL2(Library, adw_dialog_force_close, GModule);
+}
+
+void GTKNoCSDGetHdySymbols(void *Library, bool GModule) {
+	// Get all used LibHandy symbols
+
+	LOAD_SYMBOL2(Library, hdy_window_get_type, GModule);
+	LOAD_SYMBOL2(Library, hdy_application_window_get_type, GModule);
+	LOAD_SYMBOL2(Library, hdy_header_bar_get_type, GModule);
+	LOAD_SYMBOL2(Library, hdy_header_bar_set_decoration_layout, GModule);
+	LOAD_SYMBOL2(Library, hdy_header_bar_get_custom_title, GModule);
+	LOAD_SYMBOL2(Library, hdy_header_bar_set_custom_title, GModule);
+	LOAD_SYMBOL2(Library, hdy_style_manager_get_default, GModule);
+	LOAD_SYMBOL2(Library, hdy_style_manager_set_color_scheme, GModule);
+}
+
 void GTKNoCSDGetReferences(bool GetTypes) {
 	// Fetch each needed function
 
@@ -977,6 +974,7 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 		LOAD_SYMBOL(Library, g_type_check_instance_cast);
 		LOAD_SYMBOL(Library, g_find_program_in_path);
 		LOAD_SYMBOL(Library, g_object_set);
+		LOAD_SYMBOL(Library, g_object_get);
 		LOAD_SYMBOL(Library, g_object_ref);
 		LOAD_SYMBOL(Library, g_object_unref);
 		LOAD_SYMBOL(Library, g_malloc0_n);
@@ -1026,7 +1024,8 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 	Dl_info Information;
 
 	// Get used GTK version
-	*(void **) (&o_gtk_check_version) = o_dlsym(RTLD_NEXT, "gtk_check_version");
+	*(void **) (&o_gtk_check_version) = o_dlsym(RTLD_DEFAULT,
+			"gtk_check_version");
 	if (o_gtk_check_version != NULL) {
 		if (o_gtk_check_version(2, 0, 0) == NULL) {
 			GTKNoCSDNewGTKVersion = 2;
@@ -1042,6 +1041,12 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 				(void *) (uintptr_t) o_gtk_check_version, &Information) != 0) {
 			GTKNoCSDNewGTKName = Information.dli_fname;
 		}
+	}
+
+	// GTK is statically linked. Function pointers will be collected from binary
+	if (o_dlsym(RTLD_NEXT, "gtk_init") == NULL && o_dlsym(RTLD_DEFAULT,
+		"gtk_init") != NULL) {
+		GTKNoCSDNewGTKName = RTLD_DEFAULT;
 	}
 
 	// If gtk_check_version is missing, check linked libraries
@@ -1091,6 +1096,7 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 		LOAD_SYMBOL(Library, gtk_widget_get_type);
 		LOAD_SYMBOL(Library, gtk_window_set_decorated);
 		LOAD_SYMBOL(Library, gtk_window_get_decorated);
+		LOAD_SYMBOL(Library, gtk_im_context_set_cursor_location);
 
 		if (GTKNoCSDGTKVersion < 4) {
 			// In GTK2 and GTK3
@@ -1142,7 +1148,6 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 			LOAD_SYMBOL(Library, gtk_box_new);
 			LOAD_SYMBOL(Library, gtk_widget_set_name);
 			LOAD_SYMBOL(Library, gtk_label_set_label);
-			LOAD_SYMBOL(Library, gtk_label_get_label);
 			LOAD_SYMBOL(Library, gtk_window_set_title);
 			LOAD_SYMBOL(Library, gtk_shortcuts_window_get_type);
 			LOAD_SYMBOL(Library, gtk_grid_new);
@@ -1162,6 +1167,8 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 			LOAD_SYMBOL(Library, gtk_grid_attach);
 			LOAD_SYMBOL(Library, gtk_file_chooser_dialog_get_type);
 			LOAD_SYMBOL(Library, gtk_file_chooser_widget_get_type);
+			LOAD_SYMBOL(Library, gtk_widget_get_visible);
+			LOAD_SYMBOL(Library, gtk_button_get_type);
 		}
 
 		if (GTKNoCSDGTKVersion == 4) {
@@ -1194,23 +1201,7 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 			} else {
 				// Only in LibAdwaita
 
-				LOAD_SYMBOL(Library, adw_window_get_type);
-				LOAD_SYMBOL(Library, adw_application_window_get_type);
-				LOAD_SYMBOL(Library, adw_header_bar_get_type);
-				LOAD_SYMBOL(Library, adw_header_bar_get_title_widget);
-				LOAD_SYMBOL(Library, adw_dialog_get_type);
-				LOAD_SYMBOL(Library, adw_header_bar_set_decoration_layout);
-				LOAD_SYMBOL(Library, adw_dialog_present);
-				LOAD_SYMBOL(Library, adw_dialog_set_content_height);
-				LOAD_SYMBOL(Library, adw_dialog_set_content_width);
-				LOAD_SYMBOL(Library, adw_window_title_get_type);
-				LOAD_SYMBOL(Library, adw_application_window_get_visible_dialog);
-				LOAD_SYMBOL(Library, adw_window_get_visible_dialog);
-				LOAD_SYMBOL(Library, adw_dialog_get_content_width);
-				LOAD_SYMBOL(Library, adw_dialog_get_content_height);
-				LOAD_SYMBOL(Library, adw_header_bar_set_title_widget);
-				LOAD_SYMBOL(Library, adw_style_manager_get_default);
-				LOAD_SYMBOL(Library, adw_style_manager_set_color_scheme);
+				GTKNoCSDGetAdwSymbols(Library, false);
 			}
 		}
 
@@ -1229,18 +1220,15 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 			LOAD_SYMBOL(Library, gtk_widget_set_halign);
 			LOAD_SYMBOL(Library, gtk_toggle_button_get_type);
 			LOAD_SYMBOL(Library, gtk_image_get_type);
-			LOAD_SYMBOL(Library, gtk_container_forall);
 			LOAD_SYMBOL(Library, gtk_widget_set_no_show_all);
 			LOAD_SYMBOL(Library, gtk_widget_destroy);
 			LOAD_SYMBOL(Library, gtk_container_propagate_draw);
 			LOAD_SYMBOL(Library, gtk_header_bar_get_title);
-			LOAD_SYMBOL(Library, gtk_widget_create_pango_layout);
 			LOAD_SYMBOL(Library, gtk_widget_set_size_request);
 			LOAD_SYMBOL(Library, gtk_grid_remove_column);
-			dlclose(Library);
-
-			Library = GTKNoCSDGetLibrary("libpango-1.0.so.0", true);
-			LOAD_SYMBOL(Library, pango_layout_get_pixel_size);
+			LOAD_SYMBOL(Library, gtk_im_context_set_client_window);
+			LOAD_SYMBOL(Library, gtk_window_is_active);
+			LOAD_SYMBOL(Library, gtk_widget_get_preferred_width);
 			dlclose(Library);
 
 			Library = GTKNoCSDGetLibrary("libhandy-1.so.0", false);
@@ -1250,15 +1238,7 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 			} else {
 				// Only in LibHandy
 
-				LOAD_SYMBOL(Library, hdy_window_get_type);
-				LOAD_SYMBOL(Library, hdy_application_window_get_type);
-				LOAD_SYMBOL(Library, hdy_header_bar_get_type);
-				LOAD_SYMBOL(Library, hdy_header_bar_set_decoration_layout);
-				LOAD_SYMBOL(Library, hdy_header_bar_get_custom_title);
-				LOAD_SYMBOL(Library, hdy_header_bar_set_custom_title);
-				LOAD_SYMBOL(Library, hdy_style_manager_get_default);
-				LOAD_SYMBOL(Library, hdy_style_manager_set_color_scheme);
-				LOAD_SYMBOL(Library, hdy_header_bar_get_title);
+				GTKNoCSDGetHdySymbols(Library, false);
 			}
 		}
 
@@ -1268,29 +1248,29 @@ void GTKNoCSDGetReferences(bool GetTypes) {
 	}
 
 	// G functions are too early to fetch GTypes, there they are not fetched yet
-	if ((!GTKNoCSDGotTypes || OldGTKVersion != GTKNoCSDNewGTKVersion) &&
-		GetTypes) {
-		// Better to get these once and then reuse
-		GET_TYPE(GTKNoCSDGTKWindow, gtk_window_get_type);
-		GET_TYPE(GTKNoCSDGTKApplicationWindow,
-			gtk_application_window_get_type);
-		GET_TYPE(GTKNoCSDGTKHeaderBar, gtk_header_bar_get_type);
-		GET_TYPE(GTKNoCSDContainer, gtk_container_get_type);
-		GET_TYPE(GTKNoCSDGTKShortcutsWindow, gtk_shortcuts_window_get_type);
-		GET_TYPE(GTKNoCSDGTKBuilder, gtk_builder_get_type);
-		GET_TYPE(GTKNoCSDGTKLabel, gtk_label_get_type);
-		GET_TYPE(GTKNoCSDGTKBox, gtk_box_get_type);
-		GET_TYPE(GTKNoCSDGTKSearchBar, gtk_search_bar_get_type);
-		GET_TYPE(GTKNoCSDGTKToggleButton, gtk_toggle_button_get_type);
-		GET_TYPE(GTKNoCSDGTKImage, gtk_image_get_type);
-		GET_TYPE(GTKNoCSDGTKFileChooserDialog,
-			gtk_file_chooser_dialog_get_type);
-		GET_TYPE(GTKNoCSDGTKFileChooserWidget,
-			gtk_file_chooser_widget_get_type);
-		GTKNoCSDGetAdwTypes();
-		GTKNoCSDGetHdyTypes();
-		GTKNoCSDGotTypes = true;
+	if ((GTKNoCSDGotTypes && OldGTKVersion == GTKNoCSDNewGTKVersion) ||
+		!GetTypes) {
+		return;
 	}
+
+	// Better to get these once and then reuse
+	GET_TYPE(GTKNoCSDGTKWindow, gtk_window_get_type);
+	GET_TYPE(GTKNoCSDGTKApplicationWindow, gtk_application_window_get_type);
+	GET_TYPE(GTKNoCSDGTKHeaderBar, gtk_header_bar_get_type);
+	GET_TYPE(GTKNoCSDContainer, gtk_container_get_type);
+	GET_TYPE(GTKNoCSDGTKShortcutsWindow, gtk_shortcuts_window_get_type);
+	GET_TYPE(GTKNoCSDGTKBuilder, gtk_builder_get_type);
+	GET_TYPE(GTKNoCSDGTKLabel, gtk_label_get_type);
+	GET_TYPE(GTKNoCSDGTKBox, gtk_box_get_type);
+	GET_TYPE(GTKNoCSDGTKSearchBar, gtk_search_bar_get_type);
+	GET_TYPE(GTKNoCSDGTKToggleButton, gtk_toggle_button_get_type);
+	GET_TYPE(GTKNoCSDGTKImage, gtk_image_get_type);
+	GET_TYPE(GTKNoCSDGTKFileChooserDialog, gtk_file_chooser_dialog_get_type);
+	GET_TYPE(GTKNoCSDGTKFileChooserWidget, gtk_file_chooser_widget_get_type);
+	GET_TYPE(GTKNoCSDGTKButton, gtk_button_get_type);
+	GTKNoCSDGetAdwTypes();
+	GTKNoCSDGetHdyTypes();
+	GTKNoCSDGotTypes = true;
 }
 
 int GTKNoCSDMagic(GtkWindow *Window, size_t Options);
@@ -1304,12 +1284,10 @@ gboolean GTKNoCSDRecall(gpointer Data) {
 
 // WARNING: These malloced lists will live forever. If the app spawns 100
 // regular or undecorated CSD windows, these will grow to 101 length, which will
-// use a staggering 808 bytes of memory, on 64bit systems.
-// GTKNoCSDWindowList is a list of weak references to be able to
-// check that a window has been destroyed, when using g_idle_add or such. The
-// actual window values might be NULL
-GtkWindow ***GTKNoCSDWindowList = NULL;
-GtkWindow **GTKNoCSDUndecoratedWindowList = NULL;
+// use a staggering 808 bytes of memory, on 64bit systems. GTKNoCSDWindowList is
+// a list of weak references to check that a window has been destroyed
+// when using g_idle_add or such. The actual window values might be NULL
+GtkWindow ***GTKNoCSDWindowList = NULL, **GTKNoCSDUndecoratedWindowList = NULL;
 
 GtkWidget *GTKNoCSDGetWindow(GtkWidget *Widget) {
 	// Get the window of a widget in both GTK3 and GTK4, unified
@@ -1321,6 +1299,34 @@ GtkWidget *GTKNoCSDGetWindow(GtkWidget *Widget) {
 		return o_gtk_widget_get_ancestor(Widget, GTKNoCSDGTKWindow);
 	}
 }
+
+bool GTKNoCSDHasClass(GtkWidget *Widget, const char *Class) {
+	// Check whether a widget has a CSS class
+
+	GtkStyleContext *Style = o_gtk_widget_get_style_context(Widget);
+	return o_gtk_style_context_has_class(Style, Class);
+}
+
+bool GTKNoCSDGTK3HasVisible(GtkWidget *Container) {
+	// Check if a container has any visible widgets
+
+	// Get children, go through them
+	GList *Children = o_gtk_container_get_children(Container);
+	for (GList *Iter = Children; Iter != NULL; Iter = Iter->next) {
+		// Has visible child
+		if (o_gtk_widget_get_visible((GtkWidget *) Iter->data)) {
+			o_g_list_free(Children);
+			return true;
+		}
+	}
+
+	// Does not have visible child
+	o_g_list_free(Children);
+	return false;
+}
+
+// Overwrite for not checking parent (LibAdwaita dialog first label)
+bool GTKNoCSDLabelParentCheck = true;
 
 gboolean GTKNoCSDLabelChange(gpointer Data) {
 	// Check title content, and hide it, if it is the same as the window or
@@ -1340,7 +1346,10 @@ gboolean GTKNoCSDLabelChange(gpointer Data) {
 	if (Parent == NULL && GTKNoCSDHDYHeaderBar != 0) {
 		Parent = o_gtk_widget_get_ancestor(Label, GTKNoCSDHDYHeaderBar);
 	}
-	if (Parent == NULL) {
+
+	// Do not act if not in header (unless LibAdwaita dialogs), or if in button
+	if ((Parent == NULL && GTKNoCSDLabelParentCheck) ||
+		o_gtk_widget_get_ancestor(Label, GTKNoCSDGTKButton) != NULL) {
 		return FALSE;
 	}
 
@@ -1353,11 +1362,34 @@ gboolean GTKNoCSDLabelChange(gpointer Data) {
 	const char *Title = Window != NULL ? o_gtk_window_get_title(Window) : NULL;
 	Title = Title == NULL ? o_g_get_application_name() : Title;
 
-	// Only show if different
+	// Only show if different and not empty, or if a default decoration
 	if (Title != NULL) {
-		o_gtk_widget_set_visible(Label, strcmp(Text, Title) != 0);
-	}
+		bool Visible = (strstr(Title, Text) == NULL && Text[0] != '\0') ||
+			(Parent != NULL && GTKNoCSDHasClass(Parent, "default-decoration"));
+		if (Visible == o_gtk_widget_get_visible(Label)) {
+			return FALSE;
+		}
+		o_gtk_widget_set_visible(Label, Visible);
 
+		// Very specific XFCE scenario, can be loosened if needed
+		// Layered checks for least work if not needed
+		if (GTKNoCSDGTKVersion == 3) {
+			GtkWidget *Box = o_gtk_widget_get_parent(Label);
+			if ((!GTKNoCSDGtkBox((GObject *) Box)) ||
+				o_gtk_widget_get_parent(Box) != Parent) {
+				return FALSE;
+			}
+
+			if (GTKNoCSDHasClass(Label, "title") &&
+				GTKNoCSDHasClass(Box, "vertical")) {
+				// Hide or show Box based on whether it has visible
+				// children, do the same with the header
+				o_gtk_widget_set_visible(Box, GTKNoCSDGTK3HasVisible(Box));
+				o_gtk_widget_set_visible(Parent,
+					GTKNoCSDGTK3HasVisible(Parent));
+			}
+		}
+	}
 	return FALSE;
 }
 
@@ -1390,23 +1422,14 @@ bool GTKNoCSDCheckGTK4Header(GtkWidget *Widget) {
 		GTKNoCSDTitleChanged((GtkLabel *) Widget, NULL, NULL);
 	}
 
-	// Hide empty title widgets and force set decoration layouts to empty
+	// Force set decoration layouts to empty
 	if (GTKNoCSDAdwHeaderBar((GObject *) Widget)) {
 		o_adw_header_bar_set_decoration_layout((AdwHeaderBar *) Widget, "");
-		if (o_adw_header_bar_get_title_widget((AdwHeaderBar *) Widget) ==
-			NULL) {
-			o_adw_header_bar_set_title_widget((AdwHeaderBar *) Widget,
-				o_gtk_grid_new());
-		}
 		return true;
-	} else if (GTKNoCSDGtkHeaderBar((GObject *) Widget)) {
+	} else if (GTKNoCSDGtkHeaderBar((GObject *) Widget) &&
+		!(GTKNoCSDCSD && GTKNoCSDHasClass(Widget, "default-decoration"))) {
 		// GTK4 headers are never looked for so they are never confirmed
 		o_gtk_header_bar_set_decoration_layout((GtkHeaderBar *) Widget, "");
-		if (o_gtk_header_bar_get_title_widget((GtkHeaderBar *) Widget) ==
-			NULL) {
-			o_gtk_header_bar_set_title_widget((GtkHeaderBar *) Widget,
-				o_gtk_grid_new());
-		}
 	}
 
 	return false;
@@ -1552,7 +1575,9 @@ void GTKNoCSDForceInvisible(GtkWidget *Widget, G_GNUC_UNUSED GParamSpec *Spec,
 	// forced off here
 
 	o_gtk_widget_set_visible(Widget, false);
-	o_gtk_widget_set_no_show_all(Widget, true);
+	if (o_gtk_widget_set_no_show_all != NULL) {
+		o_gtk_widget_set_no_show_all(Widget, true);
+	}
 }
 
 void GTKNoCSDGTK3SetForceInvisible(GtkWidget *Widget) {
@@ -1568,56 +1593,35 @@ void GTKNoCSDGTK3SetForceInvisible(GtkWidget *Widget) {
 }
 
 void GTKNoCSDGTK3EmptyTitleChanged(GtkWidget *Header,
-	G_GNUC_UNUSED GParamSpec *Spec, gpointer Data) {
-	// Make the placeholder title take as much space as the title would take
+	G_GNUC_UNUSED GParamSpec *Spec, G_GNUC_UNUSED gpointer Data) {
+	// Make the headerbar take as much space as it would naturally
 
-	// Get placeholder and text of title
-	GtkWidget *Grid = NULL;
-	const char *Title = NULL;
-	if (Data) {
-		Title = o_hdy_header_bar_get_title(Header);
-		Grid = o_hdy_header_bar_get_custom_title(Header);
-	} else {
-		Title = o_gtk_header_bar_get_title((GtkHeaderBar *) Header);
-		Grid = o_gtk_header_bar_get_custom_title((GtkHeaderBar *) Header);
-	}
-
-	// Hide or show depending on title being available
-	o_gtk_widget_set_visible(Grid, Title != NULL);
-
-	// Get width of the title text if available
 	int Width = -1;
-	if (Title != NULL) {
-		PangoLayout *Layout = o_gtk_widget_create_pango_layout(Grid, Title);
-		o_pango_layout_get_pixel_size(Layout, &Width, NULL);
-		o_g_object_unref((GObject *) Layout);
-	}
-
-	// Set width of text or unset
-	o_gtk_widget_set_size_request(Grid, Width, -1);
+	o_gtk_widget_get_preferred_width(Header, NULL, &Width);
+	o_gtk_widget_set_size_request(Header, Width, -1);
 }
 
-void GTKNoCSDGTK3SetEmptyTitle(GtkWidget *Header, bool IsLibHandy) {
+void GTKNoCSDGTK3SetEmptyTitle(GtkWidget *Header, bool Setup) {
 	// Set up empty title with size monitoring for GTK3
 
-	// Add empty title
-	GtkWidget *Grid = o_gtk_grid_new();
-	if (IsLibHandy) {
-		o_hdy_header_bar_set_custom_title(Header, Grid);
-	} else {
-		o_gtk_header_bar_set_custom_title((GtkHeaderBar *) Header, Grid);
+	if (!Setup) {
+		o_gtk_widget_set_size_request(Header, -1, -1);
+
+		// WARNING: Macro
+		g_signal_handlers_disconnect_by_func(Header,
+			(GCallback *) GTKNoCSDGTK3EmptyTitleChanged, NULL);
+		return;
 	}
 
 	// Check size once
-	GTKNoCSDGTK3EmptyTitleChanged(Header, NULL, (void *) IsLibHandy);
+	GTKNoCSDGTK3EmptyTitleChanged(Header, NULL, NULL);
 
 	// Recheck each time on title change
 	if (!o_g_signal_handler_find((GObject *) Header, G_SIGNAL_MATCH_FUNC,
-		0, 0, NULL, (GCallback *) GTKNoCSDGTK3EmptyTitleChanged,
-		(void *) IsLibHandy)) {
+		0, 0, NULL, (GCallback *) GTKNoCSDGTK3EmptyTitleChanged, NULL)) {
 		// WARNING: Macro
 		g_signal_connect(Header, "notify::title",
-			G_CALLBACK(GTKNoCSDGTK3EmptyTitleChanged), (void *) IsLibHandy);
+			G_CALLBACK(GTKNoCSDGTK3EmptyTitleChanged), NULL);
 	}
 }
 
@@ -1626,11 +1630,12 @@ bool GTKNoCSDGetGTK3Headers(GtkWidget *Container) {
 
 	// Certain applications set this layout for themselves, here it is unset
 	// Also remove empty titles
-	if (GTKNoCSDGtkHeaderBar((GObject *) Container)) {
-		o_gtk_header_bar_set_decoration_layout((GtkHeaderBar *) Container, "");
+	if (GTKNoCSDGtkHeaderBar((GObject *) Container) && !(GTKNoCSDCSD &&
+		GTKNoCSDHasClass(Container, "default-decoration"))) {
 		GtkHeaderBar *Header = (GtkHeaderBar *) Container;
+		o_gtk_header_bar_set_decoration_layout(Header, "");
 		if (o_gtk_header_bar_get_custom_title(Header) == NULL) {
-			GTKNoCSDGTK3SetEmptyTitle(Container, false);
+			GTKNoCSDGTK3SetEmptyTitle(Container, true);
 		}
 	} else if (GTKNoCSDHdyHeaderBar((GObject *) Container)) {
 		o_hdy_header_bar_set_decoration_layout(Container, "");
@@ -1649,8 +1654,7 @@ bool GTKNoCSDGetGTK3Headers(GtkWidget *Container) {
 		GTKNoCSDTitleChanged((GtkLabel *) Container, NULL, NULL);
 	}
 
-	GtkStyleContext *Context = o_gtk_widget_get_style_context(Container);
-	if (o_gtk_style_context_has_class(Context, "titlebutton")) {
+	if (GTKNoCSDHasClass(Container, "titlebutton")) {
 		GTKNoCSDGTK3SetForceInvisible(Container);
 		return true;
 	}
@@ -1672,8 +1676,7 @@ bool GTKNoCSDGetGTK3Headers(GtkWidget *Container) {
 			++Hidden;
 		} else {
 			// If close button, remove
-			Context = o_gtk_widget_get_style_context(Child);
-			if (o_gtk_style_context_has_class(Context, "titlebutton")) {
+			if (GTKNoCSDHasClass(Child, "titlebutton")) {
 				GTKNoCSDGTK3SetForceInvisible(Child);
 				++Hidden;
 			}
@@ -1932,7 +1935,7 @@ static void GTKNoCSDGTK3HeaderSizeAllocate(GtkWidget *Widget,
 }
 
 GtkWidget *GTKNoCSDGTK3FindWidget(void *Container, bool (*Check) (GObject *)) {
-	// Find the widget checked by Check in a container
+	// Find the widget checked by Check in a container (GTK3)
 
 	GList *Children = o_gtk_container_get_children(Container);
 
@@ -1963,44 +1966,87 @@ GtkWidget *GTKNoCSDGTK3FindWidget(void *Container, bool (*Check) (GObject *)) {
 	return NULL;
 }
 
-void GTKNoCSDAddToUndecorated(GtkWindow *Window) {
-	// Add a window to the list of windows which got the CSD removed and were
-	// also set to be undecorated
+GtkWidget *GTKNoCSDGTK4FindWidget(GtkWidget *Container,
+	bool (*Check) (GObject *)) {
+	// Find the widget checked by Check in a container (GTK4)
 
-	if (GTKNoCSDUndecoratedWindowList == NULL) {
-		// Create list with single item if first such window
-		GTKNoCSDUndecoratedWindowList = malloc(sizeof(GtkWindow *) * 2);
-		GTKNoCSDUndecoratedWindowList[0] = Window;
-		GTKNoCSDUndecoratedWindowList[1] = NULL;
+	// Go through each child
+	for (GtkWidget *Child = o_gtk_widget_get_first_child(Container);
+		Child != NULL; Child = o_gtk_widget_get_next_sibling(Child)) {
+		// Return if found
+		if (Check((GObject *) Child)) {
+			return Child;
+		}
+
+		// Recurse into children
+		GtkWidget *Found = GTKNoCSDGTK4FindWidget(Child, Check);
+
+		// Return if found
+		if (Found != NULL) {
+			return Found;
+		}
+	}
+
+	// It was not found
+	return NULL;
+}
+
+void GTKNoCSDAddToList(GtkWindow ***List, GtkWindow *Window) {
+	// Add a window to a list of windows
+
+	// Create list with single item if first window
+	if (*List == NULL) {
+		*List = malloc(sizeof(GtkWindow *) * 2);
+		(*List)[0] = Window;
+		(*List)[1] = NULL;
 	} else {
 		// Check if window is already added
 		size_t Index = 0;
-		bool Add = true;
-		while (GTKNoCSDUndecoratedWindowList[Index] != NULL) {
-			if (GTKNoCSDUndecoratedWindowList[Index] == Window) {
-				Add = false;
-				break;
+		while ((*List)[Index] != NULL) {
+			if ((*List)[Index] == Window) {
+				return;
 			}
 			++Index;
 		}
 
 		// Add to list, if not a reused window
-		if (Add) {
-			GTKNoCSDUndecoratedWindowList =
-				realloc(GTKNoCSDUndecoratedWindowList,
-					sizeof(GtkWindow *) * (Index + 2));
-			GTKNoCSDUndecoratedWindowList[Index] = Window;
-			GTKNoCSDUndecoratedWindowList[Index + 1] = NULL;
-		}
+		*List = realloc(*List, sizeof(GtkWindow *) * (Index + 2));
+		(*List)[Index] = Window;
+		(*List)[Index + 1] = NULL;
 	}
 }
 
-void GTKNoCSDHandlerFailExit() {
+void GTKNoCSDHandlerFailExit(void) {
 	// Simple exit function when crash handler setup failed
 
 	G_GNUC_UNUSED ssize_t Ignore = write(3, "1", 1);
 	GTKNoCSDCrashPid = -2;
 	_exit(0);
+}
+
+GtkWidget *GTKNoCSDSetUpSearchButton(GtkWidget *Container,
+	bool (*Check) (GObject *), const char *ActiveProperty) {
+	// Set up a search button
+
+	// Get widget to be bound to
+	GtkWidget *ChooserWidget = GTKNoCSDGTK3FindWidget(Container, Check);
+
+	// Create search button
+	// WARNING: Own call
+	GtkWidget *Icon = g_object_new(GTKNoCSDGTKImage, "visible",
+			ChooserWidget != NULL,
+			"icon-name", "edit-find-symbolic", NULL);
+	GtkWidget *SearchButton = g_object_new(GTKNoCSDGTKToggleButton,
+			"child", Icon, "visible", ChooserWidget != NULL, NULL);
+
+	// Bind properties
+	if (ChooserWidget != NULL) {
+		o_g_object_bind_property((GObject *) ChooserWidget,
+			ActiveProperty, (GObject *) SearchButton, "active",
+			G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
+	}
+
+	return SearchButton;
 }
 
 GtkWidget *GTKNoCSDSetUpFileChooser(GtkFileChooser *Chooser, bool Set,
@@ -2014,27 +2060,14 @@ GtkWidget *GTKNoCSDSetUpFileChooser(GtkFileChooser *Chooser, bool Set,
 		"GTKNoCSD") != 0) {
 		// Either there is no current widget or it is not ours, transfering
 
-		GtkWidget *ChooserWidget = GTKNoCSDGTK3FindWidget(Chooser,
-				GTKNoCSDGtkFileChooserWidget);
-
 		// Create grid
 		GtkWidget *ExtraGrid = o_gtk_grid_new();
 		o_gtk_widget_set_name(ExtraGrid, "GTKNoCSD");
 
 		// Create and add search button
-		// WARNING: Own call
-		GtkWidget *Icon = g_object_new(GTKNoCSDGTKImage, "visible",
-				ChooserWidget != NULL,
-				"icon-name", "edit-find-symbolic", NULL);
-		GtkWidget *SearchButton = g_object_new(GTKNoCSDGTKToggleButton,
-				"child", Icon, "visible", ChooserWidget != NULL, NULL);
+		GtkWidget *SearchButton = GTKNoCSDSetUpSearchButton(
+			(GtkWidget *) Chooser, GTKNoCSDGtkFileChooserWidget, "search-mode");
 		o_gtk_grid_attach((GtkGrid *) ExtraGrid, SearchButton, 0, 0, 1, 1);
-
-		if (ChooserWidget != NULL) {
-			o_g_object_bind_property((GObject *) ChooserWidget,
-				"search-mode", (GObject *) SearchButton, "active",
-				G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
-		}
 
 		if (Extra != NULL) {
 			// Extra exists
@@ -2080,9 +2113,28 @@ GtkWidget *GTKNoCSDSetUpFileChooser(GtkFileChooser *Chooser, bool Set,
 	return Extra;
 }
 
+void GTKNoCSDLoadCSS(const char *CSS) {
+	// Load CSS for both GTK3 and GTK4
+
+	GtkCssProvider *Provider = o_gtk_css_provider_new();
+	if (GTKNoCSDGTKVersion == 4) {
+		o_gtk_css_provider_load_from_string(Provider, CSS);
+		o_gtk_style_context_add_provider_for_display(
+			o_gdk_display_get_default(), (GtkStyleProvider *) Provider,
+			GTK_STYLE_PROVIDER_PRIORITY_USER);
+	} else {
+		o_gtk_css_provider_load_from_data(Provider, CSS, -1, NULL);
+		void *Screen = o_gdk_screen_get_default();
+		o_gtk_style_context_add_provider_for_screen(Screen,
+			(GtkStyleProvider *) Provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+	}
+	o_g_object_unref((GObject *) Provider);
+}
+
 int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 	// Do all needed changes to disable CSD
 	// Options: 0: Nothing, 1: No layout loading, 2: Retry later on no child
+	// with GTK4, 3: Same as 2 with GTK3
 
 	// This is most likely an application bug
 	if (Window == NULL) {
@@ -2269,40 +2321,32 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 				}
 			}
 
-			// Remove rounding, padding, shadow, hide title
-			const char *CSS = "window { border-radius: 0; box-shadow: none; }"
-				"headerbar { border-radius: 0; min-height: 0pt; padding: 0pt; }"
-				"headerbar * { margin: 0pt; }"
-				"headerbar box { padding: 0pt; }"
-				"windowtitle { opacity: 0; }"
-				"decoration { margin: 0px; }";
+			if (!GTKNoCSDNoCSS) {
+				// Remove rounding, padding, shadow, hide title
+				GTKNoCSDLoadCSS("window { border-radius: 0; box-shadow: none; }"
+					"headerbar { border-radius: 0; min-height: 0pt; padding: 0pt; }"
+					"headerbar * { margin: 0pt; }"
+					"windowtitle { opacity: 0; }"
+					"decoration { margin: 0px; }"
+					"headerbar viewswitcher * { padding: 0pt; min-height: 0pt; }");
 
-			// Load CSS for both GTK3 and GTK4
-			GtkCssProvider *Provider = o_gtk_css_provider_new();
-			if (GTKNoCSDGTKVersion == 4) {
-				o_gtk_css_provider_load_from_string(Provider, CSS);
-				o_gtk_style_context_add_provider_for_display(
-					o_gdk_display_get_default(),
-					(GtkStyleProvider *) Provider,
-					GTK_STYLE_PROVIDER_PRIORITY_USER);
-			} else {
-				o_gtk_css_provider_load_from_data(Provider, CSS, -1, NULL);
-				void *Screen = o_gdk_screen_get_default();
-				o_gtk_style_context_add_provider_for_screen(Screen,
-					(GtkStyleProvider *) Provider,
-					GTK_STYLE_PROVIDER_PRIORITY_USER);
+				// Some themes might not play well with the internal CSD, give
+				// it too much padding. Here it is optionally removed
+				if (GTKNoCSDCSDPadding) {
+					GTKNoCSDLoadCSS(
+						".default-decoration windowcontrols * { padding: unset; }");
+				}
 
 				// Force reload current window. We do it later, when we know
 				// that it is needed and where the weak reference is stored
-				SetCSS = true;
+				SetCSS = GTKNoCSDGTKVersion != 4;
 			}
-			o_g_object_unref((GObject *) Provider);
 
 			GTKNoCSDSettings = true;
 		}
 	}
 
-	if (!GTKNoCSDLayout && Options != 1) {
+	if (!GTKNoCSDLayout && Options != 1 && !GTKNoCSDCSD) {
 		GtkSettings *Settings = o_gtk_settings_get_default();
 		if (Settings != NULL) {
 			// Remove titlebar buttons
@@ -2314,7 +2358,8 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 	}
 
 	// GTK3 windows can be embedded into some other widgets
-	if (o_gtk_widget_get_parent((GtkWidget *) Window) != NULL) {
+	if (GTKNoCSDGTKVersion == 3 &&
+		o_gtk_widget_get_parent((GtkWidget *) Window) != NULL) {
 		return 2;
 	}
 
@@ -2430,20 +2475,22 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 			GTKNoCSDWindowList[Index]);
 	}
 
-	// This CSS breaks the look of context menus on X, with GTK3, if loaded
-	// globally, but it is needed for certain windows (Peek?)
-	GtkCssProvider *Provider = o_gtk_css_provider_new();
-	GtkStyleContext *Context =
-		o_gtk_widget_get_style_context((GtkWidget *) Window);
-	const char *CSS = "decoration { box-shadow: none; }";
-	if (GTKNoCSDGTKVersion == 4) {
-		o_gtk_css_provider_load_from_string(Provider, CSS);
-	} else {
-		o_gtk_css_provider_load_from_data(Provider, CSS, -1, NULL);
+	if (!GTKNoCSDNoCSS) {
+		// This CSS breaks the look of context menus on X, with GTK3, if loaded
+		// globally, but it is needed for certain windows (Peek?)
+		GtkCssProvider *Provider = o_gtk_css_provider_new();
+		GtkStyleContext *Style =
+			o_gtk_widget_get_style_context((GtkWidget *) Window);
+		const char *CSS = "decoration { box-shadow: none; }";
+		if (GTKNoCSDGTKVersion == 4) {
+			o_gtk_css_provider_load_from_string(Provider, CSS);
+		} else {
+			o_gtk_css_provider_load_from_data(Provider, CSS, -1, NULL);
+		}
+		o_gtk_style_context_add_provider(Style,
+			(GtkStyleProvider *) Provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+		o_g_object_unref((GObject *) Provider);
 	}
-	o_gtk_style_context_add_provider(Context,
-		(GtkStyleProvider *) Provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
-	o_g_object_unref((GObject *) Provider);
 
 	// Reset CSS to apply it on current window
 	if (SetCSS) {
@@ -2535,7 +2582,7 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 		}
 		Title = GTKNoCSDFirstChild(Title);
 		o_gtk_window_set_title(Window,
-			o_gtk_label_get_label((GtkLabel *) Title));
+			o_gtk_label_get_text((GtkLabel *) Title));
 		o_gtk_label_set_label((GtkLabel *) Title, "");
 
 		// In GTK3 ShortcutsWindows cannot get their content replaced. The
@@ -2545,26 +2592,10 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 			o_g_object_ref((GObject *) Header);
 			o_gtk_window_set_titlebar(Window, NULL);
 
-			// Get the ShortcutsWindow search bar
-			GtkWidget *SearchBar =
-				GTKNoCSDGTK3FindWidget(WindowChild, GTKNoCSDGtkSearchBar);
-
-			// Create search button, add it to window, display it
-			// WARNING: Own call
-			GtkWidget *Icon = g_object_new(GTKNoCSDGTKImage, "visible",
-					SearchBar != NULL,
-					"icon-name", "edit-find-symbolic", NULL);
-			GtkWidget *SearchButton = g_object_new(GTKNoCSDGTKToggleButton,
-					"child", Icon, "visible", SearchBar != NULL, NULL);
+			// Create search button, add it to window
+			GtkWidget *SearchButton = GTKNoCSDSetUpSearchButton(WindowChild,
+					GTKNoCSDGtkSearchBar, "search-mode-enabled");
 			GTKNoCSDGtkBoxAdd(WindowChild, SearchButton);
-			o_gtk_widget_set_visible(SearchButton, true);
-
-			// Bind search bar to the button
-			if (SearchBar != NULL) {
-				o_g_object_bind_property((GObject *) SearchBar,
-					"search-mode-enabled", (GObject *) SearchButton, "active",
-					G_BINDING_SYNC_CREATE | G_BINDING_BIDIRECTIONAL);
-			}
 
 			// Make button the first widget, move it to the left
 			o_gtk_box_reorder_child((GtkBox *) (WindowChild), SearchButton, 0);
@@ -2590,7 +2621,7 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 	// back here. These windows are tracked as gdk_window_get_frame_extents only
 	// applies to them
 	if (!o_gtk_window_get_decorated(Window)) {
-		GTKNoCSDAddToUndecorated(Window);
+		GTKNoCSDAddToList(&GTKNoCSDUndecoratedWindowList, Window);
 		o_gtk_window_set_decorated(Window, true);
 	}
 
@@ -2612,19 +2643,24 @@ int GTKNoCSDMagic(GtkWindow *Window, size_t Options) {
 		o_gtk_application_set_app_menu(Application, NULL);
 	}
 
-	// Builder might map a window and unset the child after
-	// It is also possible that such window depends on not getting unrealized
-	// later, for example with WebKitWebView. So the titlebar removal happens
-	// early, and later it will be added to the window. Liferea specific fix
-	if (WindowChild == NULL && Options == 2 && GTKNoCSDGTKVersion == 4) {
-		// Unset and save header
-		o_g_object_ref((GObject *) Header);
-		o_gtk_window_set_titlebar(Window, NULL);
-		o_g_object_set_data((GObject *) Window, "GTKNoCSDTitleBar", Header);
+	if (WindowChild == NULL) {
+		// Builder might map a window and unset the child after. It is also
+		// possible that such window depends on not getting unrealized later,
+		// for example with WebKitWebView. So the titlebar removal happens
+		// early, and later it will be added to the window. Liferea specific fix
+		if (Options == 2 && GTKNoCSDGTKVersion == 4) {
+			// Unset and save header
+			o_g_object_ref((GObject *) Header);
+			o_gtk_window_set_titlebar(Window, NULL);
+			o_g_object_set_data((GObject *) Window, "GTKNoCSDTitleBar", Header);
+		}
 
 		// Come back later
-		o_g_timeout_add(1, GTKNoCSDRecall, Window);
-		return 14;
+		if ((Options == 3 && GTKNoCSDGTKVersion == 3) ||
+			(Options == 2 && GTKNoCSDGTKVersion == 4)) {
+			o_g_timeout_add(1, GTKNoCSDRecall, Window);
+			return 14;
+		}
 	}
 
 	// Create own vertical container
@@ -2802,7 +2838,7 @@ void gtk_widget_set_visible(GtkWidget *Widget, gboolean Visible) {
 		// This function might not get called with the window
 		GtkWidget *Window = GTKNoCSDGetWindow(Widget);
 		if (Window != NULL && Visible) {
-			GTKNoCSDMagic((GtkWindow *) Window, 0);
+			GTKNoCSDMagic((GtkWindow *) Window, Window == Widget ? 0 : 3);
 		}
 	}
 }
@@ -2846,29 +2882,26 @@ void gtk_container_add(GtkWidget *Container, GtkWidget *Widget) {
 
 	GTKNoCSDGetReferences(true);
 
-	if (2 < GTKNoCSDGTKVersion) {
-		GtkWidget *Window = GTKNoCSDGetWindow(Container);
-		if (Window == Container) {
-			GtkWidget *WindowChild = GTKNoCSDFirstChild(Window);
-			if (GTKNoCSDTest(WindowChild)) {
-				GtkWidget *ContentBox = o_g_object_get_data(
-					(GObject *) WindowChild, "ContentBox");
+	if (2 < GTKNoCSDGTKVersion && Container == GTKNoCSDGetWindow(Container)) {
+		GtkWidget *WindowChild = GTKNoCSDFirstChild(Container);
+		if (GTKNoCSDTest(WindowChild)) {
+			GtkWidget *ContentBox = o_g_object_get_data(
+				(GObject *) WindowChild, "ContentBox");
 
-				// Remove existing child if present
-				GtkWidget *OldContent = GTKNoCSDFirstChild(ContentBox);
-				if (OldContent != NULL) {
-					o_gtk_container_remove(ContentBox, OldContent);
-				}
-
-				o_gtk_container_add(ContentBox, Widget);
-				o_gtk_widget_set_vexpand(Widget, TRUE);
-				o_gtk_widget_set_hexpand(Widget, TRUE);
-			} else {
-				o_gtk_container_add(Container, Widget);
-				GTKNoCSDMagic((GtkWindow *) Window, 0);
+			// Remove existing child if present
+			GtkWidget *OldContent = GTKNoCSDFirstChild(ContentBox);
+			if (OldContent != NULL) {
+				o_gtk_container_remove(ContentBox, OldContent);
 			}
-			return;
+
+			o_gtk_container_add(ContentBox, Widget);
+			o_gtk_widget_set_vexpand(Widget, TRUE);
+			o_gtk_widget_set_hexpand(Widget, TRUE);
+		} else {
+			o_gtk_container_add(Container, Widget);
+			GTKNoCSDMagic((GtkWindow *) Container, 0);
 		}
+		return;
 	}
 
 	o_gtk_container_add(Container, Widget);
@@ -3033,44 +3066,44 @@ void gtk_window_set_titlebar(GtkWindow *Window, GtkWidget *Header) {
 void gtk_header_bar_set_custom_title(GtkHeaderBar *Widget, GtkWidget *Title) {
 	GTKNoCSDGetReferences(true);
 
+	o_gtk_header_bar_set_custom_title(Widget, Title);
 	if (Title != NULL) {
+		// Unhide, if labels have hidden it, if needed it will get hidden again
+		o_gtk_widget_set_visible((GtkWidget *) Widget, true);
 		GTKNoCSDGetGTK3Headers(Title);
-		o_gtk_header_bar_set_custom_title(Widget, Title);
-	} else {
-		GTKNoCSDGTK3SetEmptyTitle((GtkWidget *) Widget, false);
 	}
+
+	GTKNoCSDGTK3SetEmptyTitle((GtkWidget *) Widget, Title == NULL);
 }
 
 void hdy_header_bar_set_custom_title(void *Widget, GtkWidget *Title) {
 	GTKNoCSDGetReferences(true);
 
+	o_hdy_header_bar_set_custom_title(Widget, Title);
 	if (Title != NULL) {
+		// Unhide, if labels have hidden it, if needed it will get hidden again
+		o_gtk_widget_set_visible((GtkWidget *) Widget, true);
 		GTKNoCSDGetGTK3Headers(Title);
-		o_hdy_header_bar_set_custom_title(Widget, Title);
-	} else {
-		GTKNoCSDGTK3SetEmptyTitle((GtkWidget *) Widget, true);
 	}
+
+	GTKNoCSDGTK3SetEmptyTitle((GtkWidget *) Widget, Title == NULL);
 }
 
 void gtk_header_bar_set_title_widget(GtkHeaderBar *Widget, GtkWidget *Title) {
 	GTKNoCSDGetReferences(true);
 
+	o_gtk_header_bar_set_title_widget(Widget, Title);
 	if (Title != NULL) {
 		GTKNoCSDGetGTK4Headers(Title, false);
-		o_gtk_header_bar_set_title_widget(Widget, Title);
-	} else {
-		o_gtk_header_bar_set_title_widget(Widget, o_gtk_grid_new());
 	}
 }
 
 void adw_header_bar_set_title_widget(AdwHeaderBar *Widget, GtkWidget *Title) {
 	GTKNoCSDGetReferences(true);
 
+	o_adw_header_bar_set_title_widget(Widget, Title);
 	if (Title != NULL) {
 		GTKNoCSDGetGTK4Headers(Title, false);
-		o_adw_header_bar_set_title_widget(Widget, Title);
-	} else {
-		o_adw_header_bar_set_title_widget(Widget, o_gtk_grid_new());
 	}
 }
 
@@ -3089,7 +3122,7 @@ void gtk_window_set_decorated(GtkWindow *Window, gboolean Setting) {
 
 	// Add window to list of undecorated windows if needed
 	if (GTKNoCSDTest(GTKNoCSDWindowGetChild(Window)) && !Setting) {
-		GTKNoCSDAddToUndecorated(Window);
+		GTKNoCSDAddToList(&GTKNoCSDUndecoratedWindowList, Window);
 	}
 
 	o_gtk_window_set_decorated(
@@ -3178,6 +3211,19 @@ GtkWidget *GTKNoCSDFindWindowTitle(GtkWidget *Widget) {
 	return NULL;
 }
 
+GtkApplication *gtk_window_get_application(GtkWindow *Window) {
+	// LibAdwaita dialogs that were split out might expect to have the same
+	// application. That on the other hand would break many other parts. So a
+	// custom property is set in adw_dialog_present, which is fetched here
+
+	GTKNoCSDGetReferences(true);
+
+	GtkApplication *Application = o_g_object_get_data((GObject *) Window,
+			"GTKNoCSDApplication");
+	return Application !=
+		   NULL ? Application : o_gtk_window_get_application(Window);
+}
+
 void adw_dialog_present(AdwDialog *Child, GtkWidget *Parent) {
 	// LibAdwaita uses embedded dialogs which break most themes. This pops them
 	// out into their own window
@@ -3201,9 +3247,18 @@ void adw_dialog_present(AdwDialog *Child, GtkWidget *Parent) {
 		}
 	}
 
-	// Get window window of dialog, empty window of parent
+	// Get window of dialog, empty window of parent
 	GtkWindow *ChildWindow = (GtkWindow *) o_gtk_widget_get_ancestor(
 		(GtkWidget *) Child, GTKNoCSDGTKWindow), *ParentWindow = NULL;
+
+	// Always check first label in dialog, which can also be the title
+	GtkWidget *Label = GTKNoCSDGTK4FindWidget((GtkWidget *) ChildWindow,
+			GTKNoCSDGtkLabel);
+	if (Label != NULL) {
+		GTKNoCSDLabelParentCheck = false;
+		GTKNoCSDLabelChange(Label);
+		GTKNoCSDLabelParentCheck = true;
+	}
 
 	// Get window of parent
 	if (Parent != NULL) {
@@ -3220,12 +3275,14 @@ void adw_dialog_present(AdwDialog *Child, GtkWidget *Parent) {
 		o_gtk_window_set_transient_for(ChildWindow, ParentWindow);
 		o_gtk_window_set_modal(ChildWindow, true);
 
-		// Add application actions if supposed to have an application
+		// Add application actions, set custom Application property, if present
 		GtkApplication *Application =
 			o_gtk_window_get_application(ParentWindow);
 		if (Application != NULL) {
 			o_gtk_widget_insert_action_group((GtkWidget *) Child, "app",
 				(GActionGroup *) Application);
+			o_g_object_set_data((GObject *) ChildWindow, "GTKNoCSDApplication",
+				Application);
 		}
 
 		// Add window actions if supposed to be in an application window
@@ -3301,6 +3358,61 @@ AdwDialog *adw_window_get_visible_dialog(AdwWindow *Window) {
 	return GTKNoCSDAdwDialogForWindow((GtkWindow *) Window);
 }
 
+void GTKNoCSDUnsetDialogWindow(GtkWindow *Window) {
+	// Unset a dialog window from the window list as if it was closed
+
+	int Index = 0;
+	while (GTKNoCSDWindowList[Index] != NULL) {
+		if (Window == GTKNoCSDWindowList[Index][0]) {
+			GTKNoCSDWindowList[Index][0] = NULL;
+			break;
+		}
+		++Index;
+	}
+}
+
+gboolean adw_dialog_close(AdwDialog *Dialog) {
+	// It is possible that thanks to a race condition a closed dialogs window
+	// will survive long enough that next time the application wants to close a
+	// dialog, it will try to close the previous. This prevents that
+
+	GTKNoCSDGetReferences(true);
+
+	// Get window window of dialog
+	GtkWindow *Window = (GtkWindow *) o_gtk_widget_get_ancestor(
+		(GtkWidget *) Dialog, GTKNoCSDGTKWindow);
+
+	// Try to close
+	bool Success = o_adw_dialog_close(Dialog);
+
+	// Remove from list if needed
+	if (Success && Window != NULL) {
+		GTKNoCSDUnsetDialogWindow(Window);
+	}
+
+	return Success;
+}
+
+void adw_dialog_force_close(AdwDialog *Dialog) {
+	// It is possible that thanks to a race condition a closed dialogs window
+	// will survive long enough that next time the application wants to close a
+	// dialog, it will try to close the previous. This prevents that
+
+	GTKNoCSDGetReferences(true);
+
+	// Get window window of dialog
+	GtkWindow *Window = (GtkWindow *) o_gtk_widget_get_ancestor(
+		(GtkWidget *) Dialog, GTKNoCSDGTKWindow);
+
+	// Try to close
+	o_adw_dialog_force_close(Dialog);
+
+	// Remove from list if needed
+	if (Window != NULL) {
+		GTKNoCSDUnsetDialogWindow(Window);
+	}
+}
+
 GtkWidget *gtk_about_dialog_new(void) {
 	// Entry point used by certain apps to create an about dialog.
 	// Hook it, execute the original then our own function
@@ -3355,60 +3467,17 @@ void gtk_show_about_dialog(GtkWindow *Window, const char *FirstProperty, ...) {
 // True when the first GTK GObject is loaded
 bool GTKNoCSDGTKGObject = false;
 
-GtkWidget *GTKNoCSDHeaderBar = NULL;
-
-void GTKNoCSDGetHeaderBar(GtkWidget *Widget, G_GNUC_UNUSED gpointer Data) {
-	// Check if a widget is a GtkHeaderBar and has the class for the internal
-	// one, set global variable if so
-
-	if (GTKNoCSDGtkHeaderBar((GObject *) Widget)) {
-		GtkStyleContext *Context = o_gtk_widget_get_style_context(Widget);
-		if (o_gtk_style_context_has_class(Context, "default-decoration")) {
-			GTKNoCSDHeaderBar = Widget;
-		}
-	}
-}
-
-gboolean gtk_window_get_decorated(GtkWindow *Window) {
-	// This is reimplemented so LibHandy applications will not have to flicker
-	// like LibAdwaita, when the built in CSD is removed
-
-	GTKNoCSDGetReferences(true);
-
-	// Only in GTK3
-	if (GTKNoCSDGTKVersion == 3) {
-		// Look for internal CSD, report not being decorated if found
-		GTKNoCSDHeaderBar = NULL;
-		o_gtk_container_forall((GtkWidget *) Window, GTKNoCSDGetHeaderBar,
-			NULL);
-		if (GTKNoCSDHeaderBar != NULL) {
-			return false;
-		}
-	}
-
-	return o_gtk_window_get_decorated(Window);
-}
-
-gboolean GTKNoCSDHeaderBarParentFinalize(gpointer Data) {
-	// Finish what GTKNoCSDHeaderBarParent started, hide the widget
-	o_gtk_widget_set_visible((GtkWidget *) Data, false);
-	return FALSE;
-}
-
 void GTKNoCSDHeaderBarParent(GtkWidget *Widget, G_GNUC_UNUSED GParamSpec *Spec,
 	G_GNUC_UNUSED gpointer Data) {
-	// Hide the CSD HeaderBar that GTK sets when the wayland compositor does not
-	// support SSD (or the KDE protocol for it) and the application does not set
-	// a CSD either
+	// GTK displays a CSD HeaderBar when the wayland compositor does not support
+	// SSD (or the KDE protocol for it) and the application does not set a CSD
+	// either. Depending on user preference this is either hidden or kept
 
-	// Only activate on the specific widget we need
+	// Only activate on the specific widget we need, hide it
 	GtkWidget *Parent = o_gtk_widget_get_parent(Widget);
-	if (Parent != NULL && GTKNoCSDGtkWindow((GObject *) Parent)) {
-		GtkStyleContext *Context = o_gtk_widget_get_style_context(Widget);
-		if (o_gtk_style_context_has_class(Context, "default-decoration")) {
-			// Hide it later
-			o_g_idle_add(GTKNoCSDHeaderBarParentFinalize, Widget);
-		}
+	if (!GTKNoCSDCSD && GTKNoCSDGtkWindow((GObject *) Parent) &&
+		GTKNoCSDHasClass(Widget, "default-decoration")) {
+		GTKNoCSDGTK3SetForceInvisible(Widget);
 	}
 }
 
@@ -3429,7 +3498,7 @@ gpointer g_object_new(GType Type, const gchar *FirstProperty, ...) {
 		va_end(VarArgs);
 	}
 
-	if (Type != 0 && GTKNoCSDGTKGObject) {
+	if (Type != 0 && GTKNoCSDGTKGObject && 2 < GTKNoCSDGTKVersion) {
 		// Call our function when the object is a window
 		if (GTKNoCSDGtkWindow(Object)) {
 			GTKNoCSDMagic((GtkWindow *) Object, 1);
@@ -3506,7 +3575,7 @@ void gtk_widget_show_all(GtkWidget *Widget) {
 }
 
 // Regex to remove CSD property from builder XML, it lives forever
-GRegex *GTKNoCSDRegex;
+GRegex *GTKNoCSDRegex = NULL;
 
 // Builder files can specify to ignore the header preference. All builder
 // creator functions are redefined and a regex disables the CSD property.
@@ -3521,7 +3590,9 @@ gboolean gtk_builder_add_from_string(GtkBuilder *Builder, const char *String,
 	// Try to load regex once
 	if (GTKNoCSDRegex == NULL) {
 		GTKNoCSDRegex = o_g_regex_new(
-			"<property\\s+name=[\"']use-header-bar[\"']\\s*>\\s*1\\s*</property>",
+			"<property\\s+name=[\"']use[-_]header[-_]bar[\"']\\s*>"
+			"\\s*1\\s*"
+			"</property>",
 			G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
 	}
 
@@ -3717,6 +3788,41 @@ void gdk_window_get_frame_extents(void *Window, GdkRectangle *Rectangle) {
 	o_gdk_window_get_frame_extents(Window, Rectangle);
 }
 
+void gtk_im_context_set_cursor_location(GtkIMContext *Context,
+	const GdkRectangle *Area) {
+	// Firefox does not reset the input method window after it was forcefully
+	// transformed. Here it is set to the correct one so the input method popup
+	// appears where it should
+
+	GTKNoCSDGetReferences(true);
+
+	// Only needed in GTK3
+	if (GTKNoCSDGTKVersion == 3 && GTKNoCSDWindowList != NULL) {
+		// Go through all windows
+		int Index = 0;
+		while (GTKNoCSDWindowList[Index] != NULL) {
+			// Check if the window still exists and is the active window
+			GtkWindow *Window = GTKNoCSDWindowList[Index][0];
+			if (Window != NULL && o_gtk_window_is_active(Window)) {
+				// Check if window has MozContainer, the Firefox webview widget
+				GtkWidget *Child = GTKNoCSDWindowGetChild(Window);
+
+				// WARNING: Macro
+				if (Child != NULL && strcmp("MozContainer",
+					o_g_type_name(G_OBJECT_TYPE(Child))) == 0) {
+					// Set the GDKWindow as the input method window
+					void *Data = o_gtk_widget_get_window(Child);
+					o_gtk_im_context_set_client_window(Context, Data);
+				}
+				break;
+			}
+			++Index;
+		}
+	}
+
+	o_gtk_im_context_set_cursor_location(Context, Area);
+}
+
 GType g_type_register_static(GType Parent, const gchar *Name,
 	const GTypeInfo *Information, GTypeFlags Flags) {
 	// Type registration might break when new GTK-NoCSD version is loaded into
@@ -3778,104 +3884,67 @@ gboolean g_module_symbol(GModule *Module, const gchar *Name, gpointer *Symbol) {
 	if (!GTKNoCSDGotPlatform) {
 		if (GTKNoCSDGTKVersion == 4 && strstr(Name,
 			"adw_") == Name && o_adw_window_get_type == NULL) {
-			o_g_module_symbol(Module, "adw_window_get_type",
-				(gpointer *) &o_adw_window_get_type);
-			o_g_module_symbol(Module, "adw_application_window_get_type",
-				(gpointer *) &o_adw_application_window_get_type);
-			o_g_module_symbol(Module, "adw_header_bar_get_type",
-				(gpointer *) &o_adw_header_bar_get_type);
-			o_g_module_symbol(Module, "adw_header_bar_get_title_widget",
-				(gpointer *) &o_adw_header_bar_get_title_widget);
-			o_g_module_symbol(Module, "adw_dialog_get_type",
-				(gpointer *) &o_adw_dialog_get_type);
-			o_g_module_symbol(Module, "adw_header_bar_set_decoration_layout",
-				(gpointer *) &o_adw_header_bar_set_decoration_layout);
-			o_g_module_symbol(Module, "adw_dialog_present",
-				(gpointer *) &o_adw_dialog_present);
-			o_g_module_symbol(Module, "adw_dialog_set_content_height",
-				(gpointer *) &o_adw_dialog_set_content_height);
-			o_g_module_symbol(Module, "adw_dialog_set_content_width",
-				(gpointer *) &o_adw_dialog_set_content_width);
-			o_g_module_symbol(Module, "adw_window_title_get_type",
-				(gpointer *) &o_adw_window_title_get_type);
-			o_g_module_symbol(Module,
-				"adw_application_window_get_visible_dialog",
-				(gpointer *) &o_adw_application_window_get_visible_dialog);
-			o_g_module_symbol(Module, "adw_window_get_visible_dialog",
-				(gpointer *) &o_adw_window_get_visible_dialog);
-			o_g_module_symbol(Module, "adw_dialog_get_content_width",
-				(gpointer *) &o_adw_dialog_get_content_width);
-			o_g_module_symbol(Module, "adw_dialog_get_content_height",
-				(gpointer *) &o_adw_dialog_get_content_height);
-			o_g_module_symbol(Module, "adw_header_bar_set_title_widget",
-				(gpointer *) &o_adw_header_bar_set_title_widget);
-			o_g_module_symbol(Module, "adw_style_manager_get_default",
-				(gpointer *) &o_adw_style_manager_get_default);
-			o_g_module_symbol(Module, "adw_style_manager_set_color_scheme",
-				(gpointer *) &o_adw_style_manager_set_color_scheme);
+			GTKNoCSDGetAdwSymbols(Module, true);
 			GTKNoCSDGetAdwTypes();
 			GTKNoCSDGotPlatform = true;
 		} else if (GTKNoCSDGTKVersion == 3 && strstr(Name,
 			"hdy_") == Name && o_hdy_window_get_type == NULL) {
-			o_g_module_symbol(Module, "hdy_window_get_type",
-				(gpointer *) &o_hdy_window_get_type);
-			o_g_module_symbol(Module, "hdy_application_window_get_type",
-				(gpointer *) &o_hdy_application_window_get_type);
-			o_g_module_symbol(Module, "hdy_header_bar_get_type",
-				(gpointer *) &o_hdy_header_bar_get_type);
-			o_g_module_symbol(Module, "hdy_header_bar_set_decoration_layout",
-				(gpointer *) &o_hdy_header_bar_set_decoration_layout);
-			o_g_module_symbol(Module, "hdy_header_bar_get_custom_title",
-				(gpointer *) &o_hdy_header_bar_get_custom_title);
-			o_g_module_symbol(Module, "hdy_header_bar_set_custom_title",
-				(gpointer *) &o_hdy_header_bar_set_custom_title);
-			o_g_module_symbol(Module, "hdy_style_manager_get_default",
-				(gpointer *) &o_hdy_style_manager_get_default);
-			o_g_module_symbol(Module, "hdy_style_manager_set_color_scheme",
-				(gpointer *) &o_hdy_style_manager_set_color_scheme);
-			o_g_module_symbol(Module, "hdy_header_bar_get_title",
-				(gpointer *) &o_hdy_header_bar_get_title);
+			GTKNoCSDGetHdySymbols(Module, true);
 			GTKNoCSDGetHdyTypes();
 			GTKNoCSDGotPlatform = true;
 		}
 	}
 
 	if (2 < GTKNoCSDGTKVersion) {
-		GET_SYMBOL1(gtk_window_present);
-		GET_SYMBOL1(gtk_widget_set_visible);
-		GET_SYMBOL1(gtk_container_add);
-		GET_SYMBOL1(gtk_window_get_child);
-		GET_SYMBOL1(gtk_window_set_child);
-		GET_SYMBOL1(gtk_widget_get_parent);
-		GET_SYMBOL1(gtk_widget_get_first_child);
-		GET_SYMBOL1(gtk_widget_get_last_child);
-		GET_SYMBOL1(gtk_window_get_titlebar);
-		GET_SYMBOL1(gtk_window_set_titlebar);
-		GET_SYMBOL1(gtk_header_bar_set_custom_title);
-		GET_SYMBOL1(hdy_header_bar_set_custom_title);
-		GET_SYMBOL1(gtk_header_bar_set_title_widget);
-		GET_SYMBOL1(adw_header_bar_set_title_widget);
-		GET_SYMBOL1(gtk_window_set_decorated);
-		GET_SYMBOL1(gtk_widget_reparent);
-		GET_SYMBOL1(adw_dialog_present);
-		GET_SYMBOL1(adw_application_window_get_visible_dialog);
-		GET_SYMBOL1(adw_window_get_visible_dialog);
-		GET_SYMBOL1(gtk_about_dialog_new);
-		GET_SYMBOL1(gtk_show_about_dialog);
-		GET_SYMBOL1(gtk_window_get_decorated);
-		GET_SYMBOL1(g_object_new);
-		GET_SYMBOL1(gtk_container_propagate_draw);
-		GET_SYMBOL1(gtk_widget_show_all);
-		GET_SYMBOL1(gtk_builder_add_from_string);
-		GET_SYMBOL1(gtk_builder_new_from_string);
-		GET_SYMBOL1(gtk_builder_add_from_resource);
-		GET_SYMBOL1(gtk_builder_new_from_resource);
-		GET_SYMBOL1(gtk_builder_add_from_file);
-		GET_SYMBOL1(gtk_builder_new_from_file);
+		if (strncmp(Name, "gtk_", 4) == 0) {
+			GET_SYMBOL1(gtk_window_present);
+			GET_SYMBOL1(gtk_widget_set_visible);
+			GET_SYMBOL1(gtk_file_chooser_get_extra_widget);
+			GET_SYMBOL1(gtk_file_chooser_set_extra_widget);
+			GET_SYMBOL1(gtk_container_add);
+			GET_SYMBOL1(gtk_window_get_child);
+			GET_SYMBOL1(gtk_window_set_child);
+			GET_SYMBOL1(gtk_widget_get_parent);
+			GET_SYMBOL1(gtk_widget_get_first_child);
+			GET_SYMBOL1(gtk_widget_get_last_child);
+			GET_SYMBOL1(gtk_window_get_titlebar);
+			GET_SYMBOL1(gtk_window_set_titlebar);
+			GET_SYMBOL1(gtk_header_bar_set_custom_title);
+			GET_SYMBOL1(gtk_header_bar_set_title_widget);
+			GET_SYMBOL1(gtk_window_set_decorated);
+			GET_SYMBOL1(gtk_widget_reparent);
+			GET_SYMBOL1(gtk_window_get_application);
+			GET_SYMBOL1(gtk_about_dialog_new);
+			GET_SYMBOL1(gtk_show_about_dialog);
+			GET_SYMBOL1(gtk_container_propagate_draw);
+			GET_SYMBOL1(gtk_widget_show_all);
+			GET_SYMBOL1(gtk_builder_add_from_string);
+			GET_SYMBOL1(gtk_builder_new_from_string);
+			GET_SYMBOL1(gtk_builder_add_from_resource);
+			GET_SYMBOL1(gtk_builder_new_from_resource);
+			GET_SYMBOL1(gtk_builder_add_from_file);
+			GET_SYMBOL1(gtk_builder_new_from_file);
+			GET_SYMBOL1(gtk_im_context_set_cursor_location);
+		}
+
+		if (strncmp(Name, "adw_", 0) == 0) {
+			GET_SYMBOL1(adw_header_bar_set_title_widget);
+			GET_SYMBOL1(adw_dialog_present);
+			GET_SYMBOL1(adw_application_window_get_visible_dialog);
+			GET_SYMBOL1(adw_window_get_visible_dialog);
+			GET_SYMBOL1(adw_dialog_close);
+			GET_SYMBOL1(adw_dialog_force_close);
+		}
+
+		if (strncmp(Name, "g_", 2) == 0) {
+			GET_SYMBOL1(g_object_new);
+			GET_SYMBOL1(g_type_register_static);
+			GET_SYMBOL1(g_type_register_static_simple);
+			GET_SYMBOL1(g_module_symbol);
+		}
+
 		GET_SYMBOL1(gdk_window_get_frame_extents);
-		GET_SYMBOL1(g_module_symbol);
-		GET_SYMBOL1(g_type_register_static);
-		GET_SYMBOL1(g_type_register_static_simple);
+		GET_SYMBOL1(hdy_header_bar_set_custom_title);
 	}
 
 	return o_g_module_symbol(Module, Name, Symbol);
@@ -3886,9 +3955,11 @@ void *dlsym(void *Handle, const char *Name) {
 
 	GTKNoCSDInitDLSym(false);
 
-	if (2 < GTKNoCSDGTKVersion) {
+	if (strncmp(Name, "gtk_", 4) == 0) {
 		GET_SYMBOL2(gtk_window_present);
 		GET_SYMBOL2(gtk_widget_set_visible);
+		GET_SYMBOL2(gtk_file_chooser_get_extra_widget);
+		GET_SYMBOL2(gtk_file_chooser_set_extra_widget);
 		GET_SYMBOL2(gtk_container_add);
 		GET_SYMBOL2(gtk_window_get_child);
 		GET_SYMBOL2(gtk_window_set_child);
@@ -3898,18 +3969,12 @@ void *dlsym(void *Handle, const char *Name) {
 		GET_SYMBOL2(gtk_window_get_titlebar);
 		GET_SYMBOL2(gtk_window_set_titlebar);
 		GET_SYMBOL2(gtk_header_bar_set_custom_title);
-		GET_SYMBOL2(hdy_header_bar_set_custom_title);
 		GET_SYMBOL2(gtk_header_bar_set_title_widget);
-		GET_SYMBOL2(adw_header_bar_set_title_widget);
 		GET_SYMBOL2(gtk_window_set_decorated);
 		GET_SYMBOL2(gtk_widget_reparent);
-		GET_SYMBOL2(adw_dialog_present);
-		GET_SYMBOL2(adw_application_window_get_visible_dialog);
-		GET_SYMBOL2(adw_window_get_visible_dialog);
+		GET_SYMBOL2(gtk_window_get_application);
 		GET_SYMBOL2(gtk_about_dialog_new);
 		GET_SYMBOL2(gtk_show_about_dialog);
-		GET_SYMBOL2(gtk_window_get_decorated);
-		GET_SYMBOL2(g_object_new);
 		GET_SYMBOL2(gtk_container_propagate_draw);
 		GET_SYMBOL2(gtk_widget_show_all);
 		GET_SYMBOL2(gtk_builder_add_from_string);
@@ -3918,11 +3983,27 @@ void *dlsym(void *Handle, const char *Name) {
 		GET_SYMBOL2(gtk_builder_new_from_resource);
 		GET_SYMBOL2(gtk_builder_add_from_file);
 		GET_SYMBOL2(gtk_builder_new_from_file);
-		GET_SYMBOL2(gdk_window_get_frame_extents);
-		GET_SYMBOL2(g_module_symbol);
+		GET_SYMBOL2(gtk_im_context_set_cursor_location);
+	}
+
+	if (strncmp(Name, "adw_", 0) == 0) {
+		GET_SYMBOL2(adw_header_bar_set_title_widget);
+		GET_SYMBOL2(adw_dialog_present);
+		GET_SYMBOL2(adw_application_window_get_visible_dialog);
+		GET_SYMBOL2(adw_window_get_visible_dialog);
+		GET_SYMBOL2(adw_dialog_close);
+		GET_SYMBOL2(adw_dialog_force_close);
+	}
+
+	if (strncmp(Name, "g_", 2) == 0) {
+		GET_SYMBOL2(g_object_new);
 		GET_SYMBOL2(g_type_register_static);
 		GET_SYMBOL2(g_type_register_static_simple);
+		GET_SYMBOL2(g_module_symbol);
 	}
+
+	GET_SYMBOL2(gdk_window_get_frame_extents);
+	GET_SYMBOL2(hdy_header_bar_set_custom_title);
 
 	return o_dlsym(Handle, Name);
 }
