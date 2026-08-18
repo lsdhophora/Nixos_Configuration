@@ -36,13 +36,6 @@ let
     prev.zip
   ];
 
-  tridactyl-native = prev.tridactyl-native.overrideAttrs (old: {
-    installPhase = old.installPhase + ''
-      sed -i '/"allowed_extensions"/ s/\[/["tridactyl-fixed@lophophora",/' \
-        "$out/lib/mozilla/native-messaging-hosts/tridactyl.json"
-    '';
-  });
-
   mkBase = ''
     cp -a ${ff}/. $out
     chmod -R u+w $out
@@ -61,11 +54,8 @@ let
       '';
 in
 {
-  inherit tridactyl-native;
-
   firefox-patched = final.wrapFirefox mkPkg {
     nativeMessagingHosts = [
-      final.tridactyl-native
       final.kdePackages.plasma-browser-integration
     ];
   };

@@ -5,11 +5,6 @@ let
     install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/addon-${slug}-latest.xpi";
     installation_mode = "force_installed";
   };
-
-  # Tridactyl site bindings for the Pixiv manga-viewer close button.
-  # One selector serves both hint variants.
-  tridactylSelector = "div.sc-a456a65d-2.ctBYkM.gtm-manga-viewer-close-icon";
-  bindurl = key: flags: "bindurl pixiv\\.net ${key} hint ${flags} ${tridactylSelector}";
 in
 {
   programs.firefox = {
@@ -40,6 +35,9 @@ in
         "browser.tabs.splitView.enabled" = false;
         "browser.tabs.groups.enabled" = false;
         "identity.fxaccounts.enabled" = false;
+        # Tridactyl (now uninstalled) had set this to its own newtab page
+        # (moz-extension://.../static/newtab.html); pin the default instead.
+        "browser.startup.homepage" = "about:home";
         "svg.context-properties.content.enabled" = true;
         "browser.fullscreen.autohide" = false;
         "browser.ml.linkPreview.enabled" = false;
@@ -57,12 +55,5 @@ in
         "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
       };
     };
-  };
-
-  xdg.configFile."tridactyl/tridactylrc" = {
-    text = lib.concatLines [
-      (bindurl "f" "-C")
-      (bindurl "F" "-bC")
-    ];
   };
 }

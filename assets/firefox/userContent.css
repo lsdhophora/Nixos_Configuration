@@ -60,11 +60,3 @@
   }
 }
 
-span.cleanslate.TridactylStatusIndicator {
-  bottom: 8px !important;
-  right: 8px !important;
-}
-
-input#tridactyl-input {
-  margin-bottom: 3px;
-}
