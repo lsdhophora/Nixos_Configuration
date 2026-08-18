@@ -13,11 +13,7 @@ git add -A && git commit -F -                       # commit (GNU format message
 git push                                           # push
 ```
 
-If the `home-manager` binary is not installed, run it via nix instead:
-
-```bash
-nix run github:nix-community/home-manager/release-26.05 -- switch --flake .#lophophora
-```
+The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the flake input revision (`inputs.home-manager.packages.${pkgs.system}.home-manager`).
 
 ## Workflow
 
@@ -42,6 +38,7 @@ Follow the rules in `docs/code-style.md`:
 - Hardware config is auto-generated
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
+- home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
