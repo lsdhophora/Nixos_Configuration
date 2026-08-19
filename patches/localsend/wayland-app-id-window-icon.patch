@@ -1,16 +1,23 @@
+diff --git a/app/linux/CMakeLists.txt b/app/linux/CMakeLists.txt
+--- a/app/linux/CMakeLists.txt
++++ b/app/linux/CMakeLists.txt
+@@ -8,7 +8,7 @@
+ set(BINARY_NAME "localsend_app")
+ # The unique GTK application identifier for this application. See:
+ # https://wiki.gnome.org/HowDoI/ChooseApplicationID
+-set(APPLICATION_ID "org.localsend.localsend_app")
++set(APPLICATION_ID "localsend")
+ 
+ # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
+ # versions of CMake.
 diff --git a/app/linux/main.cc b/app/linux/main.cc
 --- a/app/linux/main.cc
 +++ b/app/linux/main.cc
-@@ -1,6 +1,12 @@
+@@ -1,6 +1,7 @@
  #include "my_application.h"
  
  int main(int argc, char** argv) {
-+  // Set the program name explicitly so the Wayland app_id / X11 WM_CLASS is
-+  // "localsend_app" (matching StartupWMClass in the desktop file) instead of
-+  // deriving it from the argv[0] basename, which after nixpkgs makeWrapper
-+  // becomes the hidden ".localsend_app-wrapped_" path. Without this Plasma
-+  // cannot map the window to LocalSend.desktop and shows the default icon.
-+  g_set_prgname("localsend_app");
++  g_set_prgname("localsend");
    g_autoptr(MyApplication) app = my_application_new();
    return g_application_run(G_APPLICATION(app), argc, argv);
  }
