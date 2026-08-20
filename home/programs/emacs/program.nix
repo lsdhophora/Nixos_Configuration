@@ -1,9 +1,13 @@
-{ pkgs, inputs, ... }: {
+{ pkgs, inputs, repoLib, ... }:
+let
+  unstableEmacs = repoLib.unstablePkgs inputs pkgs;
+in
+{
   programs.emacs = {
     enable = true;
-    package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.emacs-pgtk;
+    package = unstableEmacs.emacs-pgtk;
     extraPackages =
-      _: with inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.emacs-pgtk.pkgs; [
+      _: with unstableEmacs.emacs-pgtk.pkgs; [
         direnv
         auctex
         nix-mode

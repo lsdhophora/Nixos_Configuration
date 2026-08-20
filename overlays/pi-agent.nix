@@ -7,9 +7,9 @@
 # prompt. The patch scripts rewrite the bundled dist file. They fail loudly
 # when a pattern does not match, so a pi version bump breaks the build instead
 # of silently losing the prompt.
-{ inputs }: final: prev: {
+{ inputs, repoLib }: final: prev: {
   pi-coding-agent =
-    (inputs.nixpkgs-unstable.legacyPackages.x86_64-linux.pi-coding-agent).overrideAttrs
+    (repoLib.unstablePkgs inputs prev).pi-coding-agent.overrideAttrs
       (
         old:
         let

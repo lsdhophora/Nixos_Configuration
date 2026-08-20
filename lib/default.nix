@@ -1,7 +1,11 @@
 # Shared helper functions and constants.
 # Import with: (import ../lib). It resolves to this file.
+#
+# Modules and home modules receive it as `repoLib` via specialArgs /
+# extraSpecialArgs (see flake-modules/nixos.nix). Overlay files receive it
+# as `repoLib` from the overlay loader (see overlays/default.nix).
 
-{
+let
   # Add patch files to a package. Keep any existing patches.
   # Example: applyPatches [ ./fix.patch ] pkg
   applyPatches =
@@ -9,6 +13,48 @@
     pkg.overrideAttrs (oldAttrs: {
       patches = (oldAttrs.patches or [ ]) ++ patches;
     });
+
+  # Apply a name -> patches map to a package set.
+  # Example: applyPatchesToSet kdePatches kdePackages
+  applyPatchesToSet =
+    patchMap: pkgSet:
+    builtins.listToAttrs (
+      map (name: {
+        inherit name;
+        value = applyPatches patchMap.${name} pkgSet.${name};
+      }) (builtins.attrNames patchMap)
+    );
+
+  # Package set from the nixpkgs-unstable input, for the same platform as pkgs.
+  # Example: unstablePkgs inputs pkgs
+  unstablePkgs = inputs: pkgs:
+    inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+
+  # Build home.file entries that symlink repo files into the home directory
+  # (out-of-store, so edits in the repo apply without a rebuild).
+  # Example:
+  #   mkRepoLinks config {
+  #     targetPrefix = ".config/emacs/lisp/";
+  #     sourcePrefix = "home/programs/emacs/lisp/";
+  #     paths = [ "init.el" ];
+  #   }
+  mkRepoLinks =
+    config: { targetPrefix, sourcePrefix, paths }:
+    builtins.listToAttrs (
+      map (path: {
+        name = targetPrefix + path;
+        value.source = config.lib.file.mkOutOfStoreSymlink
+          "${config.home.homeDirectory}/.config/nixos/${sourcePrefix}${path}";
+      }) paths
+    );
+in
+{
+  inherit
+    applyPatches
+    applyPatchesToSet
+    unstablePkgs
+    mkRepoLinks
+    ;
 
   # Breeze Light palette (official KDE Breeze.colors, light variant).
   # Used by tmux and mpv. The desktop keeps one theme (light).

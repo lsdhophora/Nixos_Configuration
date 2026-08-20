@@ -1,49 +1,41 @@
-{ config, lib, ... }:
+{ config, lib, repoLib, ... }:
 let
-  repo = "${config.home.homeDirectory}/.config/nixos";
-  base = "${repo}/home/dev/pi-agent";
-
-  # Symlink a repo file or dir into ~/.pi/agent.
-  mkLink = path: {
-    source = config.lib.file.mkOutOfStoreSymlink "${base}/${path}";
-  };
-
-  # Turn a list of repo paths into home.file entries.
-  # targetPrefix is prepended to the home file name. sourcePrefix is
-  # prepended to the repo path. Add a path to a list below to link it.
-  mkLinks =
-    targetPrefix: sourcePrefix: paths:
-    builtins.listToAttrs (
-      map (path: {
-        name = targetPrefix + path;
-        value = mkLink (sourcePrefix + path);
-      }) paths
-    );
+  base = "home/dev/pi-agent";
 in
 {
   home.file = lib.mkMerge [
-    (mkLinks ".pi/agent/" "" [
-      "AGENTS.md"
-      "models.json"
-      "lsp.json"
-      "skills/exa-search/SKILL.md"
-      "skills/ascii-art/SKILL.md"
-      "skills/nix/SKILL.md"
-    ])
-    (mkLinks ".pi/agent/themes/" "themes/" [
-      "breeze-light.json"
-    ])
-    (mkLinks ".pi/agent/extensions/" "extensions/" [
-      "deepseek-balance.ts"
-      "exa-gate.ts"
-      "exa-pi.ts"
-      "exa-prefix.ts"
-      "no-cost-footer.ts"
-      "root-session/index.ts"
-      "root-session/daemon.js"
-      "root-session/SKILL.md"
-      "pi-scheduler"
-    ])
+    (repoLib.mkRepoLinks config {
+      targetPrefix = ".pi/agent/";
+      sourcePrefix = "${base}/";
+      paths = [
+        "AGENTS.md"
+        "models.json"
+        "lsp.json"
+        "skills/exa-search/SKILL.md"
+        "skills/ascii-art/SKILL.md"
+        "skills/nix/SKILL.md"
+      ];
+    })
+    (repoLib.mkRepoLinks config {
+      targetPrefix = ".pi/agent/themes/";
+      sourcePrefix = "${base}/themes/";
+      paths = [ "breeze-light.json" ];
+    })
+    (repoLib.mkRepoLinks config {
+      targetPrefix = ".pi/agent/extensions/";
+      sourcePrefix = "${base}/extensions/";
+      paths = [
+        "deepseek-balance.ts"
+        "exa-gate.ts"
+        "exa-pi.ts"
+        "exa-prefix.ts"
+        "no-cost-footer.ts"
+        "root-session/index.ts"
+        "root-session/daemon.js"
+        "root-session/SKILL.md"
+        "pi-scheduler"
+      ];
+    })
     {
       ".pi/agent/settings.json" = {
         text = builtins.toJSON {

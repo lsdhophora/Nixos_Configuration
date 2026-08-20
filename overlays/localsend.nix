@@ -11,11 +11,8 @@
 # The patch forces g_set_prgname("localsend") so the app_id matches the desktop
 # file name, also sets the window icon explicitly for X11, and postFixup aligns
 # StartupWMClass with the new prgname so X11 keeps working too.
-let
-  applyPatches = (import ../lib).applyPatches;
-in
-final: prev: {
-  localsend = (applyPatches [
+{ repoLib }: final: prev: {
+  localsend = (repoLib.applyPatches [
     ../patches/localsend/wayland-app-id-window-icon.patch
   ] prev.localsend).overrideAttrs (old: {
     # Run after installPhase so copyDesktopItems has created the desktop file.

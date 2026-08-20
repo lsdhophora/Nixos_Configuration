@@ -1,6 +1,8 @@
 { self, inputs, ... }:
 let
   system = "x86_64-linux";
+  # Repo helper lib (see ../lib). Passed to modules and overlays as `repoLib`.
+  repoLib = import ../lib;
 in
 {
   # flake-parts convention: formatter for `nix fmt`, devShell for `nix develop`.
@@ -21,7 +23,7 @@ in
       # Auto-discovered overlays from ../overlays (see overlays/default.nix).
       overlays = (import ../overlays/default.nix) inputs;
     };
-    specialArgs = { inherit inputs; };
+    specialArgs = { inherit inputs repoLib; };
     modules = [
       ../hosts/flowerpot/default.nix
       inputs.chaotic.nixosModules.nyx-cache
@@ -33,7 +35,7 @@ in
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;
         home-manager.backupFileExtension = "bak";
-        home-manager.extraSpecialArgs = { inherit inputs; };
+        home-manager.extraSpecialArgs = { inherit inputs repoLib; };
         home-manager.users.lophophora = {
           imports = [ ../home/default.nix ];
         };
@@ -48,7 +50,7 @@ in
       inherit system;
       overlays = (import ../overlays/default.nix) inputs;
     };
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = { inherit inputs repoLib; };
     modules = [ ../home/default.nix ];
   };
 }

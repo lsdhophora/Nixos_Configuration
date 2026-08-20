@@ -1,8 +1,7 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, repoLib, ... }:
 let
-  system = pkgs.stdenv.hostPlatform.system;
-  unstable = inputs.nixpkgs-unstable.legacyPackages.${system};
   # Match the desktop's KWin version (kde.nix uses unstable kdePackages).
+  unstable = repoLib.unstablePkgs inputs pkgs;
   kscreenDoctor = "${unstable.kdePackages.libkscreen}/bin/kscreen-doctor";
   gdbus = "${pkgs.glib.bin}/bin/gdbus";
 in

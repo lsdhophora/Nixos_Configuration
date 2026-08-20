@@ -1,6 +1,6 @@
-{ lib, ... }:
+{ lib, repoLib, ... }:
 let
-  palette = (import ../../lib).breezeLight;
+  palette = repoLib.breezeLight;
 
   # Generate "bind-key <flags> <key> <cmd>" lines from a key-command table.
   bindKeys =

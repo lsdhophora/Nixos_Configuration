@@ -1,7 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, repoLib, ... }:
 let
   # Shared Breeze Light palette with modernz-specific accents.
-  palette = (import ../../lib).breezeLight // {
+  palette = repoLib.breezeLight // {
     border = "#d3d3d3";
     handle = "#1D99F3";
     hover = "#7f8c8d";

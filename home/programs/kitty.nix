@@ -1,6 +1,6 @@
-{ pkgs, ... }:
+{ pkgs, repoLib, ... }:
 let
-  palette = (import ../../lib).kittyPalette;
+  palette = repoLib.kittyPalette;
 in
 {
   programs.kitty = {

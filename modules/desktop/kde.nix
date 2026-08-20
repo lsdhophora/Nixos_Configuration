@@ -2,12 +2,12 @@
   lib,
   pkgs,
   inputs,
+  repoLib,
   ...
 }:
 let
-  applyPatches = (import ../../lib).applyPatches;
-  unstable = inputs.nixpkgs-unstable;
-  unstablePkgs = unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  applyPatches = repoLib.applyPatches;
+  unstablePkgs = repoLib.unstablePkgs inputs pkgs;
 
   # Patch files per KDE package.
   # Add an entry here to patch the package with applyPatches.
@@ -85,7 +85,7 @@ in
     (final: prev: {
       kdePackages =
         unstablePkgs.kdePackages
-        // (lib.mapAttrs (name: patches: applyPatches patches unstablePkgs.kdePackages.${name}) kdePatches);
+        // (repoLib.applyPatchesToSet kdePatches unstablePkgs.kdePackages);
     })
     # Dolphin and the file portal use the patched kio and the location-bar
     # fix. The plasma6 module pulls them from kdePackages, so the override
