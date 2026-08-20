@@ -170,11 +170,15 @@ in
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
     (final: prev: {
-      klassy = unstablePkgs.klassy.overrideAttrs (oldAttrs: {
-        postInstall = (oldAttrs.postInstall or "") + ''
-          rm -f "$out/share/applications/kcm_klassydecoration.desktop"
-        '';
-      });
+      klassy = applyPatches
+        [ ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch ]
+        (
+          unstablePkgs.klassy.overrideAttrs (oldAttrs: {
+            postInstall = (oldAttrs.postInstall or "") + ''
+              rm -f "$out/share/applications/kcm_klassydecoration.desktop"
+            '';
+          })
+        );
     })
     # kwin-myopic-defocus: myopic chromatic defocus (eye-care) KWin effect.
     # Builds against the same unstable kdePackages (kwin 6.7.x) the desktop

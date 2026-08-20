@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lophophora <lsdphophora@proton.me>
+Date: Wed, 19 Aug 2026 19:30:00 +0800
+Subject: [PATCH] Always draw titlebar separator even in tools-area mode
+
+Klassy suppresses the "Draw separator under titlebar" line whenever the
+decoration is in tools-area mode, i.e. when the active colour scheme
+defines a [Colors:Header] group (or "Match title bar color to
+application color" is on). Most stock KDE colour schemes (BreezeLight
+included) define Header colors, so the separator never shows on
+normally-decorated windows like Dolphin, making the setting effectively
+dead on such setups.
+
+Drop the m_toolsAreaWillBeDrawn gate so the separator is drawn whenever
+the option is enabled and the window is not shaded. The colour is still
+only valid for active windows (titleBarSeparatorColor returns an invalid
+colour otherwise), which matches the existing design.
+---
+ kdecoration/breezedecoration.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kdecoration/breezedecoration.cpp b/kdecoration/breezedecoration.cpp
+index 2aabbf520..0e0af5020 100644
+--- a/kdecoration/breezedecoration.cpp
++++ b/kdecoration/breezedecoration.cpp
+@@ -2109,7 +2109,7 @@ qreal Decoration::titleBarSeparatorHeight(qreal scale) const
+     // access client
+     auto c = window();
+ 
+-    if (m_internalSettings->drawTitleBarSeparator() && !c->isShaded() && !m_toolsAreaWillBeDrawn) {
++    if (m_internalSettings->drawTitleBarSeparator() && !c->isShaded()) {
+         qreal height = 1;
+         if (KWindowSystem::isPlatformX11())
+             height *= m_systemScaleFactorX11;
