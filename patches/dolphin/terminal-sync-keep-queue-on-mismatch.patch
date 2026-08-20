@@ -1,39 +1,51 @@
 diff --git a/src/panels/terminal/terminalpanel.cpp b/src/panels/terminal/terminalpanel.cpp
-index a357b31..bb5f57a 100644
+index a357b31..5084ade 100644
 --- a/src/panels/terminal/terminalpanel.cpp
 +++ b/src/panels/terminal/terminalpanel.cpp
-@@ -329,10 +329,31 @@ void TerminalPanel::slotKonsolePartCurrentDirectoryChanged(const QString &dir)
+@@ -325,16 +325,39 @@ void TerminalPanel::slotMostLocalUrlResult(KJob *job)
  
-     // Only emit a changeUrl signal if the directory change was caused by the user inside the
-     // terminal, and not by sendCdToTerminal(QString).
+ void TerminalPanel::slotKonsolePartCurrentDirectoryChanged(const QString &dir)
+ {
+-    m_konsolePartCurrentDirectory = QDir(dir).canonicalPath();
+-
+-    // Only emit a changeUrl signal if the directory change was caused by the user inside the
+-    // terminal, and not by sendCdToTerminal(QString).
 -    while (!m_sendCdToTerminalHistory.empty()) {
 -        if (m_konsolePartCurrentDirectory == m_sendCdToTerminalHistory.dequeue()) {
 -            return;
-+    //
-+    // The shell only reports its current directory asynchronously, once it has actually
-+    // processed the "cd" commands that we sent (via an OSC 7 sequence in the prompt, which
-+    // Konsole additionally debounces with a short timer). When the view navigates quickly,
-+    // several "cd" commands can be in flight at once, and the reports can arrive out of
-+    // order, be collapsed, or carry the previous directory. Only consume queue entries that
-+    // match the reported directory: a stale report for the previous directory must not
-+    // discard the pending commands, otherwise the whole queue would be drained and the view
-+    // yanked back to the terminal's old location, only to jump to the target again once the
-+    // shell catches up.
-+    const int matchIndex = m_sendCdToTerminalHistory.indexOf(m_konsolePartCurrentDirectory);
++    const QString newDir = QDir(dir).canonicalPath();
++
++    // A report that does not move the terminal is either a duplicate OSC 7
++    // emission or the stale "previous directory" that Konsole's debounce can
++    // report after the terminal has already moved on. It must never drive the
++    // view: following it would drain the pending "cd" queue and yank the view
++    // back to a directory the terminal has left.
++    if (newDir == m_konsolePartCurrentDirectory) {
++        return;
++    }
++    m_konsolePartCurrentDirectory = newDir;
++
++    // The terminal caught up with a "cd" command that Dolphin itself sent.
++    // This can also be an intermediate target that the terminal passed through
++    // while the view navigated quickly (Konsole may report it between the
++    // other commands). Consume the matching entry and everything before it;
++    // the view already moved when the command was sent, so it must not follow.
++    const int matchIndex = m_sendCdToTerminalHistory.indexOf(newDir);
 +    if (matchIndex != -1) {
-+        // The terminal has caught up with a change that we triggered. Drop the matching
-+        // entry and everything before it: the terminal may have processed several commands
-+        // back-to-back and skipped the reports in between.
 +        for (int i = 0; i <= matchIndex; ++i) {
 +            m_sendCdToTerminalHistory.dequeue();
          }
 +        return;
-+    }
-+    if (!m_sendCdToTerminalHistory.isEmpty()) {
-+        // "cd" commands are still in flight, but the report matches none of them, so it
-+        // cannot have been caused by a user action inside the terminal. Ignore it instead
-+        // of following the terminal to a location that the shell is about to leave again.
-+        return;
      }
  
++    // The report matches neither the terminal's previous directory nor any
++    // pending programmatic command: this is a real "cd" typed by the user.
++    // Drop the leftover commands (their reports were collapsed by Konsole's
++    // debounce) so they cannot swallow later user actions, then follow the
++    // user. Note that this deliberately differs from upstream, which drained
++    // the whole queue for any unmatched report and yanked the view back.
++    m_sendCdToTerminalHistory.clear();
++
      // User may potentially be browsing inside a KIOFuse mount.
+     // If so lets try and change the DolphinView to point to the remote URL equivalent.
+     // instead of into the KIOFuse mount itself (which can cause performance issues!)

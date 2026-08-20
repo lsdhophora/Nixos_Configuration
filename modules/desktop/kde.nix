@@ -131,11 +131,13 @@ in
           applyPatches
             [
               ./../../patches/dolphin/hide-current-dir-path-selector.patch
-              # Race fix: a stale currentDirectoryChanged report for the
-              # previous directory used to drain the whole "cd" queue and
-              # yank the view back (brief enter -> jump back -> re-enter).
-              # Only matching reports are now consumed from the queue; while
-              # the queue is non-empty the view never follows the terminal.
+              # Terminal sync: a currentDirectoryChanged report is only followed
+              # if it is neither a duplicate of the terminal's previous directory
+              # (stale "previous dir" reports from Konsole's debounce) nor one of
+              # Dolphin's own pending programmatic "cd" commands (intermediate
+              # targets passed through during fast view navigation). Anything else
+              # is a real user "cd" and follows. Leftover commands are dropped
+              # when following, so they cannot swallow later user actions.
               ./../../patches/dolphin/terminal-sync-keep-queue-on-mismatch.patch
             ]
             (
