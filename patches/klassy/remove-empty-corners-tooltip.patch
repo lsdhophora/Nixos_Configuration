@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: lophophora <lsdphophora@proton.me>
+Date: Fri, 21 Aug 2026 08:40:00 +0800
+Subject: [PATCH] Drop empty tooltip from corners checkbox
+
+The "Round all corners when no borders" checkbox carries a toolTip that
+is an empty HTML fragment (<p><br/></p>), so hovering it pops an empty
+tooltip. Remove the property so the checkbox has no tooltip at all.
+---
+ kdecoration/config/ui/breezeconfigurationui.ui | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/kdecoration/config/ui/breezeconfigurationui.ui b/kdecoration/config/ui/breezeconfigurationui.ui
+index acdef1f..a96266a 100644
+--- a/kdecoration/config/ui/breezeconfigurationui.ui
++++ b/kdecoration/config/ui/breezeconfigurationui.ui
+@@ -1369,9 +1369,6 @@
+             </item>
+             <item>
+              <widget class="QCheckBox" name="roundAllCornersWhenNoBorders">
+-              <property name="toolTip">
+-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+-              </property>
+               <property name="text">
+                <string>Round all corners when no borders (clips window content)</string>
+               </property>
+-- 
+2.48.1

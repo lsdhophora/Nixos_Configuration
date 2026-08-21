@@ -173,7 +173,10 @@ in
     # which causes it to appear on the Most Used page.
     (final: prev: {
       klassy = applyPatches
-        [ ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch ]
+        [
+          ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
+          ./../../patches/klassy/remove-empty-corners-tooltip.patch
+        ]
         (
           unstablePkgs.klassy.overrideAttrs (oldAttrs: {
             postInstall = (oldAttrs.postInstall or "") + ''
