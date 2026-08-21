@@ -1,29 +1,71 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: lophophora <lsdphophora@proton.me>
 Date: Wed, 19 Aug 2026 19:30:00 +0800
-Subject: [PATCH] Always draw titlebar separator even in tools-area mode
+Subject: [PATCH] Always draw titlebar separator on all windows
 
-Klassy suppresses the "Draw separator under titlebar" line whenever the
-decoration is in tools-area mode, i.e. when the active colour scheme
-defines a [Colors:Header] group (or "Match title bar color to
-application color" is on). Most stock KDE colour schemes (BreezeLight
-included) define Header colors, so the separator never shows on
-normally-decorated windows like Dolphin, making the setting effectively
-dead on such setups.
+Klassy gates the titlebar separator behind m_toolsAreaWillBeDrawn (active
+whenever the colour scheme defines a [Colors:Header] group or "Match
+title bar color to application color" is on), and the separator colour is
+taken from titleBarSeparatorColor(), which returns an invalid colour for
+inactive windows so the line never appears there either. Most stock KDE
+colour schemes (BreezeLight included) define Header colors, so on such
+setups the "Draw separator under titlebar" option drew nothing at all.
 
-Drop the m_toolsAreaWillBeDrawn gate so the separator is drawn whenever
-the option is enabled and the window is not shaded. The colour is still
-only valid for active windows (titleBarSeparatorColor returns an invalid
-colour otherwise), which matches the existing design.
+Drop the m_toolsAreaWillBeDrawn gate so the separator height is computed
+whenever the option is enabled and the window is not shaded, and draw the
+line with a neutral hairline gray instead of titleBarSeparatorColor() so
+it is visible on inactive windows too (the buttonFocus colour would only
+be valid on the focused window). titleBarSeparatorColor() is left
+untouched so the title underline colour is unaffected.
 ---
- kdecoration/breezedecoration.cpp | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kdecoration/breezedecoration.cpp | 19 +++++++++----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/kdecoration/breezedecoration.cpp b/kdecoration/breezedecoration.cpp
-index 2aabbf520..0e0af5020 100644
+index 99947d4..9930f0b 100644
 --- a/kdecoration/breezedecoration.cpp
 +++ b/kdecoration/breezedecoration.cpp
-@@ -2109,7 +2109,7 @@ qreal Decoration::titleBarSeparatorHeight(qreal scale) const
+@@ -1477,23 +1477,22 @@ void Decoration::paintTitleBar(QPainter *painter, const QRectF &repaintRegion)
+     // draw titlebar separator
+     qreal separatorHeight;
+     if ((separatorHeight = titleBarSeparatorHeight(scale))) {
+-        const QColor titleBarSeparatorColor(this->titleBarSeparatorColor());
+-
+-        if (titleBarSeparatorColor.isValid()) {
+-            painter->setRenderHint(QPainter::Antialiasing);
+-            painter->setBrush(Qt::NoBrush);
+-            QPen p(titleBarSeparatorColor);
+-            p.setWidthF(separatorHeight);
+-            p.setCapStyle(Qt::FlatCap);
+-            painter->setPen(p);
+-
+-            qreal separatorYCoOrd = m_titleRect.bottom() - separatorHeight / 2;
+-            if (m_internalSettings->useTitleBarColorForAllBorders()) {
+-                painter->drawLine(QPointF(m_titleRect.bottomLeft().x() + borderLeft(), separatorYCoOrd),
+-                                  QPointF(m_titleRect.bottomRight().x() - borderRight(), separatorYCoOrd));
+-            } else {
+-                painter->drawLine(QPointF(m_titleRect.bottomLeft().x(), separatorYCoOrd), QPointF(m_titleRect.bottomRight().x(), separatorYCoOrd));
+-            }
++        // titleBarSeparatorColor() is only valid for active windows, so using
++        // it here would skip the separator on every unfocused window. Use a
++        // neutral hairline so the line shows on all windows.
++        painter->setRenderHint(QPainter::Antialiasing);
++        painter->setBrush(Qt::NoBrush);
++        QPen p(QColor(128, 128, 128, 145));
++        p.setWidthF(separatorHeight);
++        p.setCapStyle(Qt::FlatCap);
++        painter->setPen(p);
++
++        qreal separatorYCoOrd = m_titleRect.bottom() - separatorHeight / 2;
++        if (m_internalSettings->useTitleBarColorForAllBorders()) {
++            painter->drawLine(QPointF(m_titleRect.bottomLeft().x() + borderLeft(), separatorYCoOrd),
++                              QPointF(m_titleRect.bottomRight().x() - borderRight(), separatorYCoOrd));
++        } else {
++            painter->drawLine(QPointF(m_titleRect.bottomLeft().x(), separatorYCoOrd), QPointF(m_titleRect.bottomRight().x(), separatorYCoOrd));
+         }
+     }
+ 
+@@ -2109,7 +2108,7 @@ qreal Decoration::titleBarSeparatorHeight(qreal scale) const
      // access client
      auto c = window();
  
@@ -32,3 +74,5 @@ index 2aabbf520..0e0af5020 100644
          qreal height = 1;
          if (KWindowSystem::isPlatformX11())
              height *= m_systemScaleFactorX11;
+-- 
+2.48.1
