@@ -17,7 +17,7 @@
       }
 
       subscription {
-        flybit: '${config.sops.placeholder."dae-subscription"}'
+        mojie: '${config.sops.placeholder."dae-subscription"}'
       }
 
       dns {
