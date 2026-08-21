@@ -14,6 +14,23 @@
 // and redraws the visible viewport in place after clearing the screen. The
 // scrollback above the viewport stays intact.
 //
+// Duplication guard: an in-place redraw keeps the scrollback, but the
+// redrawn rows [pinnedViewportTop, prevViewportTop) are already physically
+// in the scrollback (the terminal cannot rewind it). The top rows of the new
+// viewport then appear twice - once in the scrollback and once on screen.
+// A small shift only duplicates the boundary rows, which is the price for
+// keeping the scrollback alive during streaming reflow. A large shift would
+// duplicate a whole visible chunk, so it falls back to a full redraw that
+// clears the scrollback and rebuilds it from the new buffer.
+//
+// The same duplication accumulates when streaming oscillates: a small shrink
+// (in-place redraw) is followed by a small grow, and the normal append path
+// then scrolls, pushing the boundary row into the scrollback where it
+// already lives. Every shrink/grow cycle adds another copy. To stop this,
+// the patch records that the last frame used the in-place redraw; the next
+// frame's small grow then also redraws in place instead of scrolling, so the
+// oscillation never pollutes the scrollback.
+//
 // IMPORTANT: the fallback must NOT fire on growth/append. When the buffer
 // grows, the incremental path scrolls the terminal forward naturally, which
 // pushes every visible row into the scrollback - nothing is lost. An earlier
@@ -69,64 +86,112 @@ if (!mainScreenPath) {
 
 let src = readFileSync(mainScreenPath, "utf8");
 
+// Track that the last frame used the in-place viewport redraw. The next
+// frame's small grow then redraws in place too (see below).
+const fieldAnchor = "    previousViewportTop = 0;\n";
+const fieldInserted =
+  "    previousViewportTop = 0;\n" +
+  "    // True when the last frame redrew the viewport in place (shrink\n" +
+  "    // fallback). The next frame's small grow then also redraws in place\n" +
+  "    // instead of scrolling, so the streaming shrink/grow oscillation does\n" +
+  "    // not push boundary rows into the scrollback again and again.\n" +
+  "    inPlaceViewportRedraw = false;\n";
+
+if (!src.includes(fieldAnchor)) {
+  console.error("pi-tui patch: viewport field anchor not found");
+  process.exit(1);
+}
+src = src.split(fieldAnchor).join(fieldInserted);
+
 // Insert the shrink fallback right after the appendStart computation, before
 // the deleted-lines and incremental write paths so both are covered.
 const anchor =
   "        const appendStart = appendedLines && firstChanged === this.previousLines.length && firstChanged > 0;\n" +
   "        // No changes - but still need to update hardware cursor position if it moved\n";
 
-const inserted =
-  "        const appendStart = appendedLines && firstChanged === this.previousLines.length && firstChanged > 0;\n" +
-  "        // Viewport-top desync: the buffer shrank, so the pinned tail now sits\n" +
-  "        // above the tracked viewport top. Terminals cannot scroll backwards,\n" +
-  "        // so the incremental diff would keep showing the old (lower) window,\n" +
-  "        // desyncing the tracked viewport top and leaving stale cells on screen\n" +
-  "        // (e.g. a leftover caret block from an earlier frame). Redraw the\n" +
-  "        // visible viewport in place; the scrollback above stays intact.\n" +
-  "        // NOTE: never fall back on growth/append - there the incremental path\n" +
-  "        // scrolls the terminal forward naturally, preserving every row. An\n" +
-  "        // earlier version of this patch also fell back during streaming\n" +
-  "        // growth, clearing the screen and rewriting only the trailing rows,\n" +
-  "        // which dropped the middle rows of the buffer (\"swallowed\" lines).\n" +
-  "        const pinnedViewportTop = Math.max(0, newLines.length - height);\n" +
-  "        if (pinnedViewportTop < prevViewportTop) {\n" +
-  "            logRedraw(\"viewport top moved up (\" + pinnedViewportTop + \" < \" + prevViewportTop + \")\");\n" +
-  "            const startRow = pinnedViewportTop;\n" +
-  "            const span = Math.min(height, newLines.length - startRow);\n" +
-  "            let redraw = \"\\x1b[?2026h\";\n" +
-  "            redraw += this.deleteKittyImages(this.previousKittyImageIds);\n" +
-  "            redraw += \"\\x1b[2J\\x1b[H\";\n" +
-  "            for (let i = 0; i < span; i++) {\n" +
-  "                if (i > 0)\n" +
-  "                    redraw += \"\\r\\n\";\n" +
-  "                const line = newLines[startRow + i];\n" +
-  "                const isImage = isImageLine(line);\n" +
-  "                const imageReservedRows = isImage ? this.getKittyImageReservedRows(newLines, startRow + i) : 1;\n" +
-  "                if (imageReservedRows > 1 && imageReservedRows <= height) {\n" +
-  "                    for (let row = 1; row < imageReservedRows; row++)\n" +
-  "                        redraw += \"\\r\\n\";\n" +
-  "                    redraw += \"\\x1b[\" + (imageReservedRows - 1) + \"A\";\n" +
-  "                    redraw += line;\n" +
-  "                    redraw += \"\\x1b[\" + (imageReservedRows - 1) + \"B\";\n" +
-  "                    i += imageReservedRows - 1;\n" +
-  "                    continue;\n" +
-  "                }\n" +
-  "                redraw += line;\n" +
-  "            }\n" +
-  "            redraw += \"\\x1b[?2026l\";\n" +
-  "            this.terminal.write(redraw);\n" +
-  "            this.cursorRow = Math.max(0, startRow + span - 1);\n" +
-  "            this.hardwareCursorRow = this.cursorRow;\n" +
-  "            this.maxLinesRendered = Math.max(this.maxLinesRendered, newLines.length);\n" +
-  "            this.previousViewportTop = startRow;\n" +
-  "            this.positionHardwareCursor(cursorPos, newLines.length);\n" +
-  "            this.previousLines = newLines;\n" +
-  "            this.previousKittyImageIds = this.collectKittyImageIds(newLines);\n" +
-  "            this.previousWidth = width;\n" +
-  "            this.previousHeight = height;\n" +
-  "            return;\n" +
-  "        }\n" +
-  "        // No changes - but still need to update hardware cursor position if it moved\n";
+const inserted = `        const appendStart = appendedLines && firstChanged === this.previousLines.length && firstChanged > 0;
+        // Viewport-top desync: the buffer shrank, so the pinned tail now sits
+        // above the tracked viewport top. Terminals cannot scroll backwards,
+        // so the incremental diff would keep showing the old (lower) window,
+        // desyncing the tracked viewport top and leaving stale cells on screen
+        // (e.g. a leftover caret block from an earlier frame). Redraw the
+        // visible viewport in place; the scrollback above stays intact.
+        // NOTE: never fall back on growth/append - there the incremental path
+        // scrolls the terminal forward naturally, preserving every row. An
+        // earlier version of this patch also fell back during streaming
+        // growth, clearing the screen and rewriting only the trailing rows,
+        // which dropped the middle rows of the buffer ("swallowed" lines).
+        const pinnedViewportTop = Math.max(0, newLines.length - height);
+        if (pinnedViewportTop !== prevViewportTop) {
+            const viewportShift = pinnedViewportTop - prevViewportTop;
+            // Duplication guard: an in-place redraw keeps the scrollback, but
+            // the redrawn rows [pinnedViewportTop, prevViewportTop) already
+            // live in the scrollback (it cannot be rewound), so the top rows
+            // of the new viewport appear twice - on screen and in history.
+            // A small shift only duplicates the boundary rows, which is the
+            // price for keeping the scrollback alive during streaming reflow.
+            // A large shift would duplicate a whole visible chunk; fall back
+            // to a full redraw that also clears the scrollback and rebuilds
+            // it from the new buffer (no duplicates at all).
+            if (viewportShift < -3) {
+                logRedraw("viewport top moved up " + (-viewportShift) + " rows - full redraw");
+                this.inPlaceViewportRedraw = false;
+                fullRender(true);
+                return;
+            }
+            // After an in-place redraw the next frame usually grows again
+            // (streaming continues). The normal append path would then scroll,
+            // pushing the boundary row into the scrollback - where it already
+            // lives - so every shrink/grow cycle adds another copy. Redraw in
+            // place for small follow-up growth as well; the oscillation then
+            // never pollutes the scrollback. (Large follow-up growth falls
+            // through to the incremental path, which scrolls correctly.)
+            const followupGrow = this.inPlaceViewportRedraw && viewportShift > 0 && viewportShift <= 3;
+            if (viewportShift < 0 || followupGrow) {
+                const startRow = pinnedViewportTop;
+                const span = Math.min(height, newLines.length - startRow);
+                let redraw = "\\x1b[?2026h";
+                redraw += this.deleteKittyImages(this.previousKittyImageIds);
+                redraw += "\\x1b[2J\\x1b[H";
+                for (let i = 0; i < span; i++) {
+                    if (i > 0)
+                        redraw += "\\r\\n";
+                    const line = newLines[startRow + i];
+                    const isImage = isImageLine(line);
+                    const imageReservedRows = isImage ? this.getKittyImageReservedRows(newLines, startRow + i) : 1;
+                    if (imageReservedRows > 1 && imageReservedRows <= height) {
+                        for (let row = 1; row < imageReservedRows; row++)
+                            redraw += "\\r\\n";
+                        redraw += "\\x1b[" + (imageReservedRows - 1) + "A";
+                        redraw += line;
+                        redraw += "\\x1b[" + (imageReservedRows - 1) + "B";
+                        i += imageReservedRows - 1;
+                        continue;
+                    }
+                    redraw += line;
+                }
+                redraw += "\\x1b[?2026l";
+                this.terminal.write(redraw);
+                this.cursorRow = Math.max(0, startRow + span - 1);
+                this.hardwareCursorRow = this.cursorRow;
+                this.maxLinesRendered = Math.max(this.maxLinesRendered, newLines.length);
+                this.previousViewportTop = startRow;
+                this.positionHardwareCursor(cursorPos, newLines.length);
+                this.previousLines = newLines;
+                this.previousKittyImageIds = this.collectKittyImageIds(newLines);
+                this.previousWidth = width;
+                this.previousHeight = height;
+                this.inPlaceViewportRedraw = viewportShift < 0;
+                return;
+            }
+            if (this.inPlaceViewportRedraw && viewportShift > 3) {
+                // Large growth right after an in-place redraw: let the
+                // incremental path scroll normally from now on.
+                this.inPlaceViewportRedraw = false;
+            }
+        }
+        // No changes - but still need to update hardware cursor position if it moved
+`;
 
 if (!src.includes(anchor)) {
   console.error("pi-tui patch: viewport fallback anchor not found");
