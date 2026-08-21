@@ -4,11 +4,17 @@
   # Elisp files are symlinked to the actual files in this repo (out of store),
   # so editing them in Emacs takes effect immediately, no rebuild needed.
   home.file = lib.mkMerge [
+    # early-init.el lives at home/programs/emacs/ (not lisp/), so it needs
+    # its own source prefix. The other elisp files are in lisp/.
+    (repoLib.mkRepoLinks config {
+      targetPrefix = ".config/emacs/lisp/";
+      sourcePrefix = "home/programs/emacs/";
+      paths = [ "early-init.el" ];
+    })
     (repoLib.mkRepoLinks config {
       targetPrefix = ".config/emacs/lisp/";
       sourcePrefix = "home/programs/emacs/lisp/";
       paths = [
-        "early-init.el"
         "init.el"
         "nov-config.el"
       ];
