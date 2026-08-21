@@ -40,6 +40,7 @@
 
       group {
         proxy {
+          filter: !name(keyword: '剩余流量') && !name(keyword: '套餐到期') && !name(keyword: '过滤掉')
           policy: min_moving_avg
         }
       }
