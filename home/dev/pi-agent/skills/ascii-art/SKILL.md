@@ -9,7 +9,7 @@ description: 把图语言（Mermaid / DOT / PlantUML 等）和 Markdown 表格�
 
 1. **遇到图语言转 ASCII 的问题全靠 CLI**。用户给出图语言源码（Mermaid、DOT、PlantUML 等）或 Markdown 表格时，禁止手画盒子、禁止手工算宽度、禁止目视对齐。一律把源码交给 `mermaid-ascii` CLI 转换。
 2. 输出必须用代码块（```` ``` ````）包裹，代码块内不混入 Markdown 装饰（`**`、`_` 等）。
-3. CLI 输出即最终稿：**原样粘贴，不得手工改动**。若 `mermaid-ascii` 未在 PATH，提示用户先执行 `nixos-rebuild switch --flake /home/lophophora/.config/nixos#flowerpot`，不要手工画。
+3. CLI 输出即最终稿：**原样粘贴，不得手工改动**。若 `mermaid-ascii` 未在 PATH，提示用户先执行 `nixos-rebuild switch --flake /home/FeiHsueh/.config/nixos#flowerpot`，不要手工画。
 4. CLI 输出无需再跑任何对齐工具——布局由 elkjs 自动计算，CJK 与符号宽度由 CLI 内部处理（见「宽度模型」）。
 
 ## 转换流程（必须按顺序）

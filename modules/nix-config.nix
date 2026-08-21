@@ -6,7 +6,7 @@
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     extra-deprecated-features = [ "or-as-identifier" "broken-string-indentation" ];
-    trusted-users = [ "root" "lophophora" ];
+    trusted-users = [ "root" "FeiHsueh" ];
     substituters = [
       "https://cache.nixos.org"
       "https://nyx-cache.chaotic.cx/"

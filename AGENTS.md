@@ -7,7 +7,7 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Ch
 ```bash
 nixos-rebuild dry-build --flake .#flowerpot       # verify (system + home)
 run0 nixos-rebuild switch --flake .#flowerpot   # rebuild & switch (system)
-home-manager switch --flake .#lophophora         # home-only rebuild (fast, no system closure)
+home-manager switch --flake .#FeiHsueh         # home-only rebuild (fast, no system closure)
 nix flake update                                   # update inputs
 git add -A && git commit -F -                       # commit (GNU format message via stdin)
 git push                                           # push
@@ -22,7 +22,7 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 3. Commit (if success)
 4. Push (if success)
 
-Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#lophophora` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
+Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
 System changes (hosts, kernel, services, etc.) still require `nixos-rebuild switch`.
 

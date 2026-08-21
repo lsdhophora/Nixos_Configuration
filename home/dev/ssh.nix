@@ -15,7 +15,7 @@
         HostName = "ssh.github.com";
         User = "git";
         Port = 443;
-        IdentityFile = "/home/lophophora/.ssh/lysergic";
+        IdentityFile = "/home/FeiHsueh/.ssh/lysergic";
       };
     };
   };

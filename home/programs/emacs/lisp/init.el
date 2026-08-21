@@ -84,7 +84,7 @@
         eglot-nix-formatting-command ["nixfmt"]
         eglot-nix-nixpkgs-expr "import <nixpkgs> { }"
         eglot-nix-nixos-options-expr
-        "(builtins.getFlake \"/home/lophophora/.config/nixos\").nixosConfigurations.flowerpot.options"))
+        "(builtins.getFlake \"/home/FeiHsueh/.config/nixos\").nixosConfigurations.flowerpot.options"))
 
 (use-package magit
   :bind (("C-x g" . magit-status))

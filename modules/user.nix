@@ -7,8 +7,9 @@
 {
   programs.zsh.enable = true;
 
-  users.users.lophophora = {
+  users.users.FeiHsueh = {
     isNormalUser = true;
+    uid = 1000;
     description = "费雪";
     hashedPasswordFile = config.sops.secrets.hashed-password.path;
     extraGroups = [ "wheel" ];

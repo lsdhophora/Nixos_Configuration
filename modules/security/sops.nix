@@ -3,7 +3,7 @@
 {
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
 
-  sops.age.sshKeyPaths = [ "/home/lophophora/.ssh/lysergic" ];
+  sops.age.sshKeyPaths = [ "/home/FeiHsueh/.ssh/lysergic" ];
 
   # hashed-password: needed before user creation
   sops.secrets.hashed-password = {
@@ -26,9 +26,9 @@
     content = ''
       access-tokens = github.com=${config.sops.placeholder.access-tokens-github}
     '';
-    path = "/home/lophophora/.config/nix/nix.conf";
+    path = "/home/FeiHsueh/.config/nix/nix.conf";
     mode = "0600";
-    owner = "lophophora";
+    owner = "FeiHsueh";
     group = "users";
   };
 }

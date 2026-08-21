@@ -36,7 +36,7 @@ in
         home-manager.useUserPackages = true;
         home-manager.backupFileExtension = "bak";
         home-manager.extraSpecialArgs = { inherit inputs repoLib; };
-        home-manager.users.lophophora = {
+        home-manager.users.FeiHsueh = {
           imports = [ ../home/default.nix ];
         };
       }
@@ -45,7 +45,7 @@ in
 
   # Standalone entry point for fast home-only rebuilds.
   # Shares the same ../home/default.nix as the NixOS module above.
-  flake.homeConfigurations.lophophora = inputs.home-manager.lib.homeManagerConfiguration {
+  flake.homeConfigurations.FeiHsueh = inputs.home-manager.lib.homeManagerConfiguration {
     pkgs = import inputs.nixpkgs {
       inherit system;
       overlays = (import ../overlays/default.nix) inputs;

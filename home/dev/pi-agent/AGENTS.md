@@ -2,7 +2,7 @@
 
 ## Language and Writing Standard
 
-1. **Code style** — Follow the rules in `/home/lophophora/.config/nixos/docs/code-style.md`. Use the `equational-reasoning` and `hoare-logic` skills when their trigger conditions match.
+1. **Code style** — Follow the rules in `/home/FeiHsueh/.config/nixos/docs/code-style.md`. Use the `equational-reasoning` and `hoare-logic` skills when their trigger conditions match.
 
 2. **Reply in the user's language** — If the user writes in a language other than English, first write the response in English following STE rules inside the thinking block (do not output it directly), then translate and output only the final response in the user's language. The English version must stay in the thinking block only.
 
