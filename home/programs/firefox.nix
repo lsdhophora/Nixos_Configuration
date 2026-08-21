@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 let
   # AMO force-install entry. `slug` is the addon id in the download URL.
   mozAddon = slug: {
@@ -10,7 +15,11 @@ in
   programs.firefox = {
     enable = true;
     package = pkgs.firefox-patched;
-    configPath = ".mozilla/firefox";
+    # Firefox >= 147 honours the XDG Base Directory spec: with no legacy
+    # ~/.mozilla, it stores everything under $XDG_CONFIG_HOME/mozilla.
+    # home.stateVersion is 25.05, so the module default would still be the
+    # legacy .mozilla/firefox path; set the XDG one explicitly.
+    configPath = "${config.xdg.configHome}/mozilla/firefox";
     profiles.default = {
       settings = {
         "xpinstall.signatures.required" = false;
@@ -55,5 +64,18 @@ in
         "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
       };
     };
+  };
+
+  # Native messaging hosts. Firefox 148+ looks them up under
+  # $XDG_CONFIG_HOME/mozilla first (then legacy ~/.mozilla). home-manager's
+  # mozilla module still hardcodes the legacy .mozilla location, so link the
+  # Plasma browser integration host to the XDG path here and disable the
+  # legacy link to keep $HOME free of ~/.mozilla.
+  home.file = {
+    ".config/mozilla/native-messaging-hosts" = {
+      source = "${pkgs.kdePackages.plasma-browser-integration}/lib/mozilla/native-messaging-hosts";
+      recursive = true;
+    };
+    ".mozilla/native-messaging-hosts".enable = lib.mkForce false;
   };
 }
