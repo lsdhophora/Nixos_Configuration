@@ -62,8 +62,11 @@
   (setq corfu-auto-delay 0.2)
   (setq corfu-auto-prefix 1))
 
-(use-package corfu-terminal
-  :config
+;; Forward declarations keep the byte compiler silent when it compiles
+;; init.el and its deferred lambdas.
+(defvar corfu-terminal-mode)
+(declare-function corfu-terminal-mode "corfu-terminal")
+(with-eval-after-load 'corfu-terminal
   (unless (display-graphic-p)
     (corfu-terminal-mode 1)))
 
