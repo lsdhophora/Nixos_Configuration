@@ -26,9 +26,6 @@ in
     specialArgs = { inherit inputs repoLib; };
     modules = [
       ../hosts/flowerpot/default.nix
-      inputs.chaotic.nixosModules.nyx-cache
-      inputs.chaotic.nixosModules.nyx-overlay
-      inputs.chaotic.nixosModules.nyx-registry
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
       {

@@ -7,13 +7,12 @@
     experimental-features = [ "nix-command" "flakes" ];
     extra-deprecated-features = [ "or-as-identifier" "broken-string-indentation" ];
     trusted-users = [ "root" "FeiHsueh" ];
-    substituters = [
-      "https://cache.nixos.org"
-      "https://nyx-cache.chaotic.cx/"
-    ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "nyx-cache.chaotic.cx:dJxTrgMC3V3cFfyIiBQDQorG6k1LsqurH/srpMSq7qk="
-    ];
+    auto-optimise-store = true;
+  };
+
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
   };
 }

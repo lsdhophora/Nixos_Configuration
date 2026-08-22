@@ -39,7 +39,16 @@ in
     pkgs.texlab
   ];
 
+  # Erase the luaotfload font cache only when the texlive store path
+  # changes (upgrade), not on every switch. A stale cache breaks font
+  # lookup after an upgrade; clearing unconditionally would force a full
+  # cache rebuild after every home-manager switch.
   home.activation.clearLuaotfloadCache = lib.hm.dag.entryAfter [ "entryLast" ] ''
-    ${myTexlive}/bin/luaotfload-tool --cache=erase
+    marker="$HOME/.cache/luaotfload-cleared"
+    if [ "$(cat "$marker" 2>/dev/null)" != "${myTexlive}" ]; then
+      ${myTexlive}/bin/luaotfload-tool --cache=erase
+      mkdir -p "$(dirname "$marker")"
+      printf '%s' "${myTexlive}" > "$marker"
+    fi
   '';
 }

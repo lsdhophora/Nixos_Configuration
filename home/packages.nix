@@ -1,6 +1,5 @@
 { pkgs, ... }: {
   home.packages = with pkgs; [
-    ibm-plex
     tree
     ffmpeg
     fastfetch
@@ -9,7 +8,6 @@
     nixfmt
     nixd
     unzip
-    kitty
     mosh
     clang
     clang-tools
