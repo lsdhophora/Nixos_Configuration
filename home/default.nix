@@ -14,6 +14,7 @@
     ./misc/avatar.nix
     ./misc/housekeeping.nix
     ./misc/cli.nix
+    ./misc/clangd.nix
     ./misc/gui.nix
     ./packages.nix
 

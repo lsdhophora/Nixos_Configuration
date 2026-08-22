@@ -5,11 +5,6 @@
 (when (file-exists-p custom-file)
   (load custom-file :noerror))
 
-(add-to-list 'load-path (expand-file-name "site-lisp" user-emacs-directory))
-(autoload 'audio-trimmer "audio-trimmer" "Audio trimmer with ffplay backend." t)
-(require 'nmcli-wifi nil t)
-
-
 (setq nobreak-char-display nil)
 (set-face-attribute 'default nil :height 120)
 (set-face-attribute 'default nil :font "IBM Plex Mono")
@@ -47,16 +42,16 @@
   :config
   (setq eglot-sync-connect 5)
   (setq eglot-autoshutdown t)
-  (setq corfu-auto-delay 0.2)
   ;; --- clangd LSP (clang-tools, system package) ---
-  ;; For standalone CP files without compile_commands.json, drop a
-  ;; .clangd file next to the source to pin flags, e.g.:
-  ;;   CompileFlags:
-  ;;     Add: [-std=c++17, -Wall]
+  ;; The global default C++ standard is pinned in
+  ;; ~/.config/clangd/config.yaml (managed by home/misc/clangd.nix);
+  ;; drop a .clangd file next to a source tree to override it.
   (add-to-list 'eglot-server-programs '(c-mode . ("clangd" "--header-insertion=never")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd" "--header-insertion=never")))
   (add-hook 'c-mode-hook #'eglot-ensure)
   (add-hook 'c++-mode-hook #'eglot-ensure)
+  (add-hook 'c-mode-hook #'corfu-mode)
+  (add-hook 'c++-mode-hook #'corfu-mode)
   ;; --- texlab LSP (latex, system package) ---
   (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab"))))
@@ -160,9 +155,6 @@
   :custom
   (nerd-icons-font-family "Hack Nerd Font"))
 
-(eval-after-load 'nov
-  '(load "~/.config/emacs/lisp/nov-config" nil t))
-
 (require 'emms-setup)
 (emms-all)
 (emms-default-players)
@@ -179,31 +171,7 @@
             (file-name-sans-extension
              (file-name-nondirectory (emms-track-get track 'name))))))
 
-
-;; hydra removed
-
-(when (file-exists-p "~/.config/eca/deepseek-key")
-  (setenv "DEEPSEEK_API_KEY"
-          (with-temp-buffer
-            (insert-file-contents "~/.config/eca/deepseek-key")
-            (string-trim (buffer-string)))))
-
-(use-package eca
-  :bind
-  (("C-c e" . eca)
-   :map eca-chat-mode-map
-   ("C-c ." . eca-transient-menu))
-  :custom
-  (eca-custom-command '("eca" "server"))
-  (eca-completion-idle-delay 0.2)
-  (eca-chat-window-side 'right)
-  (eca-chat-window-width 56)
-  (eca-chat-auto-add-cursor t)
-  (eca-chat-auto-add-repomap t)
-  :config
-  (add-hook 'prog-mode-hook #'eca-completion-mode))
-
-;; --- competitive programming: cph.el (companion: cph/cph.user.js) ---
+;; --- competitive programming: cph.el (companion: lisp/cph/cph.user.js) ---
 ;; cph.el is symlinked into ~/.config/emacs/cph by files.nix
 ;; (mkOutOfStoreSymlink), so repo edits apply without rebuild.
 (add-to-list 'load-path (expand-file-name "cph" user-emacs-directory))
