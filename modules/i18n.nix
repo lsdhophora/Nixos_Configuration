@@ -1,4 +1,12 @@
 { lib, pkgs, ... }: {
+  # ibm-plex needs a second visibility path besides fontconfig's conf.d
+  # <dir> entry: merging it into the system profile exposes it under
+  # /run/current-system/sw/share/fonts (an XDG data dir). Without this,
+  # Emacs mis-deduplicates ibm-plex's duplicate OTF/TTF faces when only
+  # conf.d registers the package, fails to resolve the bold face, and
+  # the modeline falls back to another font.
+  environment.systemPackages = [ pkgs.ibm-plex ];
+
   i18n.defaultLocale = "zh_CN.UTF-8";
   i18n.supportedLocales = [
     "zh_CN.UTF-8/UTF-8"
