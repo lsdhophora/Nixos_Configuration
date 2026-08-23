@@ -1,0 +1,12 @@
+diff --git a/src/gtk3/widgets/_progressbar.scss b/src/gtk3/widgets/_progressbar.scss
+index 15a905f..8303eda 100644
+--- a/src/gtk3/widgets/_progressbar.scss
++++ b/src/gtk3/widgets/_progressbar.scss
+@@ -88,6 +88,7 @@ treeview.view {
+ 		}
+ 	}
+ 	&.trough {
++		border-radius: $r;
+ 		background-color: $trough_color;
+ 		&:selected {
+ 			&:focus,

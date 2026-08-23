@@ -1,0 +1,60 @@
+diff --git a/src/pgtkmenu.c b/src/pgtkmenu.c
+index a2e09b6..65080f9 100644
+--- a/src/pgtkmenu.c
++++ b/src/pgtkmenu.c
+@@ -754,11 +754,12 @@ pgtk_menu_show (struct frame *f, int x, int y, int menuflags,
+   if (!NILP (title))
+     {
+       widget_value *wv_title;
+-      widget_value *wv_sep1 = make_widget_value ("--", NULL, false, Qnil);
+-      widget_value *wv_sep2 = make_widget_value ("--", NULL, false, Qnil);
++      /* Emit one separator below the title.  Two adjacent separator items
++	 show as two lines on themes that put margins on menu separators
++	 (for example Breeze).  */
++      widget_value *wv_sep = make_widget_value ("--", NULL, false, Qnil);
+ 
+-      wv_sep2->next = first_wv->contents;
+-      wv_sep1->next = wv_sep2;
++      wv_sep->next = first_wv->contents;
+ 
+ #ifndef HAVE_MULTILINGUAL_MENU
+       if (STRING_MULTIBYTE (title))
+@@ -767,7 +768,7 @@ pgtk_menu_show (struct frame *f, int x, int y, int menuflags,
+ 
+       wv_title = make_widget_value (SSDATA (title), NULL, true, Qnil);
+       wv_title->button_type = BUTTON_TYPE_NONE;
+-      wv_title->next = wv_sep1;
++      wv_title->next = wv_sep;
+       first_wv->contents = wv_title;
+     }
+ 
+diff --git a/src/xmenu.c b/src/xmenu.c
+index 3f09edb..3699790 100644
+--- a/src/xmenu.c
++++ b/src/xmenu.c
+@@ -2070,11 +2070,12 @@ x_menu_show (struct frame *f, int x, int y, int menuflags,
+   if (!NILP (title))
+     {
+       widget_value *wv_title;
+-      widget_value *wv_sep1 = make_widget_value ("--", NULL, false, Qnil);
+-      widget_value *wv_sep2 = make_widget_value ("--", NULL, false, Qnil);
++      /* Emit one separator below the title.  Two adjacent separator items
++	 show as two lines on themes that put margins on menu separators
++	 (for example Breeze).  */
++      widget_value *wv_sep = make_widget_value ("--", NULL, false, Qnil);
+ 
+-      wv_sep2->next = first_wv->contents;
+-      wv_sep1->next = wv_sep2;
++      wv_sep->next = first_wv->contents;
+ 
+ #ifndef HAVE_MULTILINGUAL_MENU
+       if (STRING_MULTIBYTE (title))
+@@ -2083,7 +2084,7 @@ x_menu_show (struct frame *f, int x, int y, int menuflags,
+ 
+       wv_title = make_widget_value (SSDATA (title), NULL, true, Qnil);
+       wv_title->button_type = BUTTON_TYPE_NONE;
+-      wv_title->next = wv_sep1;
++      wv_title->next = wv_sep;
+       first_wv->contents = wv_title;
+     }
+ 

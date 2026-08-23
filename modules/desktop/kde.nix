@@ -27,6 +27,11 @@ let
     ark = [
       ./../../patches/ark/batchextract-desturl.patch
     ];
+    # The breeze-gtk build compiles this SCSS fix into the theme CSS:
+    # - Give treeview.view.trough the same radius as treeview.view.progressbar.
+    breeze-gtk = [
+      ./../../patches/breeze-gtk/theme-fixes.patch
+    ];
     # xdg-desktop-portal-kde is patched in the kio overlay below. Its file
     # dialog embeds KFileWidget, so it must link the patched kio.
   };

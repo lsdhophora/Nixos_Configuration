@@ -5,7 +5,13 @@ in
 {
   programs.emacs = {
     enable = true;
-    package = unstableEmacs.emacs-pgtk;
+    # Emit one separator below a popup menu title instead of two (see
+    # patches/emacs-pgtk/popup-title-single-separator.patch).
+    package = unstableEmacs.emacs-pgtk.overrideAttrs (oldAttrs: {
+      patches =
+        (oldAttrs.patches or [ ])
+        ++ [ ./../../../patches/emacs-pgtk/popup-title-single-separator.patch ];
+    });
     extraPackages =
       _: with unstableEmacs.emacs-pgtk.pkgs; [
         direnv
