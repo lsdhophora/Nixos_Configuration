@@ -49,6 +49,67 @@ MyopicDefocusEffect::MyopicDefocusEffect()
     if (m_valid) {
         m_enabled = true;
     }
+
+    // Self-healing: keep offscreen textures in sync with decoration state
+    // changes (focus change via windowActivated, titlebar/button repaints
+    // via windowDamaged).  The filter keeps the red channel sharp, so a
+    // stale texture shows as a sharp red close-button that lingers after
+    // the real decoration turned grey -- visible as a "red edge" when the
+    // compositor is otherwise idle (e.g. nothing focused).
+    connect(effects, &EffectsHandler::windowActivated, this, &MyopicDefocusEffect::onWindowActivated);
+    connect(effects, &EffectsHandler::windowDeleted, this, &MyopicDefocusEffect::onWindowDeleted);
+}
+
+void MyopicDefocusEffect::onWindowActivated(EffectWindow *window)
+{
+    // Both the window that lost focus (its decoration went grey) and the one
+    // that gained it may keep stale sharp-red pixels in their offscreen
+    // textures; force both to re-render fresh.
+    if (m_lastActive && m_lastActive != window) {
+        scheduleRefresh(m_lastActive);
+    }
+    scheduleRefresh(window);
+    m_lastActive = window;
+}
+
+void MyopicDefocusEffect::onWindowDamaged(EffectWindow *window)
+{
+    if (!m_enabled || !m_valid || !window) {
+        return;
+    }
+    // Only decorated windows have titlebar buttons.  Rebuilding the offscreen
+    // texture for undecorated content repaints (videos, games, fullscreen
+    // terminals) would churn the GPU for nothing.
+    if (!window->hasDecoration()) {
+        return;
+    }
+    scheduleRefresh(window);
+}
+
+void MyopicDefocusEffect::scheduleRefresh(EffectWindow *window)
+{
+    if (!m_enabled || !m_valid || !window) {
+        return;
+    }
+    // Coalesce per frame; repaint only this window's screen area, not the
+    // whole screen.  The previous fix called addRepaintFull() on every
+    // damage event, which kept the compositor busy and made titlebar button
+    // repaints stutter.
+    m_pendingRefresh.insert(window);
+    effects->addRepaint(window->expandedGeometry());
+}
+
+void MyopicDefocusEffect::onWindowDeleted(EffectWindow *window)
+{
+    auto it = m_damagedConnections.find(window);
+    if (it != m_damagedConnections.end()) {
+        disconnect(*it);
+        m_damagedConnections.erase(it);
+    }
+    m_pendingRefresh.remove(window);
+    if (m_lastActive == window) {
+        m_lastActive = nullptr;
+    }
 }
 
 MyopicDefocusEffect::~MyopicDefocusEffect() = default;
@@ -133,9 +194,43 @@ void MyopicDefocusEffect::prePaintScreen(ScreenPrePaintData &data)
                 redirect(window);
                 setShader(window, m_shader.get());
                 m_windows.append(window);
+
+                // Self-healing: any decoration/content repaint for this
+                // window schedules a forced texture re-render, so a skipped
+                // or coalesced repaint can't leave stale sharp-red pixels
+                // (e.g. the close-button hover highlight).
+                m_damagedConnections.insert(
+                    window,
+                    connect(window, &EffectWindow::windowDamaged, this, &MyopicDefocusEffect::onWindowDamaged));
             } else if (!wantRedirect && haveRedirect) {
+                auto it = m_damagedConnections.find(window);
+                if (it != m_damagedConnections.end()) {
+                    disconnect(*it);
+                    m_damagedConnections.erase(it);
+                }
+                m_pendingRefresh.remove(window);
                 unredirect(window);
                 m_windows.removeOne(window);
+            }
+        }
+
+        // Apply pending self-heals: re-create each window's offscreen target
+        // so it re-renders fresh this frame, clearing any stale content.
+        // KWin 6 exposes no damage-region API on EffectWindow (no addDamage /
+        // damageRegion), so unredirect+redirect is the only reliable refresh
+        // primitive: redirect() forces the window to render into a fresh target.
+        if (!m_pendingRefresh.isEmpty()) {
+            const QSet<EffectWindow *> pending = m_pendingRefresh;
+            m_pendingRefresh.clear();
+            for (EffectWindow *window : pending) {
+                if (!m_windows.contains(window)) {
+                    continue;
+                }
+                unredirect(window);
+                m_windows.removeOne(window);
+                redirect(window);
+                setShader(window, m_shader.get());
+                m_windows.append(window);
             }
         }
     }
@@ -151,6 +246,12 @@ void MyopicDefocusEffect::toggleEffect()
             unredirect(window);
         }
         m_windows.clear();
+        for (auto &conn : m_damagedConnections) {
+            disconnect(conn);
+        }
+        m_damagedConnections.clear();
+        m_pendingRefresh.clear();
+        m_lastActive = nullptr;
     } else {
         m_enabled = m_valid;
     }

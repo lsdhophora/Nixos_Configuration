@@ -9,6 +9,9 @@
 
 #include "effect/offscreeneffect.h"
 
+#include <QHash>
+#include <QMetaObject>
+#include <QSet>
 #include <memory>
 
 namespace KWin
@@ -52,10 +55,24 @@ public Q_SLOTS:
 private:
     void loadShader();
 
+    // Decoration-freshness ("self-healing"): when a window's decoration
+    // state changes (focus change via windowActivated, or any repaint via
+    // windowDamaged), its offscreen texture is force-re-rendered so stale
+    // content can't linger -- e.g. a sharp red close-button left behind by
+    // a skipped/coalesced hover-exit repaint, even when the compositor is
+    // otherwise idle ("no focus" case).
+    void onWindowActivated(EffectWindow *window);
+    void onWindowDeleted(EffectWindow *window);
+    void onWindowDamaged(EffectWindow *window);
+    void scheduleRefresh(EffectWindow *window);
+
     bool m_valid = false;
     bool m_enabled = false;
     std::unique_ptr<GLShader> m_shader;
     QList<EffectWindow *> m_windows;
+    QSet<EffectWindow *> m_pendingRefresh;
+    QHash<EffectWindow *, QMetaObject::Connection> m_damagedConnections;
+    EffectWindow *m_lastActive = nullptr;
 
     // Configuration, read from kwinrc group [Effect-myopicdefocus]
     float m_greenBlurRadius = 2.5f;
