@@ -62,6 +62,7 @@ in
         "addon@darkreader.org" = "darkreader";
         "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = "stylus";
         "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
+        "firefoxpwa@filips.si" = "pwas-for-firefox";
       };
     };
   };
@@ -69,11 +70,20 @@ in
   # Native messaging hosts. Firefox 148+ looks them up under
   # $XDG_CONFIG_HOME/mozilla first (then legacy ~/.mozilla). home-manager's
   # mozilla module still hardcodes the legacy .mozilla location, so link the
-  # Plasma browser integration host to the XDG path here and disable the
-  # legacy link to keep $HOME free of ~/.mozilla.
+  # native messaging hosts (Plasma browser integration + firefoxpwa) to the
+  # XDG path here and disable the legacy link to keep $HOME free of ~/.mozilla.
   home.file = {
     ".config/mozilla/native-messaging-hosts" = {
-      source = "${pkgs.kdePackages.plasma-browser-integration}/lib/mozilla/native-messaging-hosts";
+      source = let
+        hosts = pkgs.buildEnv {
+          name = "mozilla-native-messaging-hosts";
+          paths = [
+            pkgs.kdePackages.plasma-browser-integration
+            pkgs.firefoxpwa
+          ];
+          pathsToLink = [ "/lib/mozilla/native-messaging-hosts" ];
+        };
+      in "${hosts}/lib/mozilla/native-messaging-hosts";
       recursive = true;
     };
     ".mozilla/native-messaging-hosts".enable = lib.mkForce false;
