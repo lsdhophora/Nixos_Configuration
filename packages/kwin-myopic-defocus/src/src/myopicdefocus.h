@@ -11,7 +11,6 @@
 
 #include <QHash>
 #include <QMetaObject>
-#include <QSet>
 #include <memory>
 
 namespace KWin
@@ -57,20 +56,23 @@ private:
 
     // Decoration-freshness ("self-healing"): when a window's decoration
     // state changes (focus change via windowActivated, or any repaint via
-    // windowDamaged), its offscreen texture is force-re-rendered so stale
-    // content can't linger -- e.g. a sharp red close-button left behind by
-    // a skipped/coalesced hover-exit repaint, even when the compositor is
-    // otherwise idle ("no focus" case).
+    // windowDamaged), the window's screen area is scheduled for a repaint so
+    // stale content can't linger -- e.g. a sharp red close-button left behind
+    // by a skipped/coalesced hover-exit repaint, even when the compositor is
+    // otherwise idle ("no focus" case).  The refresh is deliberately
+    // non-destructive: KWin's damage pipeline keeps the offscreen target in
+    // sync, so only a repaint is needed.  (A previous version force-recreated
+    // the target with unredirect+redirect on every damage; that churn raced
+    // with the render pass and produced garbled frames, so it was removed.)
     void onWindowActivated(EffectWindow *window);
     void onWindowDeleted(EffectWindow *window);
     void onWindowDamaged(EffectWindow *window);
-    void scheduleRefresh(EffectWindow *window);
+    void refreshWindow(EffectWindow *window);
 
     bool m_valid = false;
     bool m_enabled = false;
     std::unique_ptr<GLShader> m_shader;
     QList<EffectWindow *> m_windows;
-    QSet<EffectWindow *> m_pendingRefresh;
     QHash<EffectWindow *, QMetaObject::Connection> m_damagedConnections;
     EffectWindow *m_lastActive = nullptr;
 
