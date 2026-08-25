@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 let
   # zsh prompt format. The label shows as a bracket tag when not empty.
   prompt =

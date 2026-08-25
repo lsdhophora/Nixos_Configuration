@@ -1,4 +1,4 @@
-{ self, inputs, ... }:
+{ inputs, ... }:
 let
   system = "x86_64-linux";
   # Repo helper lib (see ../lib). Passed to modules and overlays as `repoLib`.

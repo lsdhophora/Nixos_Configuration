@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }: {
+{ pkgs, ... }: {
   # ibm-plex needs a second visibility path besides fontconfig's conf.d
   # <dir> entry: merging it into the system profile exposes it under
   # /run/current-system/sw/share/fonts (an XDG data dir). Without this,
