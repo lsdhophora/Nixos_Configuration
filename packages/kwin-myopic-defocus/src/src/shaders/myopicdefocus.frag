@@ -12,6 +12,16 @@
     separate channels, applies a Gaussian blur to G and B with different
     radii and recombines them.  We do the same here in a single pass.
 
+    Kernel: the 1D Gaussian is precomputed on the CPU as a table of
+    offsets and pair-sums.  Half-integer offsets land exactly between two
+    texels, so with GL_LINEAR filtering one texture fetch covers two
+    Gaussian taps at half weight each (offset 1.5 px averages texels 1
+    and 2, 3.5 px averages texels 3 and 4; offsets 0 and 5 px fetch a
+    single texel).  The pair-sums keep the total kernel energy exact,
+    while cutting the tap count from 11x11 (121) to 7x7 (49) fetches per
+    pixel -- important on iGPUs where this effect runs full-screen even
+    for fullscreen windows.
+
     Alpha handling: KWin's offscreen textures are premultiplied, and
     windows (panels, rounded corners, shadows) contain transparent pixels.
     The Gaussian is therefore applied to the *premultiplied* G/B channels
@@ -36,21 +46,22 @@ uniform sampler2D sampler;
 uniform int textureWidth;
 uniform int textureHeight;
 
-// WayMCA configuration (kwinrc group [Effect-waymca]).
-// Radii are Gaussian sigmas in device pixels.  effectStrength blends the
-// blurred result with the original (0.0 = off, 1.0 = fully blurred).
-uniform float greenBlurRadius;
-uniform float blueBlurRadius;
+// WayMCA configuration: effectStrength blends the blurred result with the
+// original (0.0 = off, 1.0 = fully blurred).  The blur radii are baked
+// into greenKernel/blueKernel below (precomputed on the CPU).
 uniform float effectStrength;
+
+// Precomputed 1D blur kernel, in device pixels.  kernelOffset holds sample
+// positions relative to the current texel; greenKernel/blueKernel hold the
+// Gaussian pair-sums at those positions for the configured radii (see the
+// effect's kernel table computation).  The 2D kernel is the outer product
+// of the 1D table, evaluated as a 7x7 tap loop.
+uniform float kernelOffset[7];
+uniform float greenKernel[7];
+uniform float blueKernel[7];
 
 in vec2 texcoord0;
 out vec4 fragColor;
-
-// Unnormalized 1D Gaussian weight at offset x (in pixels) for sigma.
-float gaussianWeight(float x, float sigma)
-{
-    return exp(-0.5 * (x * x) / (sigma * sigma));
-}
 
 void main()
 {
@@ -72,14 +83,6 @@ void main()
 
     vec2 pixelSize = vec2(1.0 / float(textureWidth), 1.0 / float(textureHeight));
 
-    // Clamp tiny radii so the kernel stays a proper Gaussian.
-    float sigmaG = max(greenBlurRadius, 0.6);
-    float sigmaB = max(blueBlurRadius, 0.6);
-
-    // Single-pass 2D Gaussian, 11x11 taps.  Covers sigma up to ~7 px
-    // with acceptable truncation at the kernel edge.
-    const int kernelRadius = 5;
-
     // Blur the premultiplied G/B channels and alpha with the same kernels.
     // Dividing the blurred premultiplied color by the blurred alpha yields
     // the straight-space blurred color, weighted by the opaque coverage of
@@ -90,15 +93,15 @@ void main()
     float alphaSumG = 0.0;
     float alphaSumB = 0.0;
 
-    for (int y = -kernelRadius; y <= kernelRadius; ++y) {
-        for (int x = -kernelRadius; x <= kernelRadius; ++x) {
-            vec4 tap = texture(sampler, texcoord0 + vec2(float(x), float(y)) * pixelSize);
+    for (int y = 0; y < 7; ++y) {
+        for (int x = 0; x < 7; ++x) {
+            vec4 tap = texture(sampler, texcoord0 + vec2(kernelOffset[x], kernelOffset[y]) * pixelSize);
 
-            float wG = gaussianWeight(float(x), sigmaG) * gaussianWeight(float(y), sigmaG);
+            float wG = greenKernel[x] * greenKernel[y];
+            float wB = blueKernel[x] * blueKernel[y];
             greenSum += tap.g * wG;
             alphaSumG += tap.a * wG;
 
-            float wB = gaussianWeight(float(x), sigmaB) * gaussianWeight(float(y), sigmaB);
             blueSum += tap.b * wB;
             alphaSumB += tap.a * wB;
         }

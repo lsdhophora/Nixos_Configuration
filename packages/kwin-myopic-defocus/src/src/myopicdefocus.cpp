@@ -20,12 +20,85 @@
 #include <QKeySequence>
 
 #include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <epoxy/gl.h>
 
 static void ensureResources()
 {
     // Embed the shader in the plugin binary (myopicdefocus.qrc).
     Q_INIT_RESOURCE(myopicdefocus);
 }
+
+namespace
+{
+
+// The 1D blur kernel is sampled at offsets that pair adjacent texels
+// through GL_LINEAR filtering: offset 1.5 px lands exactly between texels
+// 1 and 2, so one texture fetch covers two Gaussian taps at half weight
+// each.  The table stores the Gaussian pair-sums at those positions,
+// which keeps the total kernel energy exact while cutting the tap count
+// from 11x11 to 7x7 fetches per pixel.  The effect runs full-screen --
+// including fullscreen windows -- so on iGPUs this is what keeps the
+// compositor ahead of the frame deadline under load.
+constexpr int kKernelSize = 7;
+constexpr float kKernelOffsets[kKernelSize] = {
+    0.0f,
+    1.5f,
+    3.5f,
+    5.0f,
+    -1.5f,
+    -3.5f,
+    -5.0f,
+};
+
+// Weights per offset for a channel with Gaussian sigma:
+//   offset 0   -> g(0)
+//   offset 1.5 -> g(1) + g(2)   (samples texels 1 and 2)
+//   offset 3.5 -> g(3) + g(4)
+//   offset 5   -> g(5)
+// and symmetrically for the negative offsets.
+void kernelWeights(float sigma, float (&out)[kKernelSize])
+{
+    const float s = std::max(sigma, 0.6f);
+    const auto g = [s](float x) {
+        return std::exp(-0.5f * (x * x) / (s * s));
+    };
+    out[0] = g(0.0f);
+    out[1] = g(1.0f) + g(2.0f);
+    out[2] = g(3.0f) + g(4.0f);
+    out[3] = g(5.0f);
+    out[4] = out[1];
+    out[5] = out[2];
+    out[6] = out[3];
+}
+
+void setShaderUniforms(KWin::GLShader *shader, float sigmaG, float sigmaB, float strength)
+{
+    float greenWeights[kKernelSize];
+    float blueWeights[kKernelSize];
+    kernelWeights(sigmaG, greenWeights);
+    kernelWeights(sigmaB, blueWeights);
+
+    KWin::ShaderBinder binder(shader);
+    shader->setUniform("effectStrength", strength);
+    // KWin's GLShader has no array overload; upload the tables via the
+    // program uniform locations directly.
+    const int offsetLoc = shader->uniformLocation("kernelOffset");
+    const int greenLoc = shader->uniformLocation("greenKernel");
+    const int blueLoc = shader->uniformLocation("blueKernel");
+    if (offsetLoc >= 0) {
+        glUniform1fv(offsetLoc, kKernelSize, kKernelOffsets);
+    }
+    if (greenLoc >= 0) {
+        glUniform1fv(greenLoc, kKernelSize, greenWeights);
+    }
+    if (blueLoc >= 0) {
+        glUniform1fv(blueLoc, kKernelSize, blueWeights);
+    }
+}
+
+} // namespace
 
 namespace KWin
 {
@@ -85,6 +158,16 @@ void MyopicDefocusEffect::onWindowDamaged(EffectWindow *window)
     if (!window->hasDecoration()) {
         return;
     }
+    // Rate-limit the repaint: under a damage storm (hover, video, animation)
+    // flushing the whole window area on every event would inflate the
+    // compositor's load.  A 250 ms budget still flushes stale decoration
+    // pixels (red close-button) without amplifying load.
+    const auto now = std::chrono::steady_clock::now();
+    auto it = m_lastRefresh.find(window);
+    if (it != m_lastRefresh.end() && (now - it.value()) < std::chrono::milliseconds(250)) {
+        return;
+    }
+    m_lastRefresh.insert(window, now);
     refreshWindow(window);
 }
 
@@ -113,6 +196,7 @@ void MyopicDefocusEffect::onWindowDeleted(EffectWindow *window)
         disconnect(*it);
         m_damagedConnections.erase(it);
     }
+    m_lastRefresh.remove(window);
     if (m_lastActive == window) {
         m_lastActive = nullptr;
     }
@@ -146,10 +230,7 @@ void MyopicDefocusEffect::reconfigure(ReconfigureFlags flags)
         loadShader();
     } else if (m_shader) {
         // Push new uniform values to the existing program.
-        ShaderBinder binder(m_shader.get());
-        m_shader->setUniform("greenBlurRadius", m_greenBlurRadius);
-        m_shader->setUniform("blueBlurRadius", m_blueBlurRadius);
-        m_shader->setUniform("effectStrength", m_effectStrength);
+        setShaderUniforms(m_shader.get(), m_greenBlurRadius, m_blueBlurRadius, m_effectStrength);
     }
 
     effects->addRepaintFull();
@@ -177,10 +258,7 @@ void MyopicDefocusEffect::loadShader()
         return;
     }
 
-    ShaderBinder binder(m_shader.get());
-    m_shader->setUniform("greenBlurRadius", m_greenBlurRadius);
-    m_shader->setUniform("blueBlurRadius", m_blueBlurRadius);
-    m_shader->setUniform("effectStrength", m_effectStrength);
+    setShaderUniforms(m_shader.get(), m_greenBlurRadius, m_blueBlurRadius, m_effectStrength);
 
     m_valid = true;
 }
@@ -235,6 +313,7 @@ void MyopicDefocusEffect::toggleEffect()
             disconnect(conn);
         }
         m_damagedConnections.clear();
+        m_lastRefresh.clear();
         m_lastActive = nullptr;
     } else {
         m_enabled = m_valid;

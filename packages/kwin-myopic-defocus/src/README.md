@@ -34,10 +34,15 @@ Every visible window is redirected into an offscreen texture
    R −0.23 D / G +0.24 D / B +1.10 D),
 4. blends the blurred result with the original by `EffectStrength`.
 
-The kernel is an 11×11-tap Gaussian (sigma = radius) with the pixel size
-taken from the `textureWidth`/`textureHeight` uniforms that KWin sets
-automatically — so the blur radius is a true pixel value at any screen
-resolution or window scale.
+The kernel is a 7×7-tap Gaussian whose 1D table (offsets {0, ±1.5, ±3.5,
+±5} px, precomputed on the CPU for the configured radii) pairs adjacent
+texels through GL_LINEAR sampling, so each texture fetch covers two
+Gaussian taps at half weight each: 49 fetches per pixel instead of 121
+for an 11×11 kernel.  The pixel size is taken from the
+`textureWidth`/`textureHeight` uniforms that KWin sets automatically — so
+the blur radius is a true pixel value at any screen resolution or window
+scale.  The reduced tap count keeps the compositor ahead of the frame
+deadline on iGPUs even when the effect covers the full screen.
 
 ## Configuration
 

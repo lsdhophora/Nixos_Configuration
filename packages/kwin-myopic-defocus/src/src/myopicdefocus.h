@@ -11,6 +11,7 @@
 
 #include <QHash>
 #include <QMetaObject>
+#include <chrono>
 #include <memory>
 
 namespace KWin
@@ -74,6 +75,7 @@ private:
     std::unique_ptr<GLShader> m_shader;
     QList<EffectWindow *> m_windows;
     QHash<EffectWindow *, QMetaObject::Connection> m_damagedConnections;
+    QHash<EffectWindow *, std::chrono::steady_clock::time_point> m_lastRefresh;
     EffectWindow *m_lastActive = nullptr;
 
     // Configuration, read from kwinrc group [Effect-myopicdefocus]
