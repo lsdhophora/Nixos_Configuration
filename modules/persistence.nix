@@ -41,11 +41,11 @@
   environment.persistence."/persist" = {
     directories = [
       "/var/lib/NetworkManager" "/etc/NetworkManager/system-connections" "/etc/NetworkManager/VPN"
-      "/var/lib/zerotier-one" "/var/lib/cups" "/var/spool/cups" "/etc/cups"
+      "/var/lib/zerotier-one" "/var/lib/cups" "/var/spool/cups"
       "/var/spool/atjobs" "/var/spool/atspool" "/var/lib/bluetooth" "/var/lib/boltd"
       "/var/lib/AccountsService" "/var/lib/fprint" "/var/lib/fwupd" "/var/lib/upower"
       "/var/lib/colord" "/var/lib/udisks2" "/var/lib/power-profiles-daemon" "/var/lib/tlp"
-      "/var/log/journal" "/etc/ssh"
+      "/var/log/journal"
     ];
     files = [ "/etc/machine-id" ];
   };
