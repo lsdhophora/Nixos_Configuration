@@ -7,10 +7,12 @@
   # the modeline falls back to another font.
   environment.systemPackages = [ pkgs.ibm-plex ];
 
-  i18n.defaultLocale = "zh_CN.UTF-8";
+  # Global UI language is English (US); zh_CN stays in supportedLocales so
+  # Chinese text renders/input works everywhere (fonts, fcitx5, locale data).
+  i18n.defaultLocale = "en_US.UTF-8";
   i18n.supportedLocales = [
-    "zh_CN.UTF-8/UTF-8"
     "en_US.UTF-8/UTF-8"
+    "zh_CN.UTF-8/UTF-8"
   ];
 
   fonts = {
