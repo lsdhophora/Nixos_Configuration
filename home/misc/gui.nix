@@ -1,7 +1,5 @@
-{ pkgs, inputs, repoLib, ... }:
+{ pkgs, ... }:
 let
-  unstablePkgs = repoLib.unstablePkgs inputs pkgs;
-
   # Wrap one package with symlinkJoin and postBuild.
   wrapPackage =
     {
@@ -40,9 +38,10 @@ in
   home.packages = with pkgs; [
     # GUI
     blanket
-    # 2.7.0+ fixed OIDC/SSO login (loopback callback bug, krille-chan/fluffychat#3341);
-    # 2.8.0 from nixpkgs-unstable instead of the 2.6.0 in nixpkgs 26.05.
-    unstablePkgs.fluffychat
+    # Element (official Matrix client) replaces fluffychat: fluffychat's
+    # Linux OIDC/SSO login is broken against matrix.org MAS
+    # (krille-chan/fluffychat#3341, #3380).
+    element-desktop
     gnome-themes-extra
     kdenlive-wrapped
     localsend-wrapped
