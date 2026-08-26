@@ -1,5 +1,7 @@
-{ pkgs, ... }:
+{ pkgs, inputs, repoLib, ... }:
 let
+  unstablePkgs = repoLib.unstablePkgs inputs pkgs;
+
   # Wrap one package with symlinkJoin and postBuild.
   wrapPackage =
     {
@@ -38,7 +40,9 @@ in
   home.packages = with pkgs; [
     # GUI
     blanket
-    fluffychat
+    # 2.7.0+ fixed OIDC/SSO login (loopback callback bug, krille-chan/fluffychat#3341);
+    # 2.8.0 from nixpkgs-unstable instead of the 2.6.0 in nixpkgs 26.05.
+    unstablePkgs.fluffychat
     gnome-themes-extra
     kdenlive-wrapped
     localsend-wrapped
