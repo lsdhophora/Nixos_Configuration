@@ -27,8 +27,8 @@ let
 
   # Package set from the nixpkgs-unstable input, for the same platform as pkgs.
   # Example: unstablePkgs inputs pkgs
-  unstablePkgs = inputs: pkgs:
-    inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+  unstablePkgs =
+    inputs: pkgs: inputs.nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system};
 
   # Build home.file entries that symlink repo files into the home directory
   # (out-of-store, so edits in the repo apply without a rebuild).
@@ -39,12 +39,16 @@ let
   #     paths = [ "init.el" ];
   #   }
   mkRepoLinks =
-    config: { targetPrefix, sourcePrefix, paths }:
+    config:
+    {
+      targetPrefix,
+      sourcePrefix,
+      paths,
+    }:
     builtins.listToAttrs (
       map (path: {
         name = targetPrefix + path;
-        value.source = config.lib.file.mkOutOfStoreSymlink
-          "${config.home.homeDirectory}/.config/nixos/${sourcePrefix}${path}";
+        value.source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nixos/${sourcePrefix}${path}";
       }) paths
     );
 in

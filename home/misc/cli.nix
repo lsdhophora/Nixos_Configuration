@@ -5,7 +5,8 @@
     lazygit
     at
     nnn
+    just
     # Pin the CLI to the flake input revision.
-    inputs.home-manager.packages.${pkgs.system}.home-manager
+    inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.home-manager
   ];
 }

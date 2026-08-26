@@ -5,6 +5,8 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Ch
 ## Commands
 
 ```bash
+just check-fast                                    # fast static checks (~1 min)
+just check                                         # full checks (static + builds)
 nixos-rebuild dry-build --flake .#flowerpot       # verify (system + home)
 run0 nixos-rebuild switch --flake .#flowerpot   # rebuild & switch (system)
 home-manager switch --flake .#FeiHsueh         # home-only rebuild (fast, no system closure)
@@ -26,12 +28,35 @@ Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` a
 
 System changes (hosts, kernel, services, etc.) still require `nixos-rebuild switch`.
 
+## Tests
+
+Run `just check-fast` before every commit. It runs nixfmt, deadnix,
+statix, sops-integrity, sops-keys, invariants, and lib-tests. See
+`docs/testing.md` and `flake-modules/checks.nix` for the check
+list and definitions.
+
+Run `just check` (`nix flake check`) for full verification. It also
+builds the system toplevel and the home activation package.
+
+VM boot tests are deferred (they need a KVM-capable host). See
+`docs/testing.md` for the record and the re-enable recipe.
+
 ## Code Style
 
 Follow the rules in `docs/code-style.md`:
 - STE writing standard
 - Required skills: `equational-reasoning`, `hoare-logic`
 - Nix/TypeScript style rules and commit message format
+
+## Definition of Done
+
+Before you commit, check:
+
+1. `just check-fast` passes.
+2. The change touches only the intended files.
+3. `docs/code-style.md` rules hold (STE, GNU commit format).
+4. AGENTS.md stays current. Update it in the same commit when a
+   command, convention, or directory layout changes.
 
 ## Notes
 

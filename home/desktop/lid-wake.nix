@@ -1,4 +1,9 @@
-{ inputs, pkgs, repoLib, ... }:
+{
+  inputs,
+  pkgs,
+  repoLib,
+  ...
+}:
 let
   # Match the desktop's KWin version (kde.nix uses unstable kdePackages).
   unstable = repoLib.unstablePkgs inputs pkgs;

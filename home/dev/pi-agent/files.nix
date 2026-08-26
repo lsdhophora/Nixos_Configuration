@@ -1,4 +1,9 @@
-{ config, lib, repoLib, ... }:
+{
+  config,
+  lib,
+  repoLib,
+  ...
+}:
 let
   base = "home/dev/pi-agent";
 in
@@ -37,7 +42,13 @@ in
         "root-session/daemon.js"
         "root-session/SKILL.md"
         "pi-scheduler"
+        "subagent"
       ];
+    })
+    (repoLib.mkRepoLinks config {
+      targetPrefix = ".pi/agent/agents/";
+      sourcePrefix = "${base}/agents/";
+      paths = [ "worker.md" ];
     })
     {
       ".pi/agent/settings.json" = {

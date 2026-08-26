@@ -1,4 +1,9 @@
-{ config, lib, repoLib, ... }:
+{
+  config,
+  lib,
+  repoLib,
+  ...
+}:
 
 {
   # Elisp files are symlinked to the actual files in this repo (out of store),

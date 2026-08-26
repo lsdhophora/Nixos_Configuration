@@ -15,7 +15,11 @@ stdenv.mkDerivation {
   src = ./src;
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ glib libadwaita libhandy ];
+  buildInputs = [
+    glib
+    libadwaita
+    libhandy
+  ];
 
   # stdenv would shrink away the RUNPATH below (the .so links no GTK libs, only
   # dlopens them at runtime), so patchelf must not touch it.

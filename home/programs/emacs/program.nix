@@ -1,4 +1,9 @@
-{ pkgs, inputs, repoLib, ... }:
+{
+  pkgs,
+  inputs,
+  repoLib,
+  ...
+}:
 let
   unstableEmacs = repoLib.unstablePkgs inputs pkgs;
 in
@@ -8,9 +13,9 @@ in
     # Emit one separator below a popup menu title instead of two (see
     # patches/emacs-pgtk/popup-title-single-separator.patch).
     package = unstableEmacs.emacs-pgtk.overrideAttrs (oldAttrs: {
-      patches =
-        (oldAttrs.patches or [ ])
-        ++ [ ./../../../patches/emacs-pgtk/popup-title-single-separator.patch ];
+      patches = (oldAttrs.patches or [ ]) ++ [
+        ./../../../patches/emacs-pgtk/popup-title-single-separator.patch
+      ];
     });
     extraPackages =
       _: with unstableEmacs.emacs-pgtk.pkgs; [

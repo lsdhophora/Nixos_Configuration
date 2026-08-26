@@ -11,7 +11,10 @@
   fileSystems."/" = {
     device = "none";
     fsType = "tmpfs";
-    options = [ "mode=755" "size=4G" ];
+    options = [
+      "mode=755"
+      "size=4G"
+    ];
   };
   fileSystems."/mnt/data" = {
     device = "/dev/disk/by-uuid/f008a750-0a3e-4fcc-a18e-ca7d6e3daa75";
@@ -36,17 +39,35 @@
   fileSystems."/home" = {
     device = "tmpfs";
     fsType = "tmpfs";
-    options = [ "mode=755" "size=8G" ];
+    options = [
+      "mode=755"
+      "size=8G"
+    ];
     neededForBoot = true;
   };
 
   environment.persistence."/persist" = {
     directories = [
-      "/var/lib/NetworkManager" "/etc/NetworkManager/system-connections" "/etc/NetworkManager/VPN"
-      "/var/lib/zerotier-one" "/var/lib/cups" "/var/spool/cups"
-      "/var/spool/atjobs" "/var/spool/atspool" "/var/lib/bluetooth" "/var/lib/boltd"
-      "/var/lib/AccountsService" "/var/lib/fprint" "/var/lib/fwupd" "/var/lib/upower"
-      "/var/lib/colord" "/var/lib/udisks2" "/var/lib/power-profiles-daemon" "/var/lib/tlp"
+      # System user/group uid-gid stability across reboots (impermanence warning).
+      "/var/lib/nixos"
+      "/var/lib/NetworkManager"
+      "/etc/NetworkManager/system-connections"
+      "/etc/NetworkManager/VPN"
+      "/var/lib/zerotier-one"
+      "/var/lib/cups"
+      "/var/spool/cups"
+      "/var/spool/atjobs"
+      "/var/spool/atspool"
+      "/var/lib/bluetooth"
+      "/var/lib/boltd"
+      "/var/lib/AccountsService"
+      "/var/lib/fprint"
+      "/var/lib/fwupd"
+      "/var/lib/upower"
+      "/var/lib/colord"
+      "/var/lib/udisks2"
+      "/var/lib/power-profiles-daemon"
+      "/var/lib/tlp"
       "/var/log/journal"
     ];
     files = [ "/etc/machine-id" ];

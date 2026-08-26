@@ -4,9 +4,18 @@
   nix.package = pkgs.lixPackageSets.latest.lix;
 
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    extra-deprecated-features = [ "or-as-identifier" "broken-string-indentation" ];
-    trusted-users = [ "root" "FeiHsueh" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
+    extra-deprecated-features = [
+      "or-as-identifier"
+      "broken-string-indentation"
+    ];
+    trusted-users = [
+      "root"
+      "FeiHsueh"
+    ];
     auto-optimise-store = true;
   };
 

@@ -14,7 +14,18 @@
       pkgs = nixpkgs.legacyPackages.${system};
       kd = pkgs.kdePackages;
       pkg = import ./nix/package.nix {
-        inherit (kd) qtbase kglobalaccel kwindowsystem kconfig kconfigwidgets kcoreaddons ki18n kcmutils kwin extra-cmake-modules;
+        inherit (kd)
+          qtbase
+          kglobalaccel
+          kwindowsystem
+          kconfig
+          kconfigwidgets
+          kcoreaddons
+          ki18n
+          kcmutils
+          kwin
+          extra-cmake-modules
+          ;
         inherit (pkgs) lib stdenv cmake;
         epoxy = pkgs.libepoxy;
         src = self;

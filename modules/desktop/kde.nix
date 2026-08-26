@@ -89,8 +89,7 @@ in
     # turning everything into custom builds that miss the binary cache.)
     (final: prev: {
       kdePackages =
-        unstablePkgs.kdePackages
-        // (repoLib.applyPatchesToSet kdePatches unstablePkgs.kdePackages);
+        unstablePkgs.kdePackages // (repoLib.applyPatchesToSet kdePatches unstablePkgs.kdePackages);
     })
     # Dolphin and the file portal use the patched kio and the location-bar
     # fix. The plasma6 module pulls them from kdePackages, so the override
@@ -177,18 +176,19 @@ in
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
     (final: prev: {
-      klassy = applyPatches
-        [
-          ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
-          ./../../patches/klassy/remove-empty-corners-tooltip.patch
-        ]
-        (
-          unstablePkgs.klassy.overrideAttrs (oldAttrs: {
-            postInstall = (oldAttrs.postInstall or "") + ''
-              rm -f "$out/share/applications/kcm_klassydecoration.desktop"
-            '';
-          })
-        );
+      klassy =
+        applyPatches
+          [
+            ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
+            ./../../patches/klassy/remove-empty-corners-tooltip.patch
+          ]
+          (
+            unstablePkgs.klassy.overrideAttrs (oldAttrs: {
+              postInstall = (oldAttrs.postInstall or "") + ''
+                rm -f "$out/share/applications/kcm_klassydecoration.desktop"
+              '';
+            })
+          );
     })
     # kwin-myopic-defocus: myopic chromatic defocus (eye-care) KWin effect.
     # Builds against the same unstable kdePackages (kwin 6.7.x) the desktop
@@ -196,7 +196,18 @@ in
     # vendored in packages/kwin-myopic-defocus/src (tests excluded).
     (final: prev: {
       kwin-myopic-defocus = import ../../packages/kwin-myopic-defocus {
-        inherit (prev.kdePackages) qtbase kglobalaccel kwindowsystem kconfig kconfigwidgets kcoreaddons ki18n kcmutils kwin extra-cmake-modules;
+        inherit (prev.kdePackages)
+          qtbase
+          kglobalaccel
+          kwindowsystem
+          kconfig
+          kconfigwidgets
+          kcoreaddons
+          ki18n
+          kcmutils
+          kwin
+          extra-cmake-modules
+          ;
         inherit (unstablePkgs) lib stdenv cmake;
         epoxy = unstablePkgs.libepoxy;
       };

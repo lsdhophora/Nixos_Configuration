@@ -57,7 +57,7 @@ in
       userChrome = ./../../assets/firefox/userChrome.css;
     };
     policies = {
-      ExtensionSettings = lib.mapAttrs (id: slug: mozAddon slug) {
+      ExtensionSettings = lib.mapAttrs (_: mozAddon) {
         "uBlock0@raymondhill.net" = "ublock-origin";
         "addon@darkreader.org" = "darkreader";
         "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = "stylus";
@@ -74,16 +74,18 @@ in
   # XDG path here and disable the legacy link to keep $HOME free of ~/.mozilla.
   home.file = {
     ".config/mozilla/native-messaging-hosts" = {
-      source = let
-        hosts = pkgs.buildEnv {
-          name = "mozilla-native-messaging-hosts";
-          paths = [
-            pkgs.kdePackages.plasma-browser-integration
-            pkgs.firefoxpwa
-          ];
-          pathsToLink = [ "/lib/mozilla/native-messaging-hosts" ];
-        };
-      in "${hosts}/lib/mozilla/native-messaging-hosts";
+      source =
+        let
+          hosts = pkgs.buildEnv {
+            name = "mozilla-native-messaging-hosts";
+            paths = [
+              pkgs.kdePackages.plasma-browser-integration
+              pkgs.firefoxpwa
+            ];
+            pathsToLink = [ "/lib/mozilla/native-messaging-hosts" ];
+          };
+        in
+        "${hosts}/lib/mozilla/native-messaging-hosts";
       recursive = true;
     };
     ".mozilla/native-messaging-hosts".enable = lib.mkForce false;
