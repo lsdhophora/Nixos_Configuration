@@ -5,7 +5,7 @@
 #   /mnt/data   = p2 ext4     (original root partition, content stays put)
 #   /nix        = bind /mnt/data/nix       (store + nix db, untouched)
 #   /persist    = bind /mnt/data/persist   (all persistent data)
-#   /home       = bind /persist/home       (whole home persisted)
+#   /home       = tmpfs       (only home.persistence paths survive, see home/persistence*.nix)
 { ... }:
 {
   fileSystems."/" = {
@@ -31,10 +31,12 @@
     options = [ "bind" ];
     neededForBoot = true;
   };
+  # /home on tmpfs: only the paths declared in home/persistence*.nix
+  # (home.persistence."/persist") are bind-mounted from /persist/home/FeiHsueh.
   fileSystems."/home" = {
-    device = "/persist/home";
-    fsType = "none";
-    options = [ "bind" ];
+    device = "tmpfs";
+    fsType = "tmpfs";
+    options = [ "mode=755" "size=8G" ];
     neededForBoot = true;
   };
 

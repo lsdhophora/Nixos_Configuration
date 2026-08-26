@@ -35,7 +35,7 @@ in
         home-manager.backupFileExtension = "bak";
         home-manager.extraSpecialArgs = { inherit inputs repoLib; };
         home-manager.users.FeiHsueh = {
-          imports = [ ../home/default.nix ];
+          imports = [ ../home/default.nix ../home/persistence.nix ../home/persistence-kde.nix ];
         };
       }
     ];
