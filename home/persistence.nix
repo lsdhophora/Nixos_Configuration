@@ -35,6 +35,9 @@
       ".pi/agent/sessions" ".pi/agent/npm" ".pi/agent/voice-input-models"
 
       # ---- Non-KDE app config (.config) ----
+      # Element keeps its key backup (IndexedDB) and session here; must persist
+      # across reboots or the Matrix account needs re-login and re-verification.
+      ".config/Element"
       ".config/dconf" ".config/direnv" ".config/emacs" ".config/environment.d"
       ".config/fcitx" ".config/fcitx5" ".config/fontconfig" ".config/git"
       ".config/gtk-3.0" ".config/gtk-4.0" ".config/kitty" ".config/mpv"
