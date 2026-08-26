@@ -28,6 +28,7 @@ in
       ../hosts/flowerpot/default.nix
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
+      inputs.impermanence.nixosModules.impermanence
       {
         home-manager.useGlobalPkgs = true;
         home-manager.useUserPackages = true;

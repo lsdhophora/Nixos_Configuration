@@ -3,7 +3,8 @@
 {
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
 
-  sops.age.sshKeyPaths = [ "/home/FeiHsueh/.ssh/lysergic" ];
+  # age key must live under /persist (real file, readable in stage-1 after fstab mounts)
+  sops.age.sshKeyPaths = [ "/persist/home/FeiHsueh/.ssh/lysergic" ];
 
   # hashed-password: needed before user creation
   sops.secrets.hashed-password = {

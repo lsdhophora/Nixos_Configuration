@@ -52,12 +52,7 @@
     scheduler = "scx_lavd";
   };
 
-  swapDevices = [
-    {
-      device = "/var/lib/swapfile";
-      size = 32 * 1024;
-    }
-  ];
+  swapDevices = [ ];
 
   boot.tmp.cleanOnBoot = true;
 

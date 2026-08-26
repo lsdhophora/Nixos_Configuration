@@ -10,6 +10,7 @@
 
     # ---- Core (always enabled) ----
     ../../modules/boot.nix
+    ../../modules/persistence.nix
     ../../modules/networking.nix
     ../../modules/i18n.nix
     ../../modules/nix-config.nix

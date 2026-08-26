@@ -28,11 +28,6 @@
   ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/f008a750-0a3e-4fcc-a18e-ca7d6e3daa75";
-    fsType = "ext4";
-  };
-
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/CF3E-A333";
     fsType = "vfat";
