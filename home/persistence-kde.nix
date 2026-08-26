@@ -7,7 +7,7 @@
     directories = [
       # ---- KDE config dirs (.config) ----
       ".config/KDE" ".config/kde.org" ".config/kdedefaults"
-      ".config/klassy" ".config/panel-colorizer" ".config/plasma-workspace"
+      ".config/klassy" ".config/plasma-workspace"
       ".config/session"
 
       # ---- KDE user resources (.local/share) ----
@@ -54,7 +54,6 @@
       # ---- KDE state files (.local/share) ----
       ".local/share/krunnerstaterc" ".local/share/recently-used.xbel"
       ".local/share/user-places.xbel" ".local/share/user-places.xbel.bak"
-      ".local/share/user-places.xbel.bak-lophophora"
       ".local/share/user-places.xbel.tbcache"
     ];
   };

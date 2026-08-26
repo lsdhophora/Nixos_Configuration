@@ -71,18 +71,19 @@
     (corfu-terminal-mode 1)))
 
 (use-package nix-mode
+  ;; :demand t: this Nix-provided Emacs never activates package autoloads
+  ;; (package-enable-at-startup nil, no package-initialize), so the deferred
+  ;; .nix auto-mode-alist autoload never registers.  Load eagerly so
+  ;; nix-mode.el registers ".nix" itself (nix-mode.el has the
+  ;; (add-to-list 'auto-mode-alist ...) in its body).
+  :demand t
   :hook
   (nix-mode . eglot-ensure)
   (nix-mode . corfu-mode)
   (before-save . (lambda () (when (eq major-mode 'nix-mode) (eglot-format-buffer))))
   :config
   (add-to-list 'eglot-server-programs
-               '(nix-mode . ("nixd" "--inlay-hints=false")))
-  (setq eglot-nix-server-path "nixd"
-        eglot-nix-formatting-command ["nixfmt"]
-        eglot-nix-nixpkgs-expr "import <nixpkgs> { }"
-        eglot-nix-nixos-options-expr
-        "(builtins.getFlake \"/home/FeiHsueh/.config/nixos\").nixosConfigurations.flowerpot.options"))
+               '(nix-mode . ("nixd" "--inlay-hints=false"))))
 
 (use-package magit
   :bind (("C-x g" . magit-status))
@@ -129,7 +130,9 @@
 (add-hook 'dashboard-mode-hook #'my/disable-text-scale-commands-in-dashboard)
 
 (use-package auctex
-  :defer t
+  ;; :demand t: same autoload caveat as nix-mode above; .tex files would
+  ;; otherwise stay in the built-in latex-mode.
+  :demand t
   :hook (LaTeX-mode . (lambda ()
                         (TeX-engine-set 'luatex)
                         (TeX-PDF-mode 1)

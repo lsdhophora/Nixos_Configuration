@@ -19,7 +19,7 @@
       ".local/share/org.localsend.localsend_app" ".local/share/Shortwave"
       ".local/share/emacs" ".local/share/firefoxpwa" ".local/share/fcitx5"
       ".local/share/gh" ".local/share/nix" ".local/share/direnv"
-      ".local/share/systemd" ".local/share/uv" ".local/share/wordbook"
+      ".local/share/systemd" ".local/share/uv"
 
       # ---- User files ----
       "Projects" "Documents" "Downloads" "Music" "Pictures" "Videos"
@@ -31,15 +31,22 @@
       # ---- Nix config repo ----
       ".config/nixos"
 
+      # ---- pi agent runtime state (config itself is declarative via home/dev/pi-agent) ----
+      ".pi/agent/sessions" ".pi/agent/npm" ".pi/agent/voice-input-models"
+
       # ---- Non-KDE app config (.config) ----
       ".config/dconf" ".config/direnv" ".config/emacs" ".config/environment.d"
       ".config/fcitx" ".config/fcitx5" ".config/fontconfig" ".config/git"
       ".config/gtk-3.0" ".config/gtk-4.0" ".config/kitty" ".config/mpv"
-      ".config/tmux" ".config/zathura" ".config/transmission" ".config/systemd"
-      ".config/nix" ".config/nnn" ".config/lazygit" ".config/gh" ".config/gh-dash"
-      ".config/micro" ".config/btop" ".config/htop" ".config/procps"
+      ".config/tmux" ".config/systemd"
+      ".config/nix" ".config/nnn" ".config/lazygit" ".config/gh"
       ".config/xsettingsd" ".config/libaccounts-glib" ".config/clangd" ".config/go"
     ];
-    files = [ ".bash_history" ".zsh_history" ];
+    files = [
+      ".bash_history" ".zsh_history"
+
+      # ---- pi agent runtime files (credentials, fetched model cache, voice config, trust) ----
+      ".pi/agent/auth.json" ".pi/agent/models-store.json" ".pi/agent/voice-input.json" ".pi/agent/trust.json"
+    ];
   };
 }

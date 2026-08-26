@@ -12,7 +12,6 @@
   imports = [
     # ---- Misc ----
     ./misc/avatar.nix
-    ./misc/housekeeping.nix
     ./misc/cli.nix
     ./misc/clangd.nix
     ./misc/gui.nix
@@ -32,7 +31,6 @@
     ./programs/kitty.nix
     ./programs/mpv.nix
     ./programs/tmux.nix
-    ./programs/zathura.nix
 
     # ---- Dev ----
     ./dev/direnv.nix
