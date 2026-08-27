@@ -77,6 +77,19 @@ in
   services.displayManager.sddm.enable = lib.mkForce false;
   services.displayManager.plasma-login-manager.enable = true;
 
+  # Match the desktop cursor in the PLM greeter.
+  # The greeter's kwin_wayland runs as the plasmalogin user whose config dir
+  # is empty, so KWin falls back to its default cursor size 24, while the
+  # desktop uses 30 (~/.config/kcminputrc [Mouse] cursorSize=30). KWin reads
+  # $XCURSOR_THEME/$XCURSOR_SIZE first, then kcminputrc; the greeter env is a
+  # PAM whitelist that carries neither, so write the plasmalogin user's
+  # kcminputrc directly. Keep these in sync with the desktop cursor settings.
+  systemd.tmpfiles.rules = [
+    "d /var/lib/plasmalogin/.config 0750 plasmalogin plasmalogin -"
+    "f /var/lib/plasmalogin/.config/kcminputrc 0644 plasmalogin plasmalogin - [Mouse]\\ncursorTheme=breeze_cursors\\ncursorSize=30"
+    "w /var/lib/plasmalogin/.config/kcminputrc - - - - [Mouse]\\ncursorTheme=breeze_cursors\\ncursorSize=30"
+  ];
+
   services.power-profiles-daemon.enable = false;
 
   nixpkgs.overlays = [
