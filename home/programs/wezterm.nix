@@ -60,6 +60,8 @@ in
 
     settings = {
       color_scheme = "Breeze Light";
+      # Retro tab bar: cell-based rendering, no fancy button shapes.
+      use_fancy_tab_bar = false;
       font_size = 14.0;
       # Iosevka has no CJK glyphs; fall back to Noto Sans Mono CJK SC.
       font = lib.generators.mkLuaInline ''
