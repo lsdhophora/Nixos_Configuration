@@ -27,7 +27,7 @@
         #    and findDesktopFile() does an exact, case-sensitive
         #    QStandardPaths::locate(Applications, desktopFileName + ".desktop").
         #    Our patch sets g_set_prgname("localsend"), so the app_id is
-        #    "localsend" and the desktop file MUST be named "localsend.desktop" —
+        #    "localsend" and the desktop file MUST be named "localsend.desktop":
         #    the upstream "LocalSend.desktop" is never matched and KWin then falls
         #    back to the generic "wayland" icon.
         # 2. StartupWMClass must match for X11 (XWayland) to keep working.

@@ -73,7 +73,7 @@ in
     green = "#27ae60";
   };
 
-  # Terminal palette (16 colors + fg/bg + selection) — Breeze Light.
+  # Terminal palette (16 colors + fg/bg + selection): Breeze Light.
   # Exact values from the official KDE Breeze Light Konsole color scheme
   # (phabricator D22243, data/color-schemes/BreezeLight.colorscheme),
   # mapped to xterm color0-15 naming. Used by wezterm (ansi/brights).

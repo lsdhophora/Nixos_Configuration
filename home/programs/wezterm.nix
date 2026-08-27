@@ -1,8 +1,12 @@
 { repoLib, lib, ... }:
 let
   palette = repoLib.weztermPalette;
-  # Breeze Light 16 色 (ansi/brights) 从 repoLib 调色板派生，保持单一来源。
-  breezeLight = {
+  # Shared Breeze Light palette (tmux, mpv).
+  breeze = repoLib.breezeLight;
+  # One tab color pair.
+  tabColor = bg_color: fg_color: { inherit bg_color fg_color; };
+  # Breeze Light [colors] section, derived from the repoLib palette.
+  colors = {
     foreground = palette.foreground;
     background = palette.background;
     cursor_bg = palette.foreground;
@@ -30,30 +34,42 @@ let
       palette.color14
       palette.color15
     ];
+    # Light tab bar. WezTerm defaults to a dark bar when the scheme
+    # does not set these colors.
+    tab_bar = {
+      background = breeze.alt;
+      active_tab = tabColor breeze.accent "#ffffff";
+      inactive_tab = tabColor breeze.alt breeze.fg;
+      inactive_tab_hover = tabColor breeze.bg breeze.fg;
+      inactive_tab_edge = breeze.alt;
+      inactive_tab_edge_hover = breeze.bg;
+      new_tab = tabColor breeze.alt breeze.fg;
+      new_tab_hover = tabColor breeze.bg breeze.fg;
+    };
   };
 in
 {
   programs.wezterm = {
     enable = true;
-    # 需要时在 wezterm 中运行 wezterm ssh / imgcat 等（注入 wezterm.sh）。
+    # Enables wezterm ssh / imgcat in the shell (sources wezterm.sh).
     enableZshIntegration = true;
 
-    # 自定义配色：写入 ~/.config/wezterm/colors/Breeze Light.toml，
-    # 由 settings.color_scheme 引用。
-    colorSchemes."Breeze Light" = breezeLight;
+    # Custom colors: ~/.config/wezterm/colors/Breeze Light.toml,
+    # selected by settings.color_scheme.
+    colorSchemes."Breeze Light" = colors;
 
     settings = {
       color_scheme = "Breeze Light";
       font_size = 14.0;
-      # Iosevka 不含 CJK 字形，回退到 Noto Sans Mono CJK SC。
+      # Iosevka has no CJK glyphs; fall back to Noto Sans Mono CJK SC.
       font = lib.generators.mkLuaInline ''
         wezterm.font_with_fallback({ "Iosevka", "Noto Sans Mono CJK SC" })
       '';
-      hide_tab_bar_if_only_one_tab = true;
+      hide_tab_bar_if_only_one_tab = false;
       window_close_confirmation = "NeverPrompt";
 
-      # 与 kitty 一致的键位（launch hsplit/vsplit、neighboring_window、
-      # resize_window、close_window）。
+      # Keybindings match kitty: launch hsplit/vsplit, neighboring_window,
+      # resize_window, close_window.
       keys = lib.generators.mkLuaInline ''
         {
           { key = "Enter",     mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },

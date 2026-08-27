@@ -69,6 +69,32 @@
               echo "statix: OK" > $out
             '';
 
+        # Comments must contain ASCII characters only (STE writing
+        # standard). Catches non-ASCII comments, for example Chinese or
+        # Unicode dashes. Only comment lines (leading #) are checked;
+        # string values are not.
+        ascii-comments =
+          pkgs.runCommand "check-ascii-comments"
+            {
+              inherit src;
+            }
+            ''
+              files=$(find "$src" -name '*.nix' -not -path "$src/result/*" -not -path "$src/nixpkgs/*" -not -path "$src/.pi/*")
+              status=0
+              for f in $files; do
+                # hardware-configuration.nix is auto-generated, so exclude it.
+                case "$f" in
+                  */hardware-configuration.nix) continue ;;
+                esac
+                if grep -nP '^\s*#.*[^\x00-\x7F]' "$f"; then
+                  echo "ERROR: non-ASCII characters in comment: $f" >&2
+                  status=1
+                fi
+              done
+              [ $status -eq 0 ] || exit 1
+              echo "ascii-comments: OK" > $out
+            '';
+
         # Every value in secrets/secrets.yaml must be SOPS-encrypted
         # (ENC[...]), except the sops: metadata block. Catches a
         # decrypted secret file committed by mistake.
@@ -124,6 +150,8 @@
           assert cfg.users.users.FeiHsueh.isNormalUser;
           assert homeCfg.programs.git.enable;
           assert homeCfg.programs.zsh.enable;
+          assert homeCfg.programs.wezterm.enable;
+          assert homeCfg.programs.wezterm.settings.hide_tab_bar_if_only_one_tab == false;
           pkgs.runCommand "check-invariants" { } "echo 'invariants: OK' > $out";
 
         # Unit tests for lib/default.nix helpers. Failures abort the

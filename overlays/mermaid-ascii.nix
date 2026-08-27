@@ -10,18 +10,18 @@ final: prev: {
   mermaid-ascii = prev.stdenv.mkDerivation {
     pname = "mermaid-ascii";
     version = "2.0.0";
-    # beautiful-mermaid-cli v0.2.4 — carries dist/ascii, the CJK-fixed
+    # beautiful-mermaid-cli v0.2.4 carries dist/ascii, the CJK-fixed
     # vendored ASCII pipeline (the -cli parts are unused).
     src = prev.fetchurl {
       url = "https://registry.npmjs.org/beautiful-mermaid-cli/-/beautiful-mermaid-cli-0.2.4.tgz";
       sha256 = "sha256-qNGTuwvpQapWXqTGTR7q2fEiDq++3fF9J4lHxEICg68=";
     };
-    # upstream beautiful-mermaid — parseMermaid (parser only).
+    # upstream beautiful-mermaid: parseMermaid (parser only).
     bm = prev.fetchurl {
       url = "https://registry.npmjs.org/beautiful-mermaid/-/beautiful-mermaid-1.1.3.tgz";
       sha256 = "sha256-TUNvJ7sBAphZQMPv4xcVP00fU/IPAp8ia2Dhq0trn/A=";
     };
-    # East Asian Width → terminal cells (CJK/wide = 2, ambiguous = 1).
+    # East Asian Width maps to terminal cells (CJK/wide = 2, ambiguous = 1).
     geaw = prev.fetchurl {
       url = "https://registry.npmjs.org/get-east-asian-width/-/get-east-asian-width-1.6.0.tgz";
       sha256 = "sha256-RFH1ji9aTvJ66LS6JbZL6X06hBPchhSkMhoQ1Bju5tc=";
