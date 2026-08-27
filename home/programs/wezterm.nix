@@ -68,6 +68,36 @@ in
       hide_tab_bar_if_only_one_tab = false;
       window_close_confirmation = "NeverPrompt";
 
+      # Fancy tab bar: the strip background comes from window_frame
+      # (colors.tab_bar.background applies to the retro bar only).
+      window_frame = {
+        active_titlebar_bg = breeze.alt;
+        inactive_titlebar_bg = breeze.alt;
+        active_titlebar_fg = breeze.fg;
+        inactive_titlebar_fg = breeze.fg;
+        active_titlebar_border_bottom = breeze.inactive;
+        inactive_titlebar_border_bottom = breeze.inactive;
+        font = lib.generators.mkLuaInline ''
+          wezterm.font({ family = "Iosevka", weight = "Bold" })
+        '';
+      };
+
+      # Tab items in the fancy bar read colors.tab_bar from the Lua
+      # config. A tab_bar section in a color scheme file is ignored in
+      # fancy mode (wezterm issue #2615), so set it here directly.
+      colors = {
+        tab_bar = {
+          background = breeze.alt;
+          active_tab = tabColor breeze.accent "#ffffff";
+          inactive_tab = tabColor breeze.alt breeze.fg;
+          inactive_tab_hover = tabColor breeze.bg breeze.fg;
+          inactive_tab_edge = breeze.alt;
+          inactive_tab_edge_hover = breeze.bg;
+          new_tab = tabColor breeze.alt breeze.fg;
+          new_tab_hover = tabColor breeze.bg breeze.fg;
+        };
+      };
+
       # Keybindings match kitty: launch hsplit/vsplit, neighboring_window,
       # resize_window, close_window.
       keys = lib.generators.mkLuaInline ''
