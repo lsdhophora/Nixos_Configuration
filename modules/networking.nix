@@ -1,5 +1,4 @@
 {
-  pkgs,
   ...
 }:
 
@@ -26,21 +25,6 @@
     ];
   };
 
-  # Declarative WiFi tuning: pin 56-606 to 5 GHz (band a).
-  # The 5 GHz AP offers 80 MHz VHT with a stronger signal than the
-  # 20 MHz HT 2.4 GHz AP (-54 dBm vs -58 dBm). The connection profile
-  # (SSID, password, auth) stays managed by Plasma GUI.
-  systemd.services.nm-wifi-tune = {
-    description = "Pin NetworkManager WiFi profile to 5 GHz";
-    after = [ "NetworkManager.service" ];
-    requires = [ "NetworkManager.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = [
-        "${pkgs.networkmanager}/bin/nmcli con mod 56-606 802-11-wireless.band a"
-      ];
-    };
-  };
+  # WiFi roaming is left to NetworkManager defaults: no band pinning,
+  # so the client roams freely between the 2.4 GHz and 5 GHz APs of 56-606.
 }
