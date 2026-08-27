@@ -26,11 +26,12 @@
     ];
   };
 
-  # Declarative WiFi tuning: reduce AP switching for 56-606.
-  # The connection profile (SSID, password, auth) stays managed by Plasma GUI.
-  # This oneshot only sets the band preference and clears any BSSID lock.
+  # Declarative WiFi tuning: pin 56-606 to 5 GHz (band a).
+  # The 5 GHz AP offers 80 MHz VHT with a stronger signal than the
+  # 20 MHz HT 2.4 GHz AP (-54 dBm vs -58 dBm). The connection profile
+  # (SSID, password, auth) stays managed by Plasma GUI.
   systemd.services.nm-wifi-tune = {
-    description = "Tune NetworkManager WiFi profiles for reduced AP switching";
+    description = "Pin NetworkManager WiFi profile to 5 GHz";
     after = [ "NetworkManager.service" ];
     requires = [ "NetworkManager.service" ];
     wantedBy = [ "multi-user.target" ];
@@ -38,7 +39,7 @@
       Type = "oneshot";
       RemainAfterExit = true;
       ExecStart = [
-        "${pkgs.networkmanager}/bin/nmcli con mod 56-606 802-11-wireless.band bg"
+        "${pkgs.networkmanager}/bin/nmcli con mod 56-606 802-11-wireless.band a"
       ];
     };
   };
