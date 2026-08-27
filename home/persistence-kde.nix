@@ -62,8 +62,6 @@
       ".config/dolphinrc"
       ".config/drkonqirc"
       ".config/filetypesrc"
-      ".config/gtkrc"
-      ".config/gtkrc-2.0"
       ".config/gwenviewrc"
       ".config/kactivitymanagerdrc"
       ".config/kactivitymanagerd-statsrc"
