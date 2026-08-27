@@ -28,9 +28,9 @@
     ./programs/emacs
     ./programs/firefox.nix
     ./programs/firefoxpwa.nix
-    ./programs/kitty.nix
     ./programs/mpv.nix
     ./programs/tmux.nix
+    ./programs/wezterm.nix
 
     # ---- Dev ----
     ./dev/direnv.nix

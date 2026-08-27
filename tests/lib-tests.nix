@@ -81,8 +81,8 @@ in
     expected = "#3daee9";
   };
 
-  testKittyPaletteBackground = {
-    expr = repoLib.kittyPalette.background;
+  testWeztermPaletteBackground = {
+    expr = repoLib.weztermPalette.background;
     expected = "#eff0f1";
   };
 }

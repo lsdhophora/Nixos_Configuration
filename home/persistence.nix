@@ -70,7 +70,7 @@
       ".config/git"
       ".config/gtk-3.0"
       ".config/gtk-4.0"
-      ".config/kitty"
+      ".config/wezterm"
       ".config/mpv"
       ".config/tmux"
       ".config/systemd"

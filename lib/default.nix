@@ -73,13 +73,14 @@ in
     green = "#27ae60";
   };
 
-  # Kitty terminal palette (16 colors + fg/bg + selection) — Breeze Light.
+  # Terminal palette (16 colors + fg/bg + selection) — Breeze Light.
   # Exact values from the official KDE Breeze Light Konsole color scheme
   # (phabricator D22243, data/color-schemes/BreezeLight.colorscheme),
-  # mapped to kitty's color0-15. Background is #EFF0F1 (light grey, not
-  # pure white); Color0 is #232627 (dark grey, same as the foreground).
-  # Selection colors come from the official BreezeLight.colors.
-  kittyPalette = {
+  # mapped to xterm color0-15 naming. Used by wezterm (ansi/brights).
+  # Background is #EFF0F1 (light grey, not pure white); Color0 is
+  # #232627 (dark grey, same as the foreground). Selection colors come
+  # from the official BreezeLight.colors.
+  weztermPalette = {
     foreground = "#232627";
     background = "#eff0f1";
     color0 = "#232627";
