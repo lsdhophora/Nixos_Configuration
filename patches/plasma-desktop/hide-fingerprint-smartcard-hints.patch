@@ -1,0 +1,20 @@
+--- a/desktoppackage/contents/lockscreen/MainBlock.qml
++++ b/desktoppackage/contents/lockscreen/MainBlock.qml
+@@ -158,12 +158,9 @@
+         }
+     }
+ 
+-    FailableLabel {
+-        kind: ScreenLocker.Authenticator.Fingerprint
+-        label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:usagetip", "(or scan your fingerprint on the reader)")
+-    }
+-    FailableLabel {
+-        kind: ScreenLocker.Authenticator.Smartcard
+-        label: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:usagetip", "(or scan your smartcard)")
+-    }
++    // The "(or scan your fingerprint/smartcard)" hint labels are removed:
++    // this machine has neither reader, and kscreenlocker shows the hints
++    // while the noninteractive PAM stacks are still probing (isAvailable()
++    // stays true until pam_authenticate returns PAM_AUTHINFO_UNAVAIL), so
++    // a timing-based defer cannot fully suppress them.
+ }

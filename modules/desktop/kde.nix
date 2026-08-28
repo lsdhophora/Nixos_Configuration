@@ -17,7 +17,7 @@ let
       ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
       ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
       ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
-      ./../../patches/plasma-desktop/defer-failable-labels.patch
+      ./../../patches/plasma-desktop/hide-fingerprint-smartcard-hints.patch
       ./../../patches/plasma-desktop/kcm-splash-dedup.patch
       ./../../patches/plasma-desktop/lockscreen-field-colors.patch
     ];
@@ -39,13 +39,17 @@ in
 {
   services.desktopManager.plasma6.enable = true;
 
-  # kscreenlocker probes kde-fingerprint / kde-smartcard on every lock.
-  # Without these files, Linux-PAM falls back to "other" (pam_deny) which
-  # returns PAM_AUTH_ERR, so kscreenlocker thinks fingerprint/smartcard are
-  # available and shows the "scan your fingerprint/smartcard" hints.
-  # With these stacks the modules return PAM_AUTHINFO_UNAVAIL when no device
-  # is present, so kscreenlocker marks the authenticators unavailable and
-  # hides the hints. Users with hardware get working auth automatically.
+  # kscreenlocker probes kde-fingerprint / kde-smartcard on every lock and
+  # shows the "(or scan your fingerprint/smartcard)" hints while the
+  # noninteractive PAM stacks are running. Two measures:
+  # - These PAM stacks return PAM_AUTHINFO_UNAVAIL when no device is present
+  #   (without them Linux-PAM falls back to "other"/pam_deny, which returns
+  #   PAM_AUTH_ERR and reads as "available"). With hardware they also give
+  #   working fingerprint/smartcard auth.
+  # - hide-fingerprint-smartcard-hints.patch removes the hint labels from
+  #   the lock screen QML: the PAM probes take nonzero time (fprintd needs
+  #   dbus activation), so the hints would still flash on every lock.
+  # Users with hardware get working auth; the hints stay hidden.
   security.pam.services."kde-fingerprint" = {
     text = ''
       # fingerprint auth via fprintd; PAM_AUTHINFO_UNAVAIL without a reader
