@@ -16,7 +16,7 @@
     panels = [
       {
         location = "bottom";
-        height = 44;
+        height = 56;
         widgets = [
           {
             kickoff = {
