@@ -16,7 +16,7 @@
     panels = [
       {
         location = "bottom";
-        height = 32;
+        height = 44;
         widgets = [
           {
             kickoff = {
@@ -29,7 +29,7 @@
             # 任务管理器固定应用（pin）
             iconTasks = {
               launchers = [
-                "applications:kitty.desktop"
+                "applications:org.wezfurlong.wezterm.desktop"
                 "preferred://filemanager"
                 "preferred://browser"
               ];
@@ -38,7 +38,8 @@
           "org.kde.plasma.marginsseparator"
           {
             systemTray = {
-              items.shown = [
+              # extra = 恢复原始 extraItems 行为（主栏不铺满）
+              items.extra = [
                 "org.kde.plasma.devicenotifier"
                 "org.kde.plasma.notifications"
                 "org.kde.plasma.cameraindicator"
