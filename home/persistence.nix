@@ -33,6 +33,9 @@
       ".local/share/systemd"
       ".local/share/uv"
 
+      # ---- zsh -----
+      ".local/state/zsh"
+
       # ---- User files ----
       "Projects"
       "Documents"
@@ -84,8 +87,6 @@
       ".config/go"
     ];
     files = [
-      ".bash_history"
-      ".zsh_history"
 
       # ---- pi agent runtime files (credentials, fetched model cache, voice config, trust) ----
       ".pi/agent/auth.json"

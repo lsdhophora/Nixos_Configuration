@@ -1,4 +1,4 @@
-{ ... }:
+{ config, ... }:
 let
   # zsh prompt format. The label shows as a bracket tag when not empty.
   prompt =
@@ -14,12 +14,15 @@ in
     enableCompletion = true;
     enableVteIntegration = true;
     autosuggestion.enable = true;
+    dotDir = "${config.xdg.configHome}/zsh";
 
     history = {
       append = true;
       extended = true;
+
       ignoreAllDups = true;
       ignoreSpace = true;
+      path = "${config.xdg.stateHome}/zsh/history";
       save = 10000;
       size = 10000;
       share = true;
