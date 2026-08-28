@@ -21,3 +21,6 @@ nix-build-test/
 
 # nix build result symlinks (rotated)
 result-*
+
+# pi agent session artifacts
+pi-session-*.html
