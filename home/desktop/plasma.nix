@@ -38,6 +38,8 @@
           "org.kde.plasma.marginsseparator"
           {
             systemTray = {
+              # 图标撑满面板高度（与任务栏图标等高）
+              icons.scaleToFit = true;
               # extra = 恢复原始 extraItems 行为（主栏不铺满）
               items.extra = [
                 "org.kde.plasma.devicenotifier"
