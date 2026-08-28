@@ -44,6 +44,7 @@ in
             ../home/default.nix
             ../home/persistence.nix
             ../home/persistence-kde.nix
+            inputs.plasma-manager.homeModules.plasma-manager
           ];
         };
       }
@@ -55,6 +56,9 @@ in
   flake.homeConfigurations.FeiHsueh = inputs.home-manager.lib.homeManagerConfiguration {
     pkgs = repoPkgs;
     extraSpecialArgs = { inherit inputs repoLib; };
-    modules = [ ../home/default.nix ];
+    modules = [
+      ../home/default.nix
+      inputs.plasma-manager.homeModules.plasma-manager
+    ];
   };
 }
