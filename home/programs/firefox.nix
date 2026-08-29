@@ -43,6 +43,9 @@ in
         "ui.key.menuAccessKey" = 0;
         "browser.tabs.splitView.enabled" = false;
         "browser.tabs.groups.enabled" = false;
+        # Hide the "Create a New Profile..." entry in the hamburger menu
+        # (browser.profiles.enabled gates the app-menu profile section).
+        "browser.profiles.enabled" = false;
         "identity.fxaccounts.enabled" = false;
         # Tridactyl (now uninstalled) had set this to its own newtab page
         # (moz-extension://.../static/newtab.html); pin the default instead.
