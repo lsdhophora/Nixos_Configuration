@@ -1,0 +1,81 @@
+--- a/wezterm-gui/src/selection.rs
++++ b/wezterm-gui/src/selection.rs
+@@ -6,7 +6,7 @@
+ use std::ops::Range;
+ use termwiz::surface::line::DoubleClickRange;
+ use termwiz::surface::SequenceNo;
+-use wezterm_term::{SemanticZone, StableRowIndex};
++use wezterm_term::{Line, SemanticZone, StableRowIndex};
+ 
+ #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
+ pub struct Selection {
+@@ -355,3 +355,37 @@
+         }
+     }
+ }
++
++/// Clamp a cell range so that its boundaries do not split a wide
++/// (multi-cell) grapheme cluster in half.
++///
++/// The terminal screen buffer is a grid of cells; a wide character (for
++/// example a CJK ideograph or an emoji) occupies two cells: a leading cell
++/// that holds the text and a trailing continuation cell. The mouse can
++/// position a selection boundary between the two halves of such a
++/// character, which makes it possible to visually select only half of it.
++///
++/// This mirrors kitty's `xrange_for_iteration_with_multicells`: a boundary
++/// that falls inside a wide character is expanded to cover the entire
++/// character. It must be applied wherever a selection range is turned into
++/// concrete cells (rendering the selection highlight and extracting the
++/// selected text) so that both agree.
++pub fn clamp_range_to_graphemes(line: &Line, range: Range<usize>) -> Range<usize> {
++    if range.start >= range.end {
++        return range;
++    }
++    let mut start = range.start;
++    let mut end = range.end;
++    // If the start boundary falls on the continuation cell of a wide
++    // character, back up to the leading cell so the whole character is
++    // included.
++    if start > 0 && line.get_cell(start - 1).map_or(false, |c| c.width() > 1) {
++        start -= 1;
++    }
++    // If the end boundary falls right after the leading cell of a wide
++    // character, extend it past the continuation cell.
++    if end > 0 && line.get_cell(end - 1).map_or(false, |c| c.width() > 1) {
++        end = end.saturating_add(1).min(line.len());
++    }
++    start..end
++}
+--- a/wezterm-gui/src/termwindow/render/pane.rs
++++ b/wezterm-gui/src/termwindow/render/pane.rs
+@@ -380,6 +380,11 @@
+                         .map_or(0..0, |sel| sel.cols_for_row(stable_row, self.rectangular));
+                     // Constrain to the pane width!
+                     let selrange = selrange.start..selrange.end.min(self.dims.cols);
++                    // Don't split a wide (multi-cell) grapheme in half: clamp
++                    // the range to full cells so the highlight covers the whole
++                    // character (mirrors kitty's
++                    // xrange_for_iteration_with_multicells).
++                    let selrange = crate::selection::clamp_range_to_graphemes(line, selrange);
+ 
+                     let (cursor, composing, password_input) = if self.cursor.y == stable_row {
+                         (
+--- a/wezterm-gui/src/termwindow/selection.rs
++++ b/wezterm-gui/src/termwindow/selection.rs
+@@ -37,6 +37,7 @@
+                         let last_phys_idx = phys.len().saturating_sub(1);
+                         let cols = sel.cols_for_row(this_row, rectangular);
+                         let last_col_idx = cols.end.saturating_sub(1).min(last_phys_idx);
++                        let cols = crate::selection::clamp_range_to_graphemes(phys, cols);
+                         let mut col_span = phys.columns_as_line(cols);
+                         let seqno = col_span.current_seqno();
+                         // Only trim trailing whitespace if we are the last line
+@@ -87,6 +88,7 @@
+                         let last_phys_idx = phys.len().saturating_sub(1);
+                         let cols = sel.cols_for_row(this_row, rectangular);
+                         let last_col_idx = cols.end.saturating_sub(1).min(last_phys_idx);
++                        let cols = crate::selection::clamp_range_to_graphemes(phys, cols);
+                         let col_span = phys.columns_as_str(cols);
+                         // Only trim trailing whitespace if we are the last line
+                         // in a wrapped sequence
