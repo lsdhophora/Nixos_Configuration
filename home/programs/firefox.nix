@@ -70,6 +70,15 @@ in
     };
   };
 
+  # about:config is not persistent. The declarative prefs in `settings`
+  # are written to user.js and re-applied at every startup, but changes
+  # made in about:config live in prefs.js, which is inside the persisted
+  # profile. Delete prefs.js at every login (home-manager activation runs
+  # on each login), so about:config drift never survives a reboot.
+  home.activation.removeFirefoxPrefs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    rm -f "${config.xdg.configHome}/mozilla/firefox/default/prefs.js"
+  '';
+
   # Native messaging hosts. Firefox 148+ looks them up under
   # $XDG_CONFIG_HOME/mozilla first (then legacy ~/.mozilla). home-manager's
   # mozilla module still hardcodes the legacy .mozilla location, so link the
