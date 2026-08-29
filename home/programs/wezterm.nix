@@ -60,11 +60,6 @@ in
 
     settings = {
       color_scheme = "Breeze Light";
-      # IME preedit: let fcitx5 render it in its input panel. The default
-      # "Builtin" mode makes wezterm draw the preedit too, and the input
-      # panel flickers when the terminal repaints during streaming output
-      # (for example pi output while composing).
-      ime_preedit_rendering = "System";
       # Retro tab bar: cell-based rendering, no fancy button shapes.
       use_fancy_tab_bar = false;
       font_size = 14.0;

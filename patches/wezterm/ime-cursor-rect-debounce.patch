@@ -1,0 +1,121 @@
+--- a/window/src/os/wayland/window.rs	2026-08-29 21:46:25.241629865 +0800
++++ b/window/src/os/wayland/window.rs	2026-08-29 21:48:04.031531145 +0800
+@@ -322,6 +322,8 @@
+             frame_callback: None,
+ 
+             text_cursor: None,
++            pending_text_cursor: None,
++            text_cursor_stable_since: None,
+             appearance,
+ 
+             config,
+@@ -586,6 +588,8 @@
+     invalidated: bool,
+     // font_config: Rc<FontConfiguration>,
+     text_cursor: Option<Rect>,
++    pending_text_cursor: Option<Rect>,
++    text_cursor_stable_since: Option<Instant>,
+     appearance: Appearance,
+     config: ConfigHandle,
+     // cache the title for comparison to avoid spamming
+@@ -597,6 +601,13 @@
+     wegl_surface: Option<WlEglSurface>,
+     gl_state: Option<Rc<glium::backend::Context>>,
+ }
++// Debounce for the IME cursor rectangle: delay the text-input cursor
++// update until the position has been stable for this long. Streaming
++// output (for example a TUI like pi) moves the terminal cursor on every
++// repaint; committing each intermediate position makes the IME candidate
++// window chase the cursor and jitter.
++const TEXT_CURSOR_DEBOUNCE: Duration = Duration::from_millis(100);
++
+ 
+ impl WaylandWindowInner {
+     fn close(&mut self) {
+@@ -1005,6 +1016,51 @@
+     }
+ 
+     fn set_text_cursor_position(&mut self, rect: Rect) {
++        if self.text_cursor.map(|prior| prior != rect).unwrap_or(true) {
++            self.pending_text_cursor = Some(rect);
++            self.text_cursor_stable_since = Some(Instant::now());
++            let window_id = SurfaceUserData::from_wl(self.surface()).window_id;
++            let target = rect;
++            promise::spawn::spawn_into_main_thread(async move {
++                let wait = {
++                    let conn = WaylandConnection::get().unwrap().wayland();
++                    let handle = match conn.window_by_id(window_id) {
++                        Some(handle) => handle,
++                        None => return,
++                    };
++                    let inner = handle.borrow();
++                    match inner.text_cursor_stable_since {
++                        Some(since) => {
++                            let elapsed = since.elapsed();
++                            if elapsed < TEXT_CURSOR_DEBOUNCE {
++                                TEXT_CURSOR_DEBOUNCE - elapsed
++                            } else {
++                                Duration::ZERO
++                            }
++                        }
++                        None => Duration::ZERO,
++                    }
++                };
++                if !wait.is_zero() {
++                    Timer::after(wait).await;
++                }
++                let conn = WaylandConnection::get().unwrap().wayland();
++                if let Some(handle) = conn.window_by_id(window_id) {
++                    let mut inner = handle.borrow_mut();
++                    // A newer position resets the timer; commit only if the
++                    // pending position is still the one we waited for.
++                    if inner.pending_text_cursor == Some(target)
++                        && inner.text_cursor != Some(target)
++                    {
++                        inner.commit_text_cursor(target);
++                    }
++                }
++            })
++            .detach();
++        }
++    }
++
++    fn commit_text_cursor(&mut self, rect: Rect) {
+         let conn = WaylandConnection::get().unwrap().wayland();
+         let state = conn.wayland_state.borrow();
+         let surface = self.surface().clone();
+@@ -1013,22 +1069,20 @@
+ 
+         if let Some(active_surface_id) = active_surface_id.as_ref() {
+             if surface_id == active_surface_id.clone() {
+-                if self.text_cursor.map(|prior| prior != rect).unwrap_or(true) {
+-                    self.text_cursor.replace(rect);
++                self.text_cursor = Some(rect);
+ 
+-                    let surface_udata = SurfaceUserData::from_wl(&surface);
+-                    let factor = surface_udata.surface_data().scale_factor();
++                let surface_udata = SurfaceUserData::from_wl(&surface);
++                let factor = surface_udata.surface_data().scale_factor();
+ 
+-                    if let Some(text_input) = &state.text_input {
+-                        if let Some(input) = text_input.get_text_input_for_surface(&surface) {
+-                            input.set_cursor_rectangle(
+-                                rect.min_x() as i32 / factor,
+-                                rect.min_y() as i32 / factor,
+-                                rect.width() as i32 / factor,
+-                                rect.height() as i32 / factor,
+-                            );
+-                            input.commit();
+-                        }
++                if let Some(text_input) = &state.text_input {
++                    if let Some(input) = text_input.get_text_input_for_surface(&surface) {
++                        input.set_cursor_rectangle(
++                            rect.min_x() as i32 / factor,
++                            rect.min_y() as i32 / factor,
++                            rect.width() as i32 / factor,
++                            rect.height() as i32 / factor,
++                        );
++                        input.commit();
+                     }
+                 }
+             }
