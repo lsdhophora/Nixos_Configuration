@@ -32,7 +32,6 @@
       postInstall = (old.postInstall or "") + ''
         node ${../patches/pi-agent/patch-editor-prompt.mjs} "$out"
         node ${../patches/pi-agent/patch-editor-cursor.mjs} "$out"
-        node ${../patches/pi-agent/patch-main-screen-viewport.mjs} "$out"
         node ${../patches/pi-agent/patch-kitty-fkeys.mjs} "$out"
       '';
     }
