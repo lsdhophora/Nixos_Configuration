@@ -1,15 +1,59 @@
-# Tray icon theme name instead of the bundled relative white logo.
+# Fix LocalSend title-bar / taskbar icon on Wayland (and X11).
 #
-# LocalSend hardcodes `assets/img/logo-32-white.png` (a relative path) as
-# the Linux tray icon. tray_manager passes it verbatim to
-# libayatana-appindicator, which loads only absolute paths as files and
-# resolves everything else through the icon theme, so the icon never
-# resolves and the tray shows a white placeholder. The bundled asset
-# replacement in gui.nix had no effect for the same reason (the file was
-# never read). Use the hicolor theme icon `localsend` (the colored logo)
-# that the nixpkgs package installs into share/icons/hicolor.
+# Root cause: Flutter's Linux runner creates a GtkApplication but on Wayland,
+# GTK derives the xdg-toplevel app_id from g_get_prgname(), which (after
+# nixpkgs makeWrapper double-wrapping) is the argv[0] basename
+# ".localsend_app-wrapped_" / "localsend_app". Plasma then can't map the window
+# to LocalSend.desktop (stem "localsend") and falls back to the generic icon.
+# (The CMake APPLICATION_ID is ignored by GDK for the surface app_id here, so
+#  we set both for belt-and-suspenders.)
+#
+# The patch forces g_set_prgname("localsend") so the app_id matches the desktop
+# file name, also sets the window icon explicitly for X11, and postFixup aligns
+# StartupWMClass with the new prgname so X11 keeps working too.
+#
+# Tray icon: LocalSend hardcodes the relative path `assets/img/logo-32-white.png`
+# for the Linux tray. libayatana-appindicator loads only absolute paths as
+# files and resolves everything else through the icon theme, so the icon never
+# resolves and the tray shows a white placeholder. The second patch switches
+# the tray to the hicolor theme icon `localsend` (the colored logo).
 { repoLib }: final: prev: {
-  localsend = repoLib.applyPatches [
-    ../patches/localsend/tray-icon-theme-name.patch
-  ] prev.localsend;
+  localsend =
+    (repoLib.applyPatches [
+      ../patches/localsend/wayland-app-id-window-icon.patch
+      ../patches/localsend/tray-icon-theme-name.patch
+    ] prev.localsend).overrideAttrs
+      (old: {
+        # Run after installPhase so copyDesktopItems has created the desktop file.
+        # Two things must line up for the title-bar icon to show on Wayland:
+        #
+        # 1. KWin looks the icon up via XdgToplevelWindow::updateIcon() ->
+        #    iconFromDesktopFile() -> findDesktopFile(m_desktopFileName). KWin sets
+        #    desktopFileName to the xdg-toplevel app_id verbatim (see
+        #    xdgshellwindow.cpp handleAppIdChanged -> setDesktopFileName(appId)),
+        #    and findDesktopFile() does an exact, case-sensitive
+        #    QStandardPaths::locate(Applications, desktopFileName + ".desktop").
+        #    Our patch sets g_set_prgname("localsend"), so the app_id is
+        #    "localsend" and the desktop file MUST be named "localsend.desktop":
+        #    the upstream "LocalSend.desktop" is never matched and KWin then falls
+        #    back to the generic "wayland" icon.
+        # 2. StartupWMClass must match for X11 (XWayland) to keep working.
+        #
+        # We rename the desktop file (and fix StartupWMClass) accordingly.
+        # Locate the file defensively (name/path can vary between nixpkgs
+        # revisions); skip if not present.
+        postFixup = (old.postFixup or "") + ''
+          d="$out/share/applications"
+          f=$(find "$d" -iname '*.desktop' 2>/dev/null | while read -r x; do
+                grep -q '^Name=LocalSend$' "$x" && echo "$x"
+              done | head -1)
+          if [ -n "$f" ]; then
+            sed -i 's/^StartupWMClass=.*/StartupWMClass=localsend/' "$f"
+            base=$(basename "$f")
+            if [ "$base" != "localsend.desktop" ]; then
+              mv -f "$f" "$d/localsend.desktop"
+            fi
+          fi
+        '';
+      });
 }
