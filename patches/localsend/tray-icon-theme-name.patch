@@ -1,0 +1,15 @@
+--- a/app/lib/util/native/tray_helper.dart	1970-01-01 08:00:01.000000000 +0800
++++ b/app/lib/util/native/tray_helper.dart	2026-08-29 21:28:29.594706894 +0800
+@@ -33,7 +33,11 @@
+         // Icon for Flatpak, which must exist in /app/share/icons/hicolor/*x*/apps.
+         icon = 'org.localsend.localsend_app-tray';
+       } else {
+-        icon = Assets.img.logo32White.path;
++        // The bundled white logo is a relative path; libayatana-appindicator
++        // resolves icon names through the icon theme, so the file is never
++        // loaded and the tray shows a white placeholder. Use the hicolor
++        // theme icon (colored logo) installed by the package instead.
++        icon = 'localsend';
+       }
+       _logger.info('Using "$icon" as path of system tray icon');
+       await tm.trayManager.setIcon(icon);

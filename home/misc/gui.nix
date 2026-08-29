@@ -31,13 +31,10 @@ let
       wrapProgram $out/bin/localsend_app \
         --set GTK_THEME "Breeze" \
         --set GTK_CSD 0
-      # LocalSend forces the white logo as the Linux tray icon
-      # (app/lib/util/native/tray_helper.dart -> logo32White), which is
-      # invisible on the light Breeze panel. Replace it with the colored
-      # logo so the tray icon matches the taskbar icon.
-      rm -f $out/app/localsend/data/flutter_assets/assets/img/logo-32-white.png
-      cp ${pkgs.localsend}/app/localsend/data/flutter_assets/assets/img/logo-32.png \
-        $out/app/localsend/data/flutter_assets/assets/img/logo-32-white.png
+      # Tray icon: the white-logo asset swap used to live here, but the
+      # icon is passed as a relative path that appindicator never loads;
+      # the fix is a source patch in overlays/localsend.nix that switches
+      # the tray to the hicolor theme icon.
     '';
   };
 in
