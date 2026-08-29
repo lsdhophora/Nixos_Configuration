@@ -41,7 +41,8 @@ Apply these skills when their trigger conditions match:
 - Use consistent indentation (2 spaces).
 - Keep lines short.
 - Type your code explicitly. Do not erase type information.
-- Write comments in STE English.
+- Write comments in STE English (ASCII characters only). The
+  `english-comments` check enforces this.
 - Match the style of the surrounding code.
 - Do not copy-paste. Extract shared helpers into lib.
 

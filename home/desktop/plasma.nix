@@ -1,15 +1,17 @@
 { ... }:
 {
-  # Plasma 面板 / Task Manager 声明式配置（plasma-manager）。
+  # Declarative Plasma panel / Task Manager config (plasma-manager).
   #
-  # 机制：每次 Plasma 会话启动时，autostart 脚本会
-  #   1. rm 掉 plasma-org.kde.plasma.desktop-appletsrc（防无限增长）
-  #   2. 用 qdbus evaluateScript 按下面的声明重建面板/小组件
-  # 因此该文件每次启动都重新生成，无需持久化 —— 已从
-  # home/persistence-kde.nix 的 files 列表中移除。
+  # Mechanism: on every Plasma session start, the autostart script:
+  #   1. removes plasma-org.kde.plasma.desktop-appletsrc (prevents unbounded growth)
+  #   2. rebuilds the panel/widgets from the declarations below with
+  #      qdbus evaluateScript
+  # Therefore this file regenerates on every start and does not need
+  # persistence. It was removed from the files list in
+  # home/persistence-kde.nix.
   #
-  # UI 里的改动（取消固定、拖小组件）会在下次启动时被覆盖，
-  # 改 pin 请编辑此文件 + `home-manager switch --flake .#FeiHsueh`。
+  # UI changes (unpin, drag widgets) are overwritten on the next start.
+  # To change pins, edit this file + `home-manager switch --flake .#FeiHsueh`.
   programs.plasma = {
     enable = true;
 
@@ -26,7 +28,7 @@
           }
           "org.kde.plasma.pager"
           {
-            # 任务管理器固定应用（pin）
+            # Task manager pinned apps
             iconTasks = {
               launchers = [
                 "applications:org.wezfurlong.wezterm.desktop"
@@ -38,9 +40,9 @@
           "org.kde.plasma.marginsseparator"
           {
             systemTray = {
-              # 图标撑满面板高度（与任务栏图标等高）
+              # Icons fill the panel height (same height as taskbar icons)
               icons.scaleToFit = true;
-              # extra = 恢复原始 extraItems 行为（主栏不铺满）
+              # extra = restore the original extraItems behavior (main bar does not fill)
               items.extra = [
                 "org.kde.plasma.devicenotifier"
                 "org.kde.plasma.notifications"

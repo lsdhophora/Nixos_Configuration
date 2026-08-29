@@ -31,9 +31,9 @@ System changes (hosts, kernel, services, etc.) still require `nixos-rebuild swit
 ## Tests
 
 Run `just check-fast` before every commit. It runs nixfmt, deadnix,
-statix, sops-integrity, sops-keys, invariants, and lib-tests. See
-`docs/testing.md` and `flake-modules/checks.nix` for the check
-list and definitions.
+english-comments, statix, sops-integrity, sops-keys, invariants, and
+lib-tests. See `docs/testing.md` and `flake-modules/checks.nix` for
+the check list and definitions.
 
 Run `just check` (`nix flake check`) for full verification. It also
 builds the system toplevel and the home activation package.

@@ -1,7 +1,7 @@
 # Flake checks: static analysis, evaluation checks, and build verification.
 #
 #   - Fast static checks (per-edit): format, deadnix, statix,
-#     sops-integrity, sops-keys.
+#     sops-integrity, sops-keys, english-comments.
 #   - Evaluation checks: invariants (key config facts), lib-tests (unit
 #     tests for lib/default.nix helpers).
 #   - Build checks (pre-commit): system toplevel + home activation.
@@ -69,12 +69,12 @@
               echo "statix: OK" > $out
             '';
 
-        # Comments must contain ASCII characters only (STE writing
-        # standard). Catches non-ASCII comments, for example Chinese or
-        # Unicode dashes. Only comment lines (leading #) are checked;
-        # string values are not.
-        ascii-comments =
-          pkgs.runCommand "check-ascii-comments"
+        # Comments must be ASCII English text (STE writing standard).
+        # Catches non-ASCII comments, for example Chinese or Unicode
+        # dashes. Only comment lines (leading #) are checked; string
+        # values are not.
+        english-comments =
+          pkgs.runCommand "check-english-comments"
             {
               inherit src;
             }
@@ -92,7 +92,7 @@
                 fi
               done
               [ $status -eq 0 ] || exit 1
-              echo "ascii-comments: OK" > $out
+              echo "english-comments: OK" > $out
             '';
 
         # Every value in secrets/secrets.yaml must be SOPS-encrypted

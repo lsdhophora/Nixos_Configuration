@@ -11,6 +11,7 @@ static checks. See `flake-modules/checks.nix` for the definitions.
 |---|---|---|
 | `format` | static | All .nix files are formatted with nixfmt |
 | `deadnix` | static | No unused let bindings or module args |
+| `english-comments` | static | Comments are ASCII English text (STE style) |
 | `statix` | static | No Nix anti-patterns |
 | `sops-integrity` | static | Every value in secrets/secrets.yaml is SOPS-encrypted |
 | `sops-keys` | static | Every `sops.secrets.<key>` reference exists in the yaml |
