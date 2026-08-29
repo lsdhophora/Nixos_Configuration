@@ -47,6 +47,12 @@
     packages = with pkgs; [ terminus_font ];
   };
 
+  # sched_ext scheduler: replaces the fair-class scheduler entirely, so
+  # CFS/EEVDF tweaks like the BORE patch are inert while it runs. BORE was
+  # tried (patches/kernel/bore-7.2.patch) and rolled back: scx_lavd gives
+  # equal-or-better interactive responsiveness under full CPU load with no
+  # kernel rebuilds. Requires a kernel with CONFIG_SCHED_EXT (=y in the
+  # mainline config used by linuxPackages_latest).
   services.scx = {
     enable = true;
     scheduler = "scx_lavd";

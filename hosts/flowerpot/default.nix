@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 
 {
   # ============================================================
@@ -53,6 +53,29 @@
     HandleLidSwitch = "ignore";
     HandleLidSwitchExternalPower = "ignore";
     HandleLidSwitchDocked = "ignore";
+  };
+
+  # ---- Keep the desktop responsive during nixos-rebuild ----
+  # nix-daemon builds run as root in their own cgroup; lower their CPU
+  # weight / nice and idle-class their disk IO so Plasma and apps
+  # (user.slice) win contention.
+  systemd.services.nix-daemon.serviceConfig = {
+    Nice = 15;
+    CPUWeight = 50; # user.slice default is 100: desktop gets 2x weight
+    # Lix sets best-effort by default; idle-class it so builds never
+    # starve desktop disk IO.
+    IOSchedulingClass = lib.mkForce "idle";
+  };
+
+  # Memory-pressure tuning: prefer reclaiming page cache over disk swap,
+  # keep a reserve of free pages for atomic allocations, and flush dirty
+  # pages earlier and smoother. (zram absorbs anonymous overflow at
+  # priority 100; the 16G swapfile is the last resort.)
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 20;
+    "vm.watermark_scale_factor" = 125;
+    "vm.dirty_background_ratio" = 5;
+    "vm.dirty_ratio" = 10;
   };
 
 }
