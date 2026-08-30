@@ -1,0 +1,64 @@
+--- a/wezterm-gui/src/termwindow/render/paint.rs	2026-08-30 11:03:01.400431805 +0800
++++ b/wezterm-gui/src/termwindow/render/paint.rs	2026-08-30 11:02:34.476062660 +0800
+@@ -248,7 +248,6 @@
+ 
+         for pos in panes {
+             if pos.is_active {
+-                self.update_text_cursor(&pos);
+                 if focused {
+                     pos.pane.advise_focus();
+                     mux::Mux::get().record_focus_for_current_identity(pos.pane.pane_id());
+--- a/wezterm-gui/src/termwindow/mod.rs	2026-08-30 11:03:03.459458578 +0800
++++ b/wezterm-gui/src/termwindow/mod.rs	2026-08-30 11:02:34.476844954 +0800
+@@ -549,6 +549,9 @@
+             pane.focus_changed(focused);
+         }
+ 
++        // Report the IME cursor position on focus (kitty mirror).
++        self.update_text_cursor_for_active_pane();
++
+         self.update_title();
+         self.emit_window_event("window-focus-changed", None);
+     }
+@@ -992,6 +995,9 @@
+                     log::trace!("DeadKeyStatus now: {:?}", status);
+                 }
+                 self.dead_key_status = status;
++                // Refresh the IME cursor position when the preedit
++                // changes (kitty mirror).
++                self.update_text_cursor_for_active_pane();
+                 self.update_title();
+                 // Ensure that we repaint so that any composing
+                 // text is updated
+@@ -2109,6 +2115,19 @@
+         }
+     }
+ 
++    // Mirror kitty: refresh the IME cursor position from input paths
++    // (key events, preedit changes, focus) instead of from every repaint,
++    // so streaming output does not move the candidate window.
++    fn update_text_cursor_for_active_pane(&mut self) {
++        if let Some(pos) = self
++            .get_panes_to_render()
++            .into_iter()
++            .find(|pos| pos.is_active)
++        {
++            self.update_text_cursor(&pos);
++        }
++    }
++
+     fn update_text_cursor(&mut self, pos: &PositionedPane) {
+         if let Some(win) = self.window.as_ref() {
+             let cursor = pos.pane.get_cursor_position();
+--- a/wezterm-gui/src/termwindow/keyevent.rs	2026-08-30 11:03:04.954478019 +0800
++++ b/wezterm-gui/src/termwindow/keyevent.rs	2026-08-30 11:02:59.726410039 +0800
+@@ -741,6 +741,9 @@
+             }
+             Key::None => {}
+         }
++
++        // Report the IME cursor position on key input (kitty mirror).
++        self.update_text_cursor_for_active_pane();
+     }
+ 
+     pub fn win_key_code_to_termwiz_key_code(&self, key: &::window::KeyCode) -> Key {
