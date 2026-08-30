@@ -51,10 +51,11 @@ in
         # (moz-extension://.../static/newtab.html); pin the default instead.
         "browser.startup.homepage" = "about:home";
         # New tab page state (was only in prefs.js, which was wiped at every
-        # login): no top sites, no sponsored content, Firefox Orange wallpaper.
+        # login): no top sites, no sponsored content, no wallpaper (the
+        # empty string means no wallpaper in Firefox's newtab wallpapers).
         "browser.newtabpage.activity-stream.feeds.topsites" = false;
         "browser.newtabpage.activity-stream.showSponsored" = false;
-        "browser.newtabpage.activity-stream.newtabWallpapers.wallpaper" = "firefox-orange";
+        "browser.newtabpage.activity-stream.newtabWallpapers.wallpaper" = "";
         "svg.context-properties.content.enabled" = true;
         "browser.fullscreen.autohide" = false;
         "browser.ml.linkPreview.enabled" = false;
