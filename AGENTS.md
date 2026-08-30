@@ -21,8 +21,10 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 
 1. Edit → `dry-build` pass
 2. Rebuild
-3. Commit in Magit (see Commit Review Gate below)
-4. Push (if success)
+3. Stage and draft: `git add -A`, then write the GNU-format message
+   to `.git/ai-commit-msg.draft` (see Commit Review Gate below)
+4. Human review: commit in Magit (`C-x g` → `c c` → `C-c C-c`)
+5. Push (if success)
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
@@ -35,7 +37,9 @@ message draft; the human reviews and approves the commit. Three layers
 implement the gate:
 
 - **AI draft** — the AI writes the GNU-format message to
-  `.git/ai-commit-msg.draft` after staging the changes.
+  `.git/ai-commit-msg.draft` after staging the changes. Write a fresh
+  draft for every commit: the draft is deleted after each successful
+  commit, so a missing draft opens a blank commit buffer.
 - **Magit gate** — `my/magit-review-gate` in `home/programs/emacs/init.el`
   inserts the draft into the commit buffer on open. At `C-c C-c` the
   gate asks for the reviewer name; without a valid name (whitelist
