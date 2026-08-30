@@ -16,3 +16,9 @@ menupopup#context-sendimage, #context-sendimage { display: none !important; }
 #contentAreaContextMenu menuseparator:last-child, #contentAreaContextMenu menuseparator:only-child { display: none !important; }
 panel[type="arrow"].panel-no-padding { transform: translateY(2px) !important; }
 #appMenu-empty-profiles-button { display: none !important; }
+
+/* PiP player window: hide the close (X) button. The window still
+   closes via the unpip button, the closing tab, or the shortcut. */
+html[windowtype="Toolkit:PictureInPicture"] #close {
+  display: none !important;
+}

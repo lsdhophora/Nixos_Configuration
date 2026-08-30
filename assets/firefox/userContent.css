@@ -24,6 +24,29 @@
     touch-action: pan-x pan-y pinch-zoom !important;
     overscroll-behavior: auto !important;
   }
+
+  /* Mini player window: let Firefox's native PiP toggle receive the
+     pointer so hovering it shows the hand cursor. Bilibili's warp
+     overlay (cursor:move) used to swallow every pointer event over
+     the video; the native toggle lives in the video's UA shadow root
+     and is unreachable by page CSS, so the overlay must pass events
+     through instead (Bugzilla 1667465: same YouTube mini player issue). */
+  .bpx-player-mini-warp {
+    pointer-events: none !important;
+    cursor: pointer !important;
+  }
+  /* Keep the warp's own controls (close, play/pause state, progress)
+     interactive. */
+  .bpx-player-mini-warp * {
+    pointer-events: auto !important;
+  }
+  /* Keep the cursor visible over the mini video: Bilibili hides it in
+     the idle no-cursor state, which the warp's move cursor used to
+     mask. Force the plain arrow there. */
+  .bpx-player-container[data-screen="mini"] .bpx-player-video-perch,
+  .bpx-player-container[data-screen="mini"] video {
+    cursor: default !important;
+  }
 }
 
 /* DuckDuckGo - result site name line-height */
