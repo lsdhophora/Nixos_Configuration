@@ -19,4 +19,7 @@
             (setq file-name-handler-alist my/init-file-name-handler-alist)))
 
 (setq initial-frame-alist
-      '((width . 84) (height . 32)))
+      ;; 14pt font + 1.25x Wayland scaling: 32 rows overflow the 1080p
+      ;; screen, so start with 28 rows (same text capacity as 32 rows
+      ;; at the old 12pt).
+      '((width . 84) (height . 28)))
