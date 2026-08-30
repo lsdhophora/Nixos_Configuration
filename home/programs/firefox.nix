@@ -73,6 +73,15 @@ in
         "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
         "firefoxpwa@filips.si" = "pwas-for-firefox";
       };
+      # Disable the AI chatbot (sidebar chatbot and AI window).  The policy
+      # locks browser.ml.chat.enabled, browser.ml.chat.page and
+      # browser.ai.control.sidebarChatbot.
+      AIControls = {
+        SidebarChatbot = {
+          Value = "blocked";
+          Locked = true;
+        };
+      };
     };
   };
 
