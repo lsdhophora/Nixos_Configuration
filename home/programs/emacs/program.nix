@@ -21,7 +21,13 @@ in
       _: with unstableEmacs.emacs-pgtk.pkgs; [
         direnv
         auctex
-        nix-mode
+        # nix-log.el calls nix-read-file/nix-read-attr (defined in
+        # nix-shell.el) without requiring nix-shell, so the native
+        # compiler warns.  Mirror the upstream fix (autoload
+        # declarations); see patches/nix-mode/nix-log-autoloads.patch.
+        (repoLib.applyPatches [
+          ./../../../patches/nix-mode/nix-log-autoloads.patch
+        ] nix-mode)
         magit
         nov
         nerd-icons

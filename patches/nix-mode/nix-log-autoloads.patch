@@ -1,0 +1,16 @@
+--- a/nix-log.el	2026-08-30 12:55:35.483058584 +0800
++++ nix-log.el	2026-08-30 12:55:57.332949570 +0800
+@@ -14,6 +14,13 @@
+ (require 'nix-instantiate)
+ (require 'files)
+ 
++;;; Autoload declarations keep the byte/native compiler quiet about
++;;; nix-read-file / nix-read-attr (defined in nix-shell.el).  Requiring
++;;; nix-shell here would create a load cycle, so declare the autoloads
++;;; instead (same fix as upstream nix-mode).
++(autoload 'nix-read-file "nix-shell")
++(autoload 'nix-read-attr "nix-shell")
++
+ (defun nix-log-path (drv-file)
+   "Get the nix log of path a derivation"
+   (let* ((drv-name (file-relative-name drv-file nix-store-dir))

@@ -39,6 +39,16 @@
                 (funcall orig))))
 
 (use-package eglot
+  ;; :defer t: `eglot-ensure' is autoloaded by Emacs core, so the hooks
+  ;; below start eglot on the first C/C++/LaTeX buffer without loading
+  ;; it at startup.  The :config runs when that first connection loads
+  ;; it, before the server program is chosen.
+  :defer t
+  :hook
+  (c-mode . eglot-ensure)
+  (c++-mode . eglot-ensure)
+  (c-mode . corfu-mode)
+  (c++-mode . corfu-mode)
   :config
   (setq eglot-sync-connect 5)
   (setq eglot-autoshutdown t)
@@ -48,10 +58,6 @@
   ;; drop a .clangd file next to a source tree to override it.
   (add-to-list 'eglot-server-programs '(c-mode . ("clangd" "--header-insertion=never")))
   (add-to-list 'eglot-server-programs '(c++-mode . ("clangd" "--header-insertion=never")))
-  (add-hook 'c-mode-hook #'eglot-ensure)
-  (add-hook 'c++-mode-hook #'eglot-ensure)
-  (add-hook 'c-mode-hook #'corfu-mode)
-  (add-hook 'c++-mode-hook #'corfu-mode)
   ;; --- texlab LSP (latex, system package) ---
   (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab"))))
@@ -71,19 +77,24 @@
     (corfu-terminal-mode 1)))
 
 (use-package nix-mode
-  ;; :demand t: this Nix-provided Emacs never activates package autoloads
-  ;; (package-enable-at-startup nil, no package-initialize), so the deferred
-  ;; .nix auto-mode-alist autoload never registers.  Load eagerly so
-  ;; nix-mode.el registers ".nix" itself (nix-mode.el has the
-  ;; (add-to-list 'auto-mode-alist ...) in its body).
-  :demand t
+  ;; Deferred: Nix-provided packages never activate their autoloads
+  ;; (package-enable-at-startup nil, no package-initialize), so the .nix
+  ;; auto-mode-alist association is registered by hand below and
+  ;; nix-mode.el loads on the first .nix file instead of at startup.
+  :defer t
+  :init
+  (autoload 'nix-mode "nix-mode" nil t)
+  (add-to-list 'auto-mode-alist '("\\.nix\\'" . nix-mode))
   :hook
   (nix-mode . eglot-ensure)
   (nix-mode . corfu-mode)
   (before-save . (lambda () (when (eq major-mode 'nix-mode) (eglot-format-buffer))))
   :config
-  (add-to-list 'eglot-server-programs
-               '(nix-mode . ("nixd" "--inlay-hints=false"))))
+  ;; eglot may still be deferred when nix-mode loads; register the nixd
+  ;; server the moment eglot does load.
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs
+                 '(nix-mode . ("nixd" "--inlay-hints=false")))))
 
 (use-package magit
   :bind (("C-x g" . magit-status))
@@ -161,21 +172,27 @@
   :custom
   (nerd-icons-font-family "Hack Nerd Font"))
 
-(require 'emms-setup)
-(emms-all)
-(emms-default-players)
-(setq emms-player-list '(emms-player-mpv))
-(setq emms-player-mpv-command-name "mpv")
-(setq emms-source-file-default-directory "~/Music/")
-
-(require 'emms-info-native)
-(setq emms-info-functions '(emms-info-native))
-
-(setq emms-track-description-function
-      (lambda (track)
-        (or (emms-track-get track 'info-title)
-            (file-name-sans-extension
-             (file-name-nondirectory (emms-track-get track 'name))))))
+;; --- emms (music player) ---
+;; Deferred: Nix packages never activate their autoloads, so load
+;; emms-autoloads.el explicitly to keep every M-x emms-* command
+;; available; the player and info backends then load on the first emms
+;; command instead of at startup.  Loads only what mpv needs (emms-all
+;; would pull in every player and info backend).
+(load "emms-autoloads" nil t)
+(use-package emms
+  :defer t
+  :config
+  (require 'emms-player-mpv)
+  (require 'emms-info-native)
+  (setq emms-player-list '(emms-player-mpv))
+  (setq emms-player-mpv-command-name "mpv")
+  (setq emms-source-file-default-directory "~/Music/")
+  (setq emms-info-functions '(emms-info-native))
+  (setq emms-track-description-function
+        (lambda (track)
+          (or (emms-track-get track 'info-title)
+              (file-name-sans-extension
+               (file-name-nondirectory (emms-track-get track 'name)))))))
 
 ;; --- competitive programming: cph.el (companion: lisp/cph/cph.user.js) ---
 ;; cph.el is symlinked into ~/.config/emacs/cph by files.nix
