@@ -1,11 +1,11 @@
 # .gitignore
 
-# Emacs 临时文件
+# Emacs temporary files
 *~
 \#*#
 .#*
 
-# 备份文件
+# Backup files
 *.bak
 
 # Cloned for AI reference

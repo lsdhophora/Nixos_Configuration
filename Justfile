@@ -17,9 +17,10 @@ check:
 check-no-build:
     nix flake check --no-build
 
-# Format all Nix files with nixfmt (nix fmt itself fails: it passes no file args, nixfmt reads stdin)
+# Format all Nix files with nixfmt. fd reads .gitignore, so ignored
+# files (result/, nixpkgs/, .pi/, .agent-shell/) stay out automatically.
 fmt:
-    nix develop --command bash -c 'nixfmt $$(find . -name "*.nix" -not -path "./result/*" -not -path "./nixpkgs/*" -not -path "./pi/*" -not -path "./opencode/*")'
+    nix develop --command bash -c 'nixfmt $(fd -H -e nix --ignore-file .gitignore . .)'
 
 # Verify the system builds (dry-build, no switch)
 build:

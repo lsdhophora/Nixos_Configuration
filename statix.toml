@@ -2,11 +2,11 @@
 # Disable rules that are noise for this repo; the remaining rules still
 # catch real anti-patterns in new code.
 #
-#   empty_pattern      — `{ ... }:` is the idiomatic NixOS module signature.
-#   repeated_keys      — module option sets (home-manager.useGlobalPkgs = ...)
+#   empty_pattern      - `{ ... }:` is the idiomatic NixOS module signature.
+#   repeated_keys      - module option sets (home-manager.useGlobalPkgs = ...)
 #                        and the generated hardware-configuration.nix.
-#   manual_inherit     — explicit assignments like `color0 = palette.color0`
+#   manual_inherit     - explicit assignments like `color0 = palette.color0`
 #                        are intentional for readability (see kitty.nix).
-#   manual_inherit_from — same pattern via attr access (`background = palette.background`).
+#   manual_inherit_from - same pattern via attr access (`background = palette.background`).
 disabled = ["empty_pattern", "repeated_keys", "manual_inherit", "manual_inherit_from"]
 ignore = [".direnv"]

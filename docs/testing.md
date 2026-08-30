@@ -2,6 +2,14 @@
 
 This file records the testing setup and decisions for this repository.
 
+## File enumeration
+
+`format`, `deadnix`, and `english-comments` enumerate files with `fd`
+(`pkgs.fd`), which reads `.gitignore`. A newly ignored path needs no
+change in `checks.nix`; the hardcoded `-not -path` excludes were
+dropped. `statix check .` also respects `.gitignore` by default
+(`-u` disables it).
+
 ## Current checks
 
 `nix flake check` runs all checks. `just check-fast` runs only the fast
@@ -11,7 +19,7 @@ static checks. See `flake-modules/checks.nix` for the definitions.
 |---|---|---|
 | `format` | static | All .nix files are formatted with nixfmt |
 | `deadnix` | static | No unused let bindings or module args |
-| `english-comments` | static | Comments are ASCII English text (STE style) |
+| `english-comments` | static | Comments are ASCII English text (STE style), in nix and every `#`-comment file (`.gitignore`, `Justfile`, toml, yaml, sh, hooks/) |
 | `statix` | static | No Nix anti-patterns |
 | `sops-integrity` | static | Every value in secrets/secrets.yaml is SOPS-encrypted |
 | `sops-keys` | static | Every `sops.secrets.<key>` reference exists in the yaml |

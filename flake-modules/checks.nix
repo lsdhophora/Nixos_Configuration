@@ -14,9 +14,10 @@
 # record and how to re-enable them on a KVM-capable host.
 #
 # Note: the static checks pass `src = ../.` as an explicit derivation
-# input and enumerate files with `find` at build time. An eval-time
-# file list loses its store context, so the sandbox would not contain
-# the files.
+# input and enumerate files with `fd` at build time. fd reads
+# .gitignore, so the file lists stay gitignore-driven: a newly ignored
+# path needs no change here. An eval-time file list loses its store
+# context, so the sandbox would not contain the files.
 { inputs, lib, ... }:
 {
   perSystem =
@@ -32,10 +33,13 @@
           pkgs.runCommand "check-nixfmt"
             {
               inherit src;
-              nativeBuildInputs = [ pkgs.nixfmt ];
+              nativeBuildInputs = [
+                pkgs.nixfmt
+                pkgs.fd
+              ];
             }
             ''
-              files=$(find "$src" -name '*.nix' -not -path "$src/result/*" -not -path "$src/nixpkgs/*" -not -path "$src/.pi/*")
+              files=$(fd -H -e nix --ignore-file "$src/.gitignore" . "$src")
               nixfmt --check $files
               echo "format: OK" > $out
             '';
@@ -48,10 +52,13 @@
           pkgs.runCommand "check-deadnix"
             {
               inherit src;
-              nativeBuildInputs = [ pkgs.deadnix ];
+              nativeBuildInputs = [
+                pkgs.deadnix
+                pkgs.fd
+              ];
             }
             ''
-              files=$(find "$src" -name '*.nix' -not -path "$src/result/*" -not -path "$src/nixpkgs/*" -not -path "$src/.pi/*")
+              files=$(fd -H -e nix --ignore-file "$src/.gitignore" . "$src")
               deadnix --fail --exclude hardware-configuration.nix $files
               echo "deadnix: OK" > $out
             '';
@@ -72,14 +79,19 @@
         # Comments must be ASCII English text (STE writing standard).
         # Catches non-ASCII comments, for example Chinese or Unicode
         # dashes. Only comment lines (leading #) are checked; string
-        # values are not.
+        # values are not. Covers every file that uses # comment lines:
+        # nix, .gitignore, Justfile, toml, yaml, sh, and hooks/. Files
+        # in other comment syntaxes (elisp, css, ts, patches) stay out:
+        # their content is foreign source code, not our comments.
         english-comments =
           pkgs.runCommand "check-english-comments"
             {
               inherit src;
+              nativeBuildInputs = [ pkgs.fd ];
             }
             ''
-              files=$(find "$src" -name '*.nix' -not -path "$src/result/*" -not -path "$src/nixpkgs/*" -not -path "$src/.pi/*")
+              files=$(fd -H --type f --ignore-file "$src/.gitignore" . "$src" \
+                | grep -E '\.(nix|toml|yaml|yml|sh)$|/(\.gitignore|Justfile)$|/hooks/[^/]+$')
               status=0
               for f in $files; do
                 # hardware-configuration.nix is auto-generated, so exclude it.
