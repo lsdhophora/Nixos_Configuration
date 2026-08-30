@@ -97,10 +97,96 @@
     (add-to-list 'eglot-server-programs
                  '(nix-mode . ("nixd" "--inlay-hints=false")))))
 
+(defcustom my/git-reviewers '("lsdhophora")
+  "Names of humans allowed to approve commits."
+  :group 'magit
+  :type '(repeat string))
+
 (use-package magit
   :bind (("C-x g" . magit-status))
   :config
-  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
+
+  ;; --- Human review gate for every commit ---
+  ;; The AI writes the message draft to .git/ai-commit-msg.draft; the
+  ;; setup hook below inserts it when the commit buffer opens.  The
+  ;; human reviews the draft and the inline diff in the buffer, then
+  ;; presses C-c C-c; the finish hook asks for the reviewer name and
+  ;; aborts the commit without a name.  The name is recorded as a
+  ;; Reviewed-by trailer.  hooks/commit-msg enforces the same rule for
+  ;; commits made outside Magit.
+
+  (defun my/git-commit-message-region ()
+    "Return the end of the message region of the current buffer.
+The message region ends before the first line that starts with
+'#' (the git comment block / cut line)."
+    (save-excursion
+      (goto-char (point-min))
+      (if (re-search-forward "^#" nil t)
+          (match-beginning 0)
+        (point-max))))
+
+  (defun my/git-commit-message ()
+    "Return the current commit message text without git comments."
+    (let ((end (my/git-commit-message-region)))
+      (buffer-substring-no-properties (point-min) end)))
+
+  (defun my/git-insert-ai-draft ()
+    "Insert the AI-written commit message draft, if any.
+The draft lives at .git/ai-commit-msg.draft in the repository.
+Insert it only when the buffer has no message yet, so a manual or
+remembered message is never clobbered."
+    (when (and (fboundp 'magit-toplevel)
+               (magit-toplevel)
+               (string-match-p "\\`[[:space:]]*\\'" (my/git-commit-message)))
+      (let ((draft (expand-file-name
+                    ".git/ai-commit-msg.draft" (magit-toplevel))))
+        (when (file-exists-p draft)
+          (goto-char (point-min))
+          (insert (string-trim (with-temp-buffer
+                                 (insert-file-contents draft)
+                                 (buffer-string)))
+                  "\n\n")))))
+
+  (defun my/git-delete-ai-draft ()
+    "Delete the AI commit message draft after the commit succeeds."
+    (when (and (fboundp 'magit-toplevel) (magit-toplevel))
+      (let ((draft (expand-file-name
+                    ".git/ai-commit-msg.draft" (magit-toplevel))))
+        (when (file-exists-p draft)
+          (delete-file draft)))))
+
+  (defun my/git-insert-review-trailer (name)
+    "Insert a Reviewed-by trailer at the end of the message region."
+    (let ((end (my/git-commit-message-region)))
+      (goto-char end)
+      (skip-chars-backward " \t\n")
+      (insert (format "\n\nReviewed-by: %s\n" name))))
+
+  (defun my/magit-review-gate (_force)
+    "Require a human reviewer before the commit is created.
+Pass when the message already carries a Reviewed-by trailer or is
+a merge message.  Otherwise ask for the reviewer name; abort the
+commit when the name is not in `my/git-reviewers'."
+    (save-excursion
+      (goto-char (point-min))
+      (cond
+       ((re-search-forward "^Reviewed-by: " (my/git-commit-message-region) t) t)
+       ((looking-at "Merge ") t)
+       (t
+        (let ((name (completing-read
+                     "人工审核:请确认已在提交缓冲审阅消息和 diff,输入你的名字(空 = 中止): "
+                     my/git-reviewers nil nil)))
+          (if (member name my/git-reviewers)
+              (progn
+                (my/git-insert-review-trailer name)
+                t)
+            (message "已中止提交:必须由人工审核(输入名字确认)")
+            nil))))))
+
+  (add-hook 'git-commit-setup-hook #'my/git-insert-ai-draft)
+  (add-hook 'git-commit-post-finish-hook #'my/git-delete-ai-draft)
+  (add-hook 'git-commit-finish-query-functions #'my/magit-review-gate))
 
 (add-hook 'python-mode-hook
           (lambda ()

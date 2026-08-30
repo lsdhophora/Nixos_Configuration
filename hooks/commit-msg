@@ -1,0 +1,52 @@
+#!/usr/bin/env sh
+# commit-msg hook: require a Reviewed-by trailer from an approved human.
+#
+# A commit is allowed only when the message carries a trailer such as
+#   Reviewed-by: lsdhophora
+# Typing the name at commit time is the human review attestation; the
+# trailer stays in history, so every commit is auditable with
+#   git log --format=%b | grep Reviewed-by
+#
+# Merge commits are exempt: their content is already reviewed at the
+# source commits, and the generated merge message carries no trailer.
+#
+# The git commit-msg hook receives the message file with the comment
+# block and (with verbose output) the diff below the cut line.  Only
+# inspect the message region: everything before the first comment
+# line, so a diff line that happens to look like a trailer cannot
+# satisfy the check.
+
+set -u
+
+msg_file="$1"
+allowed_reviewer="lsdhophora"
+
+# Print the message region: lines up to the first line that starts
+# with '#' (the git comment block / cut line).
+msg=$(sed -n '/^#/q;p' "$msg_file")
+
+summary=$(printf '%s\n' "$msg" | sed -n '1p')
+
+case "$summary" in
+  "Merge "*) exit 0 ;;
+esac
+
+reviewer=$(printf '%s\n' "$msg" \
+  | sed -n 's/^Reviewed-by: *\([^<]*\).*/\1/p' \
+  | tail -n 1 \
+  | sed 's/[[:space:]]*$//')
+
+if [ -z "$reviewer" ]; then
+  echo "提交被拒绝:缺少人工审核标记 Reviewed-by" >&2
+  echo "请人工审核本次提交后,在消息末尾补上:" >&2
+  echo "  Reviewed-by: $allowed_reviewer" >&2
+  exit 1
+fi
+
+if [ "$reviewer" != "$allowed_reviewer" ]; then
+  echo "提交被拒绝:审核人 '$reviewer' 不在白名单($allowed_reviewer)" >&2
+  echo "白名单审核人:$allowed_reviewer" >&2
+  exit 1
+fi
+
+exit 0

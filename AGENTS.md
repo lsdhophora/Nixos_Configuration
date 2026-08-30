@@ -7,11 +7,11 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Ch
 ```bash
 just check-fast                                    # fast static checks (~1 min)
 just check                                         # full checks (static + builds)
+just install-hooks                                 # one-time per clone: enable the commit review gate
 nixos-rebuild dry-build --flake .#flowerpot       # verify (system + home)
 run0 nixos-rebuild switch --flake .#flowerpot   # rebuild & switch (system)
 home-manager switch --flake .#FeiHsueh         # home-only rebuild (fast, no system closure)
 nix flake update                                   # update inputs
-git add -A && git commit -F -                       # commit (GNU format message via stdin)
 git push                                           # push
 ```
 
@@ -21,12 +21,35 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 
 1. Edit → `dry-build` pass
 2. Rebuild
-3. Commit (if success)
+3. Commit in Magit (see Commit Review Gate below)
 4. Push (if success)
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
 System changes (hosts, kernel, services, etc.) still require `nixos-rebuild switch`.
+
+## Commit Review Gate
+
+Every commit needs a human reviewer. The AI prepares the change and the
+message draft; the human reviews and approves the commit. Three layers
+implement the gate:
+
+- **AI draft** — the AI writes the GNU-format message to
+  `.git/ai-commit-msg.draft` after staging the changes.
+- **Magit gate** — `my/magit-review-gate` in `home/programs/emacs/init.el`
+  inserts the draft into the commit buffer on open. At `C-c C-c` the
+  gate asks for the reviewer name; without a valid name (whitelist
+  `my/git-reviewers`) the commit aborts. The name is recorded as a
+  `Reviewed-by` trailer in the message.
+- **git hook** — `hooks/commit-msg` rejects any commit without a
+  `Reviewed-by: lsdhophora` trailer, also for commits made outside
+  Magit. Merge commits are exempt.
+
+The review flow: `C-x g` → `c c` → review the draft and the inline
+`diff` → `C-c C-c` → type the reviewer name.
+
+Run `just install-hooks` once per clone to enable the git hook. Do not
+use `git commit --no-verify` (or magit `-n`): that bypasses the gate.
 
 ## Tests
 
