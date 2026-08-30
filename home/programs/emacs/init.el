@@ -175,13 +175,13 @@ commit when the name is not in `my/git-reviewers'."
        ((looking-at "Merge ") t)
        (t
         (let ((name (completing-read
-                     "人工审核:请确认已在提交缓冲审阅消息和 diff,输入你的名字(空 = 中止): "
+                     "Please enter your name to sign: "
                      my/git-reviewers nil nil)))
           (if (member name my/git-reviewers)
               (progn
                 (my/git-insert-review-trailer name)
                 t)
-            (message "已中止提交:必须由人工审核(输入名字确认)")
+            (message "Commit aborted: a human review is required")
             nil))))))
 
   (add-hook 'git-commit-setup-hook #'my/git-insert-ai-draft)

@@ -37,15 +37,15 @@ reviewer=$(printf '%s\n' "$msg" \
   | sed 's/[[:space:]]*$//')
 
 if [ -z "$reviewer" ]; then
-  echo "提交被拒绝:缺少人工审核标记 Reviewed-by" >&2
-  echo "请人工审核本次提交后,在消息末尾补上:" >&2
+  echo "Commit rejected: no Reviewed-by trailer" >&2
+  echo "Please review the changes, then end the message with:" >&2
   echo "  Reviewed-by: $allowed_reviewer" >&2
   exit 1
 fi
 
 if [ "$reviewer" != "$allowed_reviewer" ]; then
-  echo "提交被拒绝:审核人 '$reviewer' 不在白名单($allowed_reviewer)" >&2
-  echo "白名单审核人:$allowed_reviewer" >&2
+  echo "Commit rejected: reviewer '$reviewer' is not in the whitelist" >&2
+  echo "Whitelisted reviewer: $allowed_reviewer" >&2
   exit 1
 fi
 
