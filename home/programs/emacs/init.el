@@ -6,8 +6,9 @@
   (load custom-file :noerror))
 
 (setq nobreak-char-display nil)
-(set-face-attribute 'default nil :height 120)
-(set-face-attribute 'default nil :font "IBM Plex Mono")
+;; Font family and size in one call, so the size is not reset when the
+;; family is applied.
+(set-face-attribute 'default nil :font "IBM Plex Mono" :height 140)
 (set-fontset-font t 'han "Noto Sans CJK SC" nil 'prepend)
 (set-fontset-font t 'cjk-misc "Noto Sans CJK SC" nil 'prepend)
 (tool-bar-mode -1)
