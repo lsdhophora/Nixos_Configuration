@@ -112,9 +112,22 @@
   :config
   (direnv-mode))
 
+;; --- dashboard ---
+;; Deferred: dashboard.el only needs to render at the startup hooks,
+;; which run after init.el.  Register the same hooks that
+;; `dashboard-setup-startup-hook' would register (package autoloads are
+;; never activated in this Nix setup, so declare the autoloads by hand).
+(autoload 'dashboard-initialize "dashboard")
+(autoload 'dashboard-insert-startupify-lists "dashboard")
+(autoload 'dashboard-resize-on-hook "dashboard")
+(when (< (length command-line-args) 2)
+  (add-hook 'after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'emacs-startup-hook #'dashboard-initialize)
+  (add-hook 'window-size-change-functions #'dashboard-resize-on-hook 100)
+  (add-hook 'window-setup-hook #'dashboard-resize-on-hook))
 (use-package dashboard
+  :defer t
   :config
-  (dashboard-setup-startup-hook)
   (setq dashboard-startup-banner 2)
   (setq dashboard-center-content t)
   (setq dashboard-vertically-center-content t)
@@ -168,7 +181,13 @@
   (setq TeX-file-line-error t)
   (setq TeX-source-correlate-start-server t))
 
+;; --- nerd-icons ---
+;; Deferred: nerd-icons is only needed when icons are rendered, never
+;; at startup.  The autoloads file keeps every M-x nerd-icons-* command
+;; available without loading the package.
+(load "nerd-icons-autoloads" nil t)
 (use-package nerd-icons
+  :defer t
   :custom
   (nerd-icons-font-family "Hack Nerd Font"))
 
