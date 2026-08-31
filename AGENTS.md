@@ -52,6 +52,12 @@ implement the gate:
 The review flow: `C-x g` → `c c` → review the draft and the inline
 `diff` → `C-c C-c` → type the reviewer name.
 
+**AI self-review skip**: commits reviewed and committed by the AI use the
+`Reviewed-by: ai` trailer, which both the Magit gate (enter `ai` at the
+prompt) and the git hook accept.  Human-reviewed commits use
+`Reviewed-by: lsdhophora`.  Either trailer keeps the audit trail in git
+history; use the human name for anything non-trivial.
+
 Run `just install-hooks` once per clone to enable the git hook. Do not
 use `git commit --no-verify` (or magit `-n`): that bypasses the gate.
 

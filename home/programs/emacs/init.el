@@ -97,8 +97,9 @@
     (add-to-list 'eglot-server-programs
                  '(nix-mode . ("nixd" "--inlay-hints=false")))))
 
-(defcustom my/git-reviewers '("lsdhophora")
-  "Names of humans allowed to approve commits."
+(defcustom my/git-reviewers '("lsdhophora" "ai")
+  "Names allowed to approve commits.  \"ai\" skips the human gate
+(used for AI self-reviewed commits); other names are human reviews."
   :group 'magit
   :type '(repeat string))
 
@@ -107,14 +108,15 @@
   :config
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
 
-  ;; --- Human review gate for every commit ---
+  ;; --- Review gate for every commit ---
   ;; The AI writes the message draft to .git/ai-commit-msg.draft; the
   ;; setup hook below inserts it when the commit buffer opens.  The
   ;; human reviews the draft and the inline diff in the buffer, then
   ;; presses C-c C-c; the finish hook asks for the reviewer name and
   ;; aborts the commit without a name.  The name is recorded as a
   ;; Reviewed-by trailer.  hooks/commit-msg enforces the same rule for
-  ;; commits made outside Magit.
+  ;; commits made outside Magit.  Entering "ai" in the prompt (or
+  ;; committing with a Reviewed-by: ai trailer) skips the human gate.
 
   (defun my/git-commit-message-region ()
     "Return the end of the message region of the current buffer.
@@ -164,7 +166,7 @@ remembered message is never clobbered."
       (insert (format "\n\nReviewed-by: %s\n" name))))
 
   (defun my/magit-review-gate (_force)
-    "Require a human reviewer before the commit is created.
+    "Require a reviewer before the commit is created.
 Pass when the message already carries a Reviewed-by trailer or is
 a merge message.  Otherwise ask for the reviewer name; abort the
 commit when the name is not in `my/git-reviewers'."
@@ -175,13 +177,13 @@ commit when the name is not in `my/git-reviewers'."
        ((looking-at "Merge ") t)
        (t
         (let ((name (completing-read
-                     "Please enter your name to sign: "
+                     "Please enter your name to sign (or \"ai\" to skip): "
                      my/git-reviewers nil nil)))
           (if (member name my/git-reviewers)
               (progn
                 (my/git-insert-review-trailer name)
                 t)
-            (message "Commit aborted: a human review is required")
+            (message "Commit aborted: a reviewer is required")
             nil))))))
 
   (add-hook 'git-commit-setup-hook #'my/git-insert-ai-draft)

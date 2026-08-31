@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
-# commit-msg hook: require a Reviewed-by trailer from an approved human.
+# commit-msg hook: require a Reviewed-by trailer from an approved reviewer.
 #
 # A commit is allowed only when the message carries a trailer such as
-#   Reviewed-by: lsdhophora
-# Typing the name at commit time is the human review attestation; the
-# trailer stays in history, so every commit is auditable with
+#   Reviewed-by: lsdhophora        (human review attestation)
+#   Reviewed-by: ai                (AI self-review: skips the human gate)
+# The trailer stays in history, so every commit is auditable with
 #   git log --format=%b | grep Reviewed-by
 #
 # Merge commits are exempt: their content is already reviewed at the
@@ -19,7 +19,7 @@
 set -u
 
 msg_file="$1"
-allowed_reviewer="lsdhophora"
+allowed_reviewers="lsdhophora ai"
 
 # Print the message region: lines up to the first line that starts
 # with '#' (the git comment block / cut line).
@@ -39,14 +39,15 @@ reviewer=$(printf '%s\n' "$msg" \
 if [ -z "$reviewer" ]; then
   echo "Commit rejected: no Reviewed-by trailer" >&2
   echo "Please review the changes, then end the message with:" >&2
-  echo "  Reviewed-by: $allowed_reviewer" >&2
+  echo "  Reviewed-by: lsdhophora" >&2
+  echo "(or Reviewed-by: ai to skip the human review)" >&2
   exit 1
 fi
 
-if [ "$reviewer" != "$allowed_reviewer" ]; then
-  echo "Commit rejected: reviewer '$reviewer' is not in the whitelist" >&2
-  echo "Whitelisted reviewer: $allowed_reviewer" >&2
-  exit 1
-fi
+case " $allowed_reviewers " in
+  *" $reviewer "*) exit 0 ;;
+esac
 
-exit 0
+echo "Commit rejected: reviewer '$reviewer' is not in the whitelist" >&2
+echo "Whitelisted reviewers: $allowed_reviewers" >&2
+exit 1
