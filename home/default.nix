@@ -28,6 +28,7 @@
     # ---- Programs ----
     ./programs/emacs
     ./programs/firefox.nix
+    ./programs/librewolf.nix
     ./programs/firefoxpwa.nix
     ./programs/mpv.nix
     ./programs/tmux.nix

@@ -28,7 +28,6 @@
       ".local/share/firefoxpwa"
       ".local/share/fcitx5"
       ".local/share/gh"
-      ".local/share/keepassxc"
       ".local/share/nix"
       ".local/share/direnv"
       ".local/share/systemd"
@@ -37,7 +36,7 @@
       # ---- zsh -----
       ".local/state/zsh"
 
-      # ---- User files ----
+      "keepass"
       "Projects"
       "Documents"
       "Downloads"
@@ -51,6 +50,9 @@
       # ---- Firefox data (under .config) ----
       ".config/.mozilla"
       ".config/mozilla"
+
+      # ---- LibreWolf profile (migrated from Firefox) ----
+      ".librewolf"
 
       # ---- Nix config repo ----
       ".config/nixos"

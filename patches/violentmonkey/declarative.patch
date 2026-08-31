@@ -1,0 +1,67 @@
+--- a/src/background/utils/db.js
++++ b/src/background/utils/db.js
+@@ -214,6 +214,64 @@
+   if (!__.MV3) {
+     setInterval(checkRemove, TIMEOUT_24HOURS);
+   }
++  // Declarative userscripts: scripts delivered through the enterprise policy
++  //   "3rdparty".Extensions.<id>.options.scripts
++  // (i.e. chrome.storage.managed).  Each script is matched to an existing one
++  // by @name and updated in place (no duplicate on re-run); scripts that were
++  // managed before but are no longer declared are removed again.
++  if (IS_FIREFOX && typeof browser.storage.managed === 'object') {
++    try {
++      const managedSettings = await browser.storage.managed.get(null);
++      if (managedSettings?.options) {
++        const managedOptions = managedSettings.options;
++        for (const optionName in managedOptions) {
++          setOption(optionName, managedOptions[optionName]);
++        }
++      }
++      if (managedSettings?.scripts) {
++          const current = getScriptsByIdsOrAll();
++        const managedNames = new Set();
++        for (const managedScript of managedSettings.scripts) {
++          const meta = parseMeta(managedScript);
++              if (!meta.name) {
++            continue;
++          }
++          managedNames.add(meta.name);
++          const existing = current.find(s => s.meta.name === meta.name);
++              try {
++            await parseScript({ id: existing?.props.id || 0, code: managedScript });
++                } catch (e) {
++                  throw e;
++          }
++        }
++        // Remove previously managed scripts that are no longer declared.
++        const managedKey = 'declarativeManaged';
++        const stored = await storage.api.get([managedKey]);
++          const oldManaged = Array.isArray(stored?.[managedKey]) ? stored[managedKey] : [];
++        const removed = oldManaged.filter(name => !managedNames.has(name));
++        if (removed.length) {
++          const ids = getScriptsByIdsOrAll()
++            .filter(s => removed.includes(s.meta.name))
++            .map(s => s.props.id);
++          for (const id of ids) {
++            // Same as the MarkRemoved command: mark as removed, move from
++            // aliveScripts to removedScripts, then purge immediately.
++            await updateScriptInfo(id, {
++              config: { removed: 1 },
++              props: { lastModified: Date.now() },
++            });
++            const i = aliveScripts.findIndex(s => s.props.id === id);
++            const [script] = aliveScripts.splice(i, 1);
++            removedScripts.push(script);
++          }
++          await checkRemove({ force: true });
++        }
++        await storage.api.set({ [managedKey]: [...managedNames] });
++      }
++    } catch (err) {
++      console.error('page.initSettings', err);
++    }
++  }
+   resolveInit();
+ }
+ 
