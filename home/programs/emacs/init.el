@@ -103,6 +103,13 @@
   :group 'magit
   :type '(repeat string))
 
+(defcustom my/git-review-prompt-names '("lsdhophora")
+  "Names offered as completion candidates at the review prompt.
+`my/git-reviewers' still accepts the hidden \"ai\" skip when typed
+manually."
+  :group 'magit
+  :type '(repeat string))
+
 (use-package magit
   :bind (("C-x g" . magit-status))
   :config
@@ -177,8 +184,8 @@ commit when the name is not in `my/git-reviewers'."
        ((looking-at "Merge ") t)
        (t
         (let ((name (completing-read
-                     "Please enter your name to sign (or \"ai\" to skip): "
-                     my/git-reviewers nil nil)))
+                     "Please enter your name to sign: "
+                     my/git-review-prompt-names nil nil)))
           (if (member name my/git-reviewers)
               (progn
                 (my/git-insert-review-trailer name)
