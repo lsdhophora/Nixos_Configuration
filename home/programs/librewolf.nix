@@ -36,6 +36,13 @@
         # Hide the "Create a New Profile..." entry in the hamburger menu.
         "browser.profiles.enabled" = false;
         "identity.fxaccounts.enabled" = false;
+        # LibreWolf default is to always ask where to save (useDownloadDir=false,
+        # see upstream librewolf.cfg DOWNLOADS section).  Override so that
+        # programmatic downloads (GM_download saveAs:false from userscripts like
+        # Pixiv Downloader) land silently in the default download folder and
+        # create per-artwork subfolders; the browser has no showDirectoryPicker
+        # API, so this is the only way to avoid a save dialog per file.
+        "browser.download.useDownloadDir" = true;
         "browser.startup.homepage" = "about:home";
         # New tab page state: no top sites, no sponsored content, no wallpaper.
         "browser.newtabpage.activity-stream.feeds.topsites" = false;
