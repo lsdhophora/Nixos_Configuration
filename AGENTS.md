@@ -52,7 +52,10 @@ implement the gate:
 The review flow: `C-x g` → `c c` → review the draft and the inline
 `diff` → `C-c C-c` → type the reviewer name.
 
-**AI self-review skip**: commits reviewed and committed by the AI use the
+**AI self-review skip**: the AI does **not** commit or push on its own by
+default.  It stages the changes and writes the message draft, then stops
+for human review.  Only when the user explicitly asks it to (e.g.
+"你自己 commit 和 push") may the AI commit and push, using the
 `Reviewed-by: ai` trailer, which both the Magit gate (enter `ai` at the
 prompt) and the git hook accept.  Human-reviewed commits use
 `Reviewed-by: lsdhophora`.  Either trailer keeps the audit trail in git
