@@ -71,4 +71,8 @@
     pkgs.firefoxpwa
     pkgs.keepassxc
   ];
+
+  # LibreWolf is the default browser: the per-user mimeapps.list is
+  # persisted via persistence-kde.nix (edited there: firefox.desktop ->
+  # librewolf.desktop), keeping Plasma's other associations intact.
 }

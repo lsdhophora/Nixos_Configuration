@@ -33,7 +33,7 @@
               launchers = [
                 "applications:org.wezfurlong.wezterm.desktop"
                 "preferred://filemanager"
-                "preferred://browser"
+                "applications:librewolf.desktop"
               ];
             };
           }
