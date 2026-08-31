@@ -4,6 +4,7 @@
     ffmpeg
     fastfetch
     imagemagick
+    keepassxc
     pandoc
     nixfmt
     nixd

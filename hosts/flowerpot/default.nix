@@ -20,6 +20,9 @@
     ../../modules/security/sops.nix
     ../../modules/security/sudo.nix
 
+    # ---- Firefox enterprise policies (see modules/firefox-policies.nix) ----
+    ../../modules/firefox-policies.nix
+
     # ---- Services ----
     ../../modules/services/zram.nix
     ../../modules/services/atd.nix

@@ -4,13 +4,6 @@
   config,
   ...
 }:
-let
-  # AMO force-install entry. `slug` is the addon id in the download URL.
-  mozAddon = slug: {
-    install_url = "https://addons.mozilla.org/firefox/downloads/latest/${slug}/addon-${slug}-latest.xpi";
-    installation_mode = "force_installed";
-  };
-in
 {
   programs.firefox = {
     enable = true;
@@ -65,26 +58,13 @@ in
       userContent = ./../../assets/firefox/userContent.css;
       userChrome = ./../../assets/firefox/userChrome.css;
     };
-    policies = {
-      ExtensionSettings = lib.mapAttrs (_: mozAddon) {
-        "uBlock0@raymondhill.net" = "ublock-origin";
-        "addon@darkreader.org" = "darkreader";
-        "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = "stylus";
-        "{aecec67f-0d10-4fa7-b7c7-609a2db280cf}" = "violentmonkey";
-        "firefoxpwa@filips.si" = "pwas-for-firefox";
-      };
-      # Disable every AI feature (chatbot and its context-menu entry,
-      # AI translations, PDF alt text, link preview summaries, smart
-      # tab groups, smart window).  The Default value applies to all AI
-      # features and locks their prefs.
-      AIControls = {
-        Default = {
-          Value = "blocked";
-          Locked = true;
-        };
-      };
-    };
   };
+
+  # Firefox enterprise policies (extension force-install, AIControls) live in
+  # modules/firefox-policies.nix: the home-manager policies option bakes them
+  # into the wrapped package's distribution dir, which the wrapper never reads
+  # on this system (the wrapper execs the unwrapped binary, so Firefox's GRE
+  # dir has no policies.json).
 
   # prefs.js (inside the persisted profile) now survives logins, so runtime
   # state configured from the UI -- toolbar layout, status bar, homepage --
@@ -94,8 +74,8 @@ in
   # Native messaging hosts. Firefox 148+ looks them up under
   # $XDG_CONFIG_HOME/mozilla first (then legacy ~/.mozilla). home-manager's
   # mozilla module still hardcodes the legacy .mozilla location, so link the
-  # native messaging hosts (Plasma browser integration + firefoxpwa) to the
-  # XDG path here and disable the legacy link to keep $HOME free of ~/.mozilla.
+  # native messaging hosts (Plasma browser integration + firefoxpwa +
+  # keepassxc) to the XDG path here and disable the legacy link to keep $HOME free of ~/.mozilla.
   home.file = {
     ".config/mozilla/native-messaging-hosts" = {
       source =
@@ -105,6 +85,7 @@ in
             paths = [
               pkgs.kdePackages.plasma-browser-integration
               pkgs.firefoxpwa
+              pkgs.keepassxc
             ];
             pathsToLink = [ "/lib/mozilla/native-messaging-hosts" ];
           };

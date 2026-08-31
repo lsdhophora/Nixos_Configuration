@@ -31,8 +31,8 @@
             # Task manager pinned apps
             iconTasks = {
               launchers = [
-                "preferred://filemanager"
                 "applications:org.wezfurlong.wezterm.desktop"
+                "preferred://filemanager"
                 "preferred://browser"
               ];
             };
