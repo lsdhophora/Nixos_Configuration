@@ -21,7 +21,6 @@ in
   ExtensionSettings = lib.mapAttrs (_: mozAddon) {
     "uBlock0@raymondhill.net" = "ublock-origin";
     "{7a7a4a92-a2a0-41d1-9fd7-1e92480d612d}" = "stylus";
-    "firefoxpwa@filips.si" = "pwas-for-firefox";
     "keepassxc-browser@keepassxc.org" = "keepassxc-browser";
   };
   AIControls = {

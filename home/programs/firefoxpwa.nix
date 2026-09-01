@@ -5,7 +5,16 @@ let
   # share app_id and merge into the first PWA taskbar entry (issue #80).
   # ULID has exactly 26 chars: 0123456789ABCDEFGHJKMNPQRSTVWXYZ
   # (I/L/O/U excluded). Site ULIDs are unique.
-  pwas = [ ];
+  # Optional per-site fields: icon, categories.
+  pwas = [
+    {
+      profile = "C67PY6QDRJDX4JPJ44YD2YDWP0";
+      site = "DF9SFGKCH8WNYM389ZSGMSVTYY";
+      name = "pixiv";
+      url = "https://www.pixiv.net/";
+      manifestUrl = "https://www.pixiv.net/manifest.json";
+    }
+  ];
 in
 {
   programs.firefoxpwa = {

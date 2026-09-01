@@ -71,11 +71,11 @@
     source = "${pkgs.violentmonkey-declarative}/share/mozilla/extensions/{aecec67f-0d10-4fa7-b7c7-609a2db280cf}.xpi";
   };
 
-  # Native messaging hosts (Plasma browser integration + firefoxpwa +
-  # keepassxc).  Home-manager links them into ~/.librewolf/native-messaging-hosts.
+  # Native messaging hosts (Plasma browser integration + keepassxc).
+  # firefoxpwa was removed: PWA install is declarative via home/programs/firefoxpwa.nix
+  # (no browser extension), so no native messaging host is needed.
   mozilla.librewolfNativeMessagingHosts = [
     pkgs.kdePackages.plasma-browser-integration
-    pkgs.firefoxpwa
     pkgs.keepassxc
   ];
 
