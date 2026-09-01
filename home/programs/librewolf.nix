@@ -54,6 +54,14 @@
         # Allow sideloaded addons (the patched Violentmonkey xpi in the
         # profile extensions dir) to enable themselves automatically.
         "extensions.autoDisableScopes" = 0;
+        # Keep content-process console output off the stdout pipe: with
+        # devtools.console.stdout.content on, every page console message is
+        # forwarded to the parent process over IPC.  The TypeScript Playground
+        # (Monaco + in-browser TS compiler) floods the console while booting,
+        # saturating the pipe and starving the page main thread, so the
+        # playground froze with the "this page is slowing down" warning and
+        # never loaded (https://www.typescriptlang.org/play).
+        "devtools.console.stdout.content" = false;
       };
       # CSS files live in assets/, like the GTK themes.
       userContent = ./../../assets/firefox/userContent.css;
