@@ -1,0 +1,80 @@
+diff --git a/src/frontend/greeter/qml/Main.qml b/src/frontend/greeter/qml/Main.qml
+index eb5b4995..72f730cc 100644
+--- a/src/frontend/greeter/qml/Main.qml
++++ b/src/frontend/greeter/qml/Main.qml
+@@ -63,6 +63,27 @@ Item {
+         }
+     }
+ 
++    // Suspend does not destroy the QML scene: input-derived visual state
++    // (hovered/activeFocus/down) survives the freeze untouched. After resume
++    // the compositor does not synthesize pointer events, so stale state would
++    // show as a stuck button highlight on the first frame after wake.
++    // Revert to the fresh-start idle state (same path as the Esc key and the
++    // 10s timeout) before the machine freezes. Then the post-resume frame is
++    // clean without any input. The signal fires for every sleep source
++    // (Sleep/Hibernate buttons, power key, lid); the lock screen uses it too.
++    Connections {
++        target: PlasmaLogin.SessionManagement
++
++        function onAboutToSuspend(): void {
++            PlasmaLogin.GreeterState.clearPasswords();
++            PlasmaLogin.GreeterState.timeoutWindow(loginScreenRoot.Window.window);
++            // Move focus back to the first form control, like after a fresh
++            // start, so it cannot rest on an action button: a stale focus
++            // there would fire the button on the first Enter after wake.
++            mainStack.currentItem.focusFirstVisibleFormControl();
++        }
++    }
++
+     MouseArea {
+         id: loginScreenRoot
+         anchors.fill: parent
+@@ -179,6 +200,11 @@ Item {
+                         text: i18ndc("plasma_login", "Suspend to disk", "Hibernate")
+                         visible: PlasmaLogin.SessionManagement.canHibernate
+                         onClicked: {
++                            // Ignore clicks while the UI is hidden (idle or right
++                            // after wake): they are stale input, not user intent.
++                            if (!loginScreenRoot.uiVisible) {
++                                return;
++                            }
+                             PlasmaLogin.GreeterState.clearPasswords();
+                             PlasmaLogin.SessionManagement.hibernate();
+                         }
+@@ -188,6 +214,11 @@ Item {
+                         text: i18ndc("plasma_login", "Suspend to RAM", "Sleep")
+                         visible: PlasmaLogin.SessionManagement.canSuspend
+                         onClicked: {
++                            // Ignore clicks while the UI is hidden (idle or right
++                            // after wake): they are stale input, not user intent.
++                            if (!loginScreenRoot.uiVisible) {
++                                return;
++                            }
+                             PlasmaLogin.GreeterState.clearPasswords();
+                             PlasmaLogin.SessionManagement.suspend();
+                         }
+@@ -318,6 +349,11 @@ Item {
+                         text: i18ndc("plasma_login", "Suspend to disk", "Hibernate")
+                         visible: PlasmaLogin.SessionManagement.canHibernate
+                         onClicked: {
++                            // Ignore clicks while the UI is hidden (idle or right
++                            // after wake): they are stale input, not user intent.
++                            if (!loginScreenRoot.uiVisible) {
++                                return;
++                            }
+                             PlasmaLogin.GreeterState.clearPasswords();
+                             PlasmaLogin.SessionManagement.hibernate();
+                         }
+@@ -327,6 +363,11 @@ Item {
+                         text: i18ndc("plasma_login", "Suspend to RAM", "Sleep")
+                         visible: PlasmaLogin.SessionManagement.canSuspend
+                         onClicked: {
++                            // Ignore clicks while the UI is hidden (idle or right
++                            // after wake): they are stale input, not user intent.
++                            if (!loginScreenRoot.uiVisible) {
++                                return;
++                            }
+                             PlasmaLogin.GreeterState.clearPasswords();
+                             PlasmaLogin.SessionManagement.suspend();
+                         }

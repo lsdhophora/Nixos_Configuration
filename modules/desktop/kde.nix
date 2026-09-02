@@ -24,6 +24,15 @@ let
     plasma-workspace = [
       ./../../patches/plasma-workspace/jobitem-null-check.patch
     ];
+    # Greeter: revert to the fresh-start idle state on aboutToSuspend, so the
+    # first frame after wake shows no stale button highlight (hovered/active
+    # focus survive suspend; the compositor sends no pointer event to clear
+    # them). Same signal the lock screen uses. Also ignore action-button
+    # clicks while the UI is hidden, so stale input after wake cannot fire
+    # Sleep/Hibernate again.
+    plasma-login-manager = [
+      ./../../patches/plasma-login-manager/sleep-idle-across-suspend.patch
+    ];
     ark = [
       ./../../patches/ark/batchextract-desturl.patch
     ];
