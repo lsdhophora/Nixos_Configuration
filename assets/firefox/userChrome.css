@@ -22,3 +22,13 @@ panel[type="arrow"].panel-no-padding { transform: translateY(2px) !important; }
 html[windowtype="Toolkit:PictureInPicture"] #close {
   display: none !important;
 }
+
+/* Right-clicking a password field shows the browser-native
+   "Manage Passwords" context menu item. There is no about:config
+   switch for it (nsContextMenu sets it unconditionally), so hide it
+   together with its orphaned separator line; password filling is
+   handled by KeePassXC. */
+menuitem#manage-saved-logins,
+menuseparator#passwordmgr-items-separator {
+  display: none !important;
+}
