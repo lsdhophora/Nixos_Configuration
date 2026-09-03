@@ -117,6 +117,30 @@ in
       kdePackages =
         unstablePkgs.kdePackages // (repoLib.applyPatchesToSet kdePatches unstablePkgs.kdePackages);
     })
+    # Qt5 apps (for example keepassxc) get their file dialog from the Qt5
+    # plasma-integration platform theme, which embeds KFileWidget from the
+    # KF5 kio. In kio 5 every layout from KFileWidget up to the dialog
+    # wrapper uses zero contents margins, so the bottom grid that holds the
+    # Open/Cancel buttons leaves no gap at the dialog's right edge. Patch
+    # the KF5 kio the Qt5 plugin is built against and rebuild
+    # plasma-integration on top of it (the plugin links
+    # libKF5KIOFileWidgets at runtime, so a bare kio override would still
+    # load the old library through its RPATH).
+    (final: prev: {
+      kdePackages = prev.kdePackages // {
+        plasma-integration = prev.kdePackages.plasma-integration.override {
+          libsForQt5 = unstablePkgs.libsForQt5.overrideScope (
+            kf5Final: kf5Prev: {
+              __internalKF5 = kf5Prev.__internalKF5 // {
+                kio = applyPatches [
+                  ./../../patches/kio-qt5/kfilewidget-button-column-right-margin.patch
+                ] kf5Prev.__internalKF5.kio;
+              };
+            }
+          );
+        };
+      };
+    })
     # Dolphin and the file portal use the patched kio and the location-bar
     # fix. The plasma6 module pulls them from kdePackages, so the override
     # must patch the kdePackages entries (a top-level override does not reach

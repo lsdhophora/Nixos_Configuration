@@ -1,0 +1,20 @@
+--- a/src/filewidgets/kfilewidget.cpp	2026-09-03 18:20:40.792747139 +0800
++++ b/src/filewidgets/kfilewidget.cpp	2026-09-03 18:20:49.067071635 +0800
+@@ -1600,6 +1600,17 @@
+ 
+     m_lafBox = new QGridLayout();
+ 
++    // Every layout from the KFileWidget up to the platform file-dialog
++    // wrapper (m_boxLayout, m_vbox and the dialogs in plasma-integration /
++    // xdg-desktop-portal-kde) uses zero contents margins. The QGridLayout
++    // below has no explicit margins either, so the Open/Cancel button
++    // column (grid column 2) would sit flush against the dialog's right
++    // edge. Inset it with the style's standard layout margin.
++    m_lafBox->setContentsMargins(0,
++                                 0,
++                                 q->style()->pixelMetric(QStyle::PM_LayoutRightMargin),
++                                 0);
++
+     m_lafBox->addWidget(m_locationLabel, 0, 0, Qt::AlignVCenter | Qt::AlignRight);
+     m_lafBox->addWidget(m_locationEdit, 0, 1, Qt::AlignVCenter);
+     m_lafBox->addWidget(m_okButton, 0, 2, Qt::AlignVCenter);
