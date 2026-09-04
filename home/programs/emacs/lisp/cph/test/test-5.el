@@ -6,6 +6,11 @@
 (add-to-list 'load-path cph-test-repo)
 (require 'cph)
 
+;; The test server binds an ephemeral port (see run-tests.sh): the
+;; developer's Emacs may already hold the CPH default port 27121.
+(when-let ((port (getenv "CPH_TEST_PORT")))
+  (setq cph-port (string-to-number port)))
+
 (defvar cph-test-dir (or (getenv "CPH_TEST_DIR") "/tmp/cph-test"))
 (defvar test-failures 0)
 (defun assert-t (label cond)

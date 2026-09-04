@@ -16,6 +16,26 @@ trap 'rm -rf "$SCRATCH"' EXIT
 cp fixtures/problem.json "$SCRATCH/"
 export CPH_TEST_DIR="$SCRATCH"
 
+# Pick a free high port for the CPH server under test.  The developer's
+# Emacs may already listen on 27121 (the wire default), which would
+# make the bind in the tests fail.
+pick_port() {
+  if ! command -v ss >/dev/null 2>&1; then
+    echo 27122
+    return
+  fi
+  for _ in $(seq 1 30); do
+    local p=$((20000 + RANDOM % 40000))
+    if ! ss -ltn 2>/dev/null | grep -q ":$p "; then
+      echo "$p"
+      return
+    fi
+  done
+  echo 27122
+}
+CPH_TEST_PORT=$(pick_port)
+export CPH_TEST_PORT
+
 failures=0
 
 run_batch() {
