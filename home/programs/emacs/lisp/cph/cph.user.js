@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CPH Companion for Emacs
 // @namespace    https://github.com/lophophora
-// @version      0.2.0
+// @version      0.2.1
 // @description  Send competitive programming problems (Codeforces, AtCoder, Luogu, LibreOJ) to the Emacs CPH server. Clone of competitive-companion.
 // @author       lophophora
 // @match        https://codeforces.com/*
@@ -301,7 +301,8 @@
         onload: (r) => {
           let j = null;
           try { j = JSON.parse(r.responseText); } catch (e) { reject(e); return; }
-          if (r.status !== 200 || !j || j.error || !j.localizedContentsOfLocale) {
+          // The LOJ API answers successful POSTs with HTTP 201, not 200.
+          if ((r.status !== 200 && r.status !== 201) || !j || j.error || !j.localizedContentsOfLocale) {
             reject(new Error(j && j.error ? j.error : "LOJ API HTTP " + r.status));
             return;
           }

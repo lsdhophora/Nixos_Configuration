@@ -328,11 +328,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   });
 
   let apiCalls = [];
-  const routeGM = (apiResponse) => {
+  const routeGM = (apiResponse, status = 200) => {
     globalThis.GM_xmlhttpRequest = (opts) => {
       if (/api\.loj\.ac/.test(opts.url)) {
         apiCalls.push(opts);
-        opts.onload({ status: 200, responseText: JSON.stringify(apiResponse()) });
+        opts.onload({ status, responseText: JSON.stringify(apiResponse()) });
       } else {
         captured.push(opts);
         opts.onload({ status: 200, responseText: '{"empty":true}' });
@@ -360,6 +360,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   assertT("loj 1 test", loj.tests.length === 1);
   assertT("loj test io", loj.tests[0].input === "1 2" && loj.tests[0].output === "3");
   assertT("loj no localhost POST from parse", captured.length === 0);
+
+  // The LOJ API answers successful POSTs with HTTP 201, not 200.
+  reset();
+  captured.length = 0;
+  apiCalls = [];
+  globalThis.location = { hostname: "loj.ac", href: "https://loj.ac/p/1", pathname: "/p/1", search: "" };
+  routeGM(lojFixture, 201);
+  const loj201 = await C.parseLibreOJ();
+  assertT("loj api 201 ok", !!loj201 && loj201.tests.length === 1 && loj201.name === "A + B 问题");
 
   // Non-problem LibreOJ pages (e.g. the home page) parse to null.
   reset();

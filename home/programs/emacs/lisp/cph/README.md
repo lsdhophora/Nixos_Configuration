@@ -71,7 +71,7 @@ against Emacs** (`M-x cph-store-submit-problem` fills `S`).
 |---|---|
 | `cph.el` | Emacs side: HTTP server, problem fetch, judge buffer, compiler/runner |
 | `cph.user.js` | Tampermonkey userscript: site parsers + status widget + auto-send |
-| `test/` | TDD suite: `./run-tests.sh` (97 assertions, self-contained) |
+| `test/` | TDD suite: `./run-tests.sh` (98 assertions, self-contained) |
 
 ## Usage
 
