@@ -24,6 +24,7 @@
     ./desktop/session.nix
     ./desktop/lid-wake.nix
     ./desktop/kwin-myopic-defocus.nix
+    ./desktop/baloo-purge.nix
 
     # ---- Programs ----
     ./programs/emacs
