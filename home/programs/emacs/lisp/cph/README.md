@@ -8,7 +8,8 @@ competitive-companion browser extension.
 browser userscript (cph.user.js)                Emacs (cph.el)
 ┌────────────────────────────┐                 ┌──────────────────────────────┐
 │ Codeforces / AtCoder /     │   POST problem  │ HTTP server on 127.0.0.1:27121│
-│ Luogu problem page         │ ──────────────► │                              │
+│ Luogu / LibreOJ problem    │ ──────────────► │                              │
+│ pages (LibreOJ via API)    │                 │                              │
 │  · parse sample tests      │   problem JSON  │  · create solution file      │
 │  · floating status widget  │   (companion    │  · save .cph/.prob metadata  │
 │  · auto-send on page load  │    schema)      │  · open judge buffer         │
@@ -70,7 +71,7 @@ against Emacs** (`M-x cph-store-submit-problem` fills `S`).
 |---|---|
 | `cph.el` | Emacs side: HTTP server, problem fetch, judge buffer, compiler/runner |
 | `cph.user.js` | Tampermonkey userscript: site parsers + status widget + auto-send |
-| `test/` | TDD suite: `./run-tests.sh` (63 assertions, self-contained) |
+| `test/` | TDD suite: `./run-tests.sh` (97 assertions, self-contained) |
 
 ## Usage
 
@@ -108,10 +109,12 @@ judge, `C-c C-s` start server, `C-c C-k` stop.
 ### 2. Browser
 
 Install `cph.user.js` in Tampermonkey (Dashboard → Utilities → Import
-from file). Open a problem page on Codeforces, AtCoder or Luogu — it
-auto-sends once; the bottom-right widget shows the status
-(click it to re-send). Menu commands: re-send, change port, toggle
-auto-send.
+from file). Open a problem page on Codeforces, AtCoder, Luogu or LibreOJ.
+Codeforces / AtCoder / Luogu are read from the DOM; LibreOJ is a React
+SPA with no statement in the DOM, so the script downloads the problem
+from its public API (`api.loj.ac`) and sends it when the widget is
+clicked (bottom-right; click again to re-send).  Menu commands:
+re-send, change port, toggle auto-send.
 
 The userscript uses `GM_xmlhttpRequest`, which bypasses CORS and
 mixed-content blocking, so an HTTPS page can reach the local HTTP
@@ -135,7 +138,9 @@ already in the header.
 ## Supported sites & languages
 
 Sites: Codeforces (problemset/contest/gym), AtCoder (tasks), Luogu
-(both `.sample` layouts). Extend `SITES` in the userscript for more.
+(both `.sample` layouts), LibreOJ (`loj.ac/p/<id>`, problem downloaded
+from `api.loj.ac` because the page DOM carries no statement).  Extend
+`SITES` in the userscript for more.
 
 Languages: c, cpp/cc/cxx, py, rs, java, go, js, rb, hs. Compilers must
 be on `PATH`.

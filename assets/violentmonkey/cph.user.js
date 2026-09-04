@@ -1,14 +1,16 @@
 // ==UserScript==
 // @name         CPH Companion for Emacs
 // @namespace    https://github.com/lophophora
-// @version      0.1.1
-// @description  Send competitive programming problems (Codeforces, AtCoder, Luogu) to the Emacs CPH server. Clone of competitive-companion.
+// @version      0.2.0
+// @description  Send competitive programming problems (Codeforces, AtCoder, Luogu, LibreOJ) to the Emacs CPH server. Clone of competitive-companion.
 // @author       lophophora
 // @match        https://codeforces.com/*
 // @match        https://*.codeforces.com/*
 // @match        https://atcoder.jp/*
 // @match        https://www.luogu.com.cn/*
 // @match        https://luogu.com.cn/*
+// @match        https://loj.ac/*
+// @match        https://www.loj.ac/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -16,6 +18,7 @@
 // @grant        GM_notification
 // @connect      127.0.0.1
 // @connect      localhost
+// @connect      api.loj.ac
 // @run-at       document-idle
 // @noframes
 // @license      GPL-3.0-or-later
@@ -52,6 +55,7 @@
     { name: "codeforces", match: /codeforces\.com/, parse: parseCodeforces },
     { name: "atcoder", match: /atcoder\.jp/, parse: parseAtCoder },
     { name: "luogu", match: /luogu\.com\.cn/, parse: parseLuogu },
+    { name: "libreoj", match: /(^|\.)loj\.ac$/, parse: parseLibreOJ },
   ];
 
   const state = {
@@ -229,6 +233,61 @@
     });
   }
 
+  /* -------------------------------------------------------------- LibreOJ */
+
+  // LibreOJ 4 (loj.ac) is a React SPA: the problem page DOM carries no
+  // statement or samples, so scrape nothing.  Ask the public API
+  // (api.loj.ac) directly - the same JSON the page itself renders.
+  function parseLibreOJ() {
+    const m = location.pathname.match(/^\/(?:p|problem)\/(\d+)\/?$/);
+    if (!m) return null;
+    return fetchLibreOJProblem(Number(m[1]));
+  }
+
+  function fetchLibreOJProblem(displayId) {
+    const nav = typeof navigator !== "undefined" ? navigator.language || "" : "";
+    const english = /(^|[?&])(lang|locale|hl)=en/i.test(location.search) || /^en/i.test(nav);
+    const locale = english ? "en_US" : "zh_CN";
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: "POST",
+        url: "https://api.loj.ac/api/problem/getProblem",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({
+          displayId,
+          samples: true,
+          judgeInfo: true,
+          localizedContentsOfLocale: locale,
+        }),
+        timeout: 8000,
+        onload: (r) => {
+          let j = null;
+          try { j = JSON.parse(r.responseText); } catch (e) { reject(e); return; }
+          if (r.status !== 200 || !j || j.error || !j.localizedContentsOfLocale) {
+            reject(new Error(j && j.error ? j.error : "LOJ API HTTP " + r.status));
+            return;
+          }
+          const content = j.localizedContentsOfLocale;
+          const judge = j.judgeInfo || {};
+          const tests = (Array.isArray(j.samples) ? j.samples : []).map((s) => ({
+            input: s.inputData == null ? "" : String(s.inputData),
+            output: s.outputData == null ? "" : String(s.outputData),
+          }));
+          resolve(buildProblem({
+            name: content.title || String(displayId),
+            group: "LibreOJ",
+            interactive: false,
+            memoryLimit: judge.memoryLimit || 256,
+            timeLimit: judge.timeLimit || 2000,
+            tests,
+          }));
+        },
+        onerror: () => reject(new Error("LOJ API unreachable")),
+        ontimeout: () => reject(new Error("LOJ API timed out")),
+      });
+    });
+  }
+
   /* ---------------------------------------------------------------- common */
 
   function buildProblem(p) {
@@ -266,7 +325,8 @@
 
   // Manual send only: the user picks "Send problem to Emacs" from the
   // userscript menu.  No auto-send, no retries - a failed attempt just
-  // reports the status.
+  // reports the status.  Parsers are synchronous except LibreOJ, which
+  // returns a Promise (API fetch); the POST fires once downloaded.
   function sendProblem() {
     const site = state.site || detectSite();
     if (!site) {
@@ -280,6 +340,22 @@
       notify("CPH: parse error: " + err.message);
       return;
     }
+    if (problem && typeof problem.then === "function") {
+      if (state.sending) return;
+      state.sending = true;
+      problem.then((p) => {
+        if (!p || !p.tests.length) {
+          state.sending = false;
+          notify("CPH: no sample tests found on this page");
+          return;
+        }
+        postProblem(p);
+      }, (err) => {
+        state.sending = false;
+        notify("CPH: parse error: " + err.message);
+      });
+      return;
+    }
     if (!problem || !problem.tests.length) {
       notify("CPH: no sample tests found on this page");
       return;
@@ -287,6 +363,10 @@
     if (state.sending) return;
     state.sending = true;
 
+    postProblem(problem);
+  }
+
+  function postProblem(problem) {
     GM_xmlhttpRequest({
       method: "POST",
       url: "http://" + CONFIG.host + ":" + CONFIG.port + "/",
@@ -349,6 +429,7 @@
     parseCodeforces,
     parseAtCoder,
     parseLuogu,
+    parseLibreOJ,
     buildProblem,
     sendProblem,
     maybeInit,

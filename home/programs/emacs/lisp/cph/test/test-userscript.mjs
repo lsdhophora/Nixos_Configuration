@@ -308,10 +308,100 @@ const w2 = body.getElementById("cph-emacs-widget");
 w2.listeners.click[0](); // failed manual click
 assertT("failed click sends once", captured.length === 1);
 
-setTimeout(() => {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+(async () => {
+  // Delayed part of the manual-only flow: nothing may auto-retry.
+  await sleep(2500);
   assertT("no auto retry after failure", captured.length === 1);
   const w = body.getElementById("cph-emacs-widget");
   assertT("widget at bottom-left", !!w && /left:12px/.test(w.style.cssText) && !/right:12px/.test(w.style.cssText));
+
+  /* ---------------- LibreOJ: direct API download (SPA, no DOM) ---------- */
+
+  const lojFixture = () => ({
+    meta: { id: 1, displayId: 1, type: "Traditional", locales: ["zh_CN", "en_US"], isPublic: true },
+    localizedContentsOfLocale: { locale: "zh_CN", title: "A + B 问题" },
+    samples: [{ inputData: "1 2", outputData: "3" }],
+    judgeInfo: { timeLimit: 2000, memoryLimit: 512, runSamples: true },
+    submittable: true,
+  });
+
+  let apiCalls = [];
+  const routeGM = (apiResponse) => {
+    globalThis.GM_xmlhttpRequest = (opts) => {
+      if (/api\.loj\.ac/.test(opts.url)) {
+        apiCalls.push(opts);
+        opts.onload({ status: 200, responseText: JSON.stringify(apiResponse()) });
+      } else {
+        captured.push(opts);
+        opts.onload({ status: 200, responseText: '{"empty":true}' });
+      }
+    };
+  };
+
+  // parseLibreOJ returns a Promise that resolves to the companion schema.
+  reset();
+  captured.length = 0;
+  apiCalls = [];
+  globalThis.location = { hostname: "loj.ac", href: "https://loj.ac/p/1", pathname: "/p/1", search: "" };
+  routeGM(lojFixture);
+  const loj = await C.parseLibreOJ();
+  assertT("loj parsed", !!loj);
+  assertT("loj api POST", apiCalls.length === 1 && apiCalls[0].method === "POST");
+  assertT("loj api url", apiCalls[0].url === "https://api.loj.ac/api/problem/getProblem");
+  const lojReq = JSON.parse(apiCalls[0].data);
+  assertT("loj api displayId", lojReq.displayId === 1);
+  assertT("loj api asks samples+judgeInfo", lojReq.samples === true && lojReq.judgeInfo === true);
+  assertT("loj name", loj.name === "A + B 问题");
+  assertT("loj group", loj.group === "LibreOJ");
+  assertT("loj url", loj.url === "https://loj.ac/p/1");
+  assertT("loj limits", loj.timeLimit === 2000 && loj.memoryLimit === 512);
+  assertT("loj 1 test", loj.tests.length === 1);
+  assertT("loj test io", loj.tests[0].input === "1 2" && loj.tests[0].output === "3");
+  assertT("loj no localhost POST from parse", captured.length === 0);
+
+  // Non-problem LibreOJ pages (e.g. the home page) parse to null.
+  reset();
+  captured.length = 0;
+  apiCalls = [];
+  globalThis.location = { hostname: "loj.ac", href: "https://loj.ac/", pathname: "/", search: "" };
+  assertT("loj home null", (await C.parseLibreOJ()) === null);
+
+  // Full flow: widget click downloads from api.loj.ac, then POSTs to Emacs.
+  reset();
+  captured.length = 0;
+  apiCalls = [];
+  globalThis.location = { hostname: "loj.ac", href: "https://loj.ac/p/3", pathname: "/p/3", search: "" };
+  routeGM(() => ({ ...lojFixture(), meta: { ...lojFixture().meta, displayId: 3 } }));
+  C.maybeAutoSend();
+  body.getElementById("cph-emacs-widget").listeners.click[0]();
+  await sleep(20);
+  assertT("loj click POSTs once to Emacs", captured.length === 1);
+  assertT("loj click POST url", captured[0].url === "http://127.0.0.1:27121/");
+  const lojSent = JSON.parse(captured[0].data);
+  assertT("loj sent name", lojSent.name === "A + B 问题");
+  assertT("loj sent group", lojSent.group === "LibreOJ");
+  assertT("loj sent 1 test", lojSent.tests.length === 1);
+
+  // API failure (e.g. a non-public problem) reports and sends nothing.
+  reset();
+  captured.length = 0;
+  apiCalls = [];
+  globalThis.location = { hostname: "loj.ac", href: "https://loj.ac/p/1000", pathname: "/p/1000", search: "" };
+  globalThis.GM_xmlhttpRequest = (opts) => {
+    if (/api\.loj\.ac/.test(opts.url)) {
+      apiCalls.push(opts);
+      opts.onload({ status: 403, responseText: '{"error":"PERMISSION_DENIED"}' });
+    } else {
+      captured.push(opts);
+    }
+  };
+  C.maybeAutoSend();
+  body.getElementById("cph-emacs-widget").listeners.click[0]();
+  await sleep(20);
+  assertT("loj api error POSTs nothing", captured.length === 0);
+
   console.log(failures === 0 ? "ALL USERScript TESTS PASS" : `USERScript FAILURES: ${failures}`);
   process.exit(failures === 0 ? 0 : 1);
-}, 2500);
+})();
