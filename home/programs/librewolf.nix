@@ -44,6 +44,13 @@
         # API, so this is the only way to avoid a save dialog per file.
         "browser.download.useDownloadDir" = true;
         "browser.startup.homepage" = "about:home";
+        # Restore the previous session (open tabs/windows) on startup.
+        # The profile dir (~/.librewolf) is bind-mounted from /persist, so
+        # sessionstore data survives reboots; sessionstore backups are also
+        # written every 15 s, so an unclean poweroff loses at most that
+        # window (crash recovery restores the last backup).
+        "browser.startup.page" = 3;
+        "browser.sessionstore.resume_from_crash" = true;
         # New tab page state: no top sites, no sponsored content, no wallpaper.
         "browser.newtabpage.activity-stream.feeds.topsites" = false;
         "browser.newtabpage.activity-stream.showSponsored" = false;
