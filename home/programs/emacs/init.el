@@ -98,11 +98,14 @@
                  '(nix-mode . ("nixd" "--inlay-hints=false")))))
 
 (use-package rust-ts-mode
-  ;; Deferred: rust-ts-mode is built into Emacs and already registers
-  ;; .rs in auto-mode-alist, so the block loads on the first Rust
-  ;; buffer.  The rust tree-sitter grammar, rust-analyzer and rustfmt
-  ;; come from the nix profile (home/packages.nix + files.nix).
+  ;; Deferred: rust-ts-mode is built into Emacs.  Unlike C/C++/LaTeX,
+  ;; it does NOT register .rs in auto-mode-alist itself, so the mapping
+  ;; is added by hand here (:init runs when init.el loads).  The rust
+  ;; tree-sitter grammar, rust-analyzer and rustfmt come from the nix
+  ;; profile (home/packages.nix + files.nix).
   :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-ts-mode))
   :hook
   (rust-ts-mode . eglot-ensure)
   (rust-ts-mode . corfu-mode)
