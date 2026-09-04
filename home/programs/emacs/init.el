@@ -114,7 +114,104 @@
   ;; rust-analyzer formats through rustfmt; eglot may still be deferred
   ;; when rust-ts-mode loads, so register the server once eglot loads.
   (with-eval-after-load 'eglot
-    (add-to-list 'eglot-server-programs '(rust-ts-mode . ("rust-analyzer")))))
+    (add-to-list 'eglot-server-programs '(rust-ts-mode . ("rust-analyzer")))
+
+    ;; rust-analyzer has no cargo-less folder mode: with a folder root
+    ;; and no Cargo.toml it reports "Failed to discover workspace" and
+    ;; serves nothing.  The supported standalone path is LSP detached
+    ;; files: the client starts the server without workspace folders
+    ;; and lists the file in the `detachedFiles' initialization option.
+    ;; Eglot always sends a workspace folder, so these advices emulate
+    ;; detached mode when the rust buffer has no cargo project above
+    ;; it.  Real cargo projects keep the normal path.
+    (defun my/rust-cargo-root ()
+      "Return the nearest dir with Cargo.toml or rust-project.json."
+      (or (locate-dominating-file default-directory "Cargo.toml")
+          (locate-dominating-file default-directory "rust-project.json")))
+
+    (defun my/rust-standalone-p ()
+      "Non-nil for a rust buffer outside any cargo project."
+      (and (buffer-file-name)
+           (derived-mode-p 'rust-ts-mode)
+           (not (my/rust-cargo-root))))
+
+    (defun my/eglot-workspace-folders (folders &rest _)
+      "Adapt the workspace folders for rust buffers.
+Standalone rust buffers (CPH solution files, no cargo project above)
+get no folder, which makes rust-analyzer use detached-file mode.
+Rust buffers inside a cargo project get the cargo root as their
+folder, even when eglot's project root is a parent git root."
+      (cond
+       ((my/rust-standalone-p) [])
+       ((and (derived-mode-p 'rust-ts-mode)
+             (buffer-file-name)
+             (my/rust-cargo-root))
+        (let ((dir (my/rust-cargo-root)))
+          (vector (list :uri (eglot-path-to-uri dir)
+                        :name (file-name-nondirectory
+                               (directory-file-name dir))))))
+       (t folders)))
+    (advice-add 'eglot-workspace-folders :filter-return
+                #'my/eglot-workspace-folders)
+
+    (defun my/eglot-initialization-options (fn server)
+      "List the current file as a detached file for standalone rust."
+      (let ((base (funcall fn server)))
+        (if (my/rust-standalone-p)
+            (let ((f (buffer-file-name)))
+              (when f
+                ;; Marker for the noise filter (kept on the server, not
+                ;; in the options we send to rust-analyzer).
+                (setf (eglot--saved-initargs server)
+                      (plist-put (eglot--saved-initargs server)
+                                 :my-standalone-rust t))
+                ;; eglot--{} is a hash table (jsonrpc keys must be
+                ;; strings); a per-server :initializationOptions entry
+                ;; is a plist (keyword keys are fine there).
+                (if (hash-table-p base)
+                    (puthash "detachedFiles" (vector f) base)
+                  (plist-put base :detachedFiles (vector f))))
+              base)
+          base)))
+    (advice-add 'eglot-initialization-options :around
+                #'my/eglot-initialization-options)
+
+    (defun my/rust-server-standalone-p (server)
+      "Non-nil when SERVER serves a rust project without cargo."
+      (let ((root (ignore-errors (project-root (eglot--project server)))))
+        (and root
+             (not (locate-dominating-file root "Cargo.toml"))
+             (not (locate-dominating-file root "rust-project.json")))))
+
+    ;; Standalone rust-analyzer still tries `cargo check' once at
+    ;; startup (no manifest: two warnings) and its folder-mode errors
+    ;; are meaningless in detached mode.  Hide those specific messages
+    ;; for servers we started as standalone rust, so detached rust
+    ;; buffers do not spam *Messages*.
+    (defun my/eglot-hide-rust-noise (fn server method &rest params)
+      "Suppress known rust-analyzer noise for standalone rust servers."
+      (let* ((msg (and (stringp (plist-get params :message))
+                       (plist-get params :message)))
+             (noise (and msg
+                         (string-match-p
+                          "Failed to discover workspace\\|Failed to load workspaces\\|Cargo watcher failed"
+                          msg)))
+             (standalone (or (plist-get (ignore-errors
+                                          (eglot--saved-initargs server))
+                                        :my-standalone-rust)
+                             (my/rust-server-standalone-p server)))
+             ;; After eglot-shutdown the server's project is gone, so a
+             ;; late duplicate may not be tagged as standalone.  Drop
+             ;; those warning-level (type 2) duplicates too; real
+             ;; error-level (type 1) reports stay visible.
+             (warn-only (eq (plist-get params :type) 2)))
+        (if (and (eq method 'window/showMessage)
+                 noise
+                 (or standalone warn-only))
+            nil
+          (apply fn server method params))))
+    (advice-add 'eglot-handle-notification :around
+                #'my/eglot-hide-rust-noise)))
 
 (defcustom my/git-reviewers '("lsdhophora" "ai")
   "Names allowed to approve commits.  \"ai\" skips the human gate
