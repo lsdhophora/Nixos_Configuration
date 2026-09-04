@@ -81,6 +81,15 @@ nil means: infer from the current buffer, else ask."
   :type '(choice (const :tag "Ask" nil) string)
   :group 'cph)
 
+(defcustom cph-site-languages nil
+  "Default language per problem site.
+An alist of (REGEXP . LANGUAGE) pairs.  The REGEXP matches the
+problem URL; the first match picks LANGUAGE, which overrides
+`cph-default-language'.  Example: (\"loj\\\\.ac\" . \"rs\") makes every
+LibreOJ problem default to Rust."
+  :type '(alist :key-type regexp :value-type string)
+  :group 'cph)
+
 (defcustom cph-template-file nil
   "Template file for new solution files.
 The literal text `$CURSOR_PLACEHOLDER` (if present) is removed and the
@@ -426,9 +435,20 @@ the numeric problem id (e.g. 1000)."
   (let ((ext (file-name-extension src)))
     (and ext (member ext (mapcar #'car cph-languages)) ext)))
 
-(defun cph--choose-language ()
-  "Choose the language for a new problem."
-  (or cph-default-language
+(defun cph--language-for-site (problem)
+  "Return the site-mapped language for PROBLEM, or nil.
+Match the problem URL against `cph-site-languages'."
+  (let ((url (or (cph--get "url" problem) "")))
+    (cl-loop for (pattern . lang) in cph-site-languages
+             when (string-match pattern url) return lang)))
+
+(defun cph--choose-language (problem)
+  "Choose the language for a new PROBLEM.
+Preference order: a site rule from `cph-site-languages', then
+`cph-default-language', then the current buffer's file extension,
+then ask the user."
+  (or (cph--language-for-site problem)
+      cph-default-language
       (and (buffer-file-name)
            (cph--language-for-src (buffer-file-name)))
       (let ((choice (completing-read "Language: "
@@ -486,7 +506,7 @@ Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
 
 (defun cph--handle-problem (problem)
   "Handle a problem JSON alist from the companion server."
-  (let* ((lang (cph--choose-language))
+  (let* ((lang (cph--choose-language problem))
          (name (cph--get "name" problem))
          (dir (cph--solution-dir))
          (src (expand-file-name (cph--problem-file-name problem lang) dir)))

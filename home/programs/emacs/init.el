@@ -331,6 +331,9 @@ commit when the name is not in `my/git-reviewers'."
 (add-to-list 'load-path (expand-file-name "cph" user-emacs-directory))
 (require 'cph)
 (setq cph-default-language "cpp")
+;; LibreOJ problems are solved in Rust, other sites keep the C++
+;; default.  Match on the URL, first rule wins.
+(setq cph-site-languages '(("loj\\.ac" . "rs")))
 (setq cph-naming-style (quote title))
 (setq cph-timeout 3000)
 ;; Start the problem-fetch server.  Ignore failure: the port may already

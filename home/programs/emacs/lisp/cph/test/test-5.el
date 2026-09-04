@@ -45,6 +45,18 @@
             (string= (cph--problem-file-name '(("name" . "Placing Marbles")) "cpp")
                      "Placing_Marbles.cpp")))
 
+;; --- unit: per-site default language (cph-site-languages) ---
+(let ((cph-default-language "cpp"))
+  (assert-t "no site rule keeps default"
+            (string= (cph--choose-language '(("url" . "https://loj.ac/p/1"))) "cpp"))
+  (let ((cph-site-languages '(("loj\\.ac" . "rs"))))
+    (assert-t "site rule maps LibreOJ to rs"
+              (string= (cph--choose-language '(("url" . "https://loj.ac/p/1"))) "rs"))
+    (assert-t "site rule maps legacy LOJ URL"
+              (string= (cph--choose-language '(("url" . "https://loj.ac/problem/1"))) "rs"))
+    (assert-t "site rule keeps default for other sites"
+              (string= (cph--choose-language '(("url" . "https://codeforces.com/problemset/problem/4/A"))) "cpp"))))
+
 ;; --- unit: .prob round trip ---
 (let* ((src (expand-file-name "roundtrip/X.cpp" cph-test-dir))
        (problem '(("name" . "X") ("url" . "https://codeforces.com/problemset/problem/1/X")

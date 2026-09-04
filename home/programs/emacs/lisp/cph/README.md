@@ -71,7 +71,7 @@ against Emacs** (`M-x cph-store-submit-problem` fills `S`).
 |---|---|
 | `cph.el` | Emacs side: HTTP server, problem fetch, judge buffer, compiler/runner |
 | `cph.user.js` | Tampermonkey userscript: site parsers + status widget + auto-send |
-| `test/` | TDD suite: `./run-tests.sh` (98 assertions, self-contained) |
+| `test/` | TDD suite: `./run-tests.sh` (102 assertions, self-contained) |
 
 ## Usage
 
@@ -128,6 +128,7 @@ already in the header.
 | `cph-port` | 27121 | server port (CPH-compatible) |
 | `cph-host` | 127.0.0.1 | listen interface |
 | `cph-default-language` | nil | e.g. `"cpp"`; nil = infer/ask |
+| `cph-site-languages` | nil | per-site language rules, e.g. `(("loj\\.ac" . "rs"))` |
 | `cph-template-file` | nil | template with `$CURSOR_PLACEHOLDER` |
 | `cph-timeout` | 3000 | per-test timeout in ms |
 | `cph-online-judge` | nil | define `ONLINE_JUDGE` at compile |
