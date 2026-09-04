@@ -559,8 +559,12 @@ Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
       (setq err (with-current-buffer buf (buffer-string)))
       (kill-buffer buf))
     (if (zerop code)
-        (cons (list bin)
-              (lambda () (unless cph-keep-binaries (delete-file bin))))
+        (progn
+          ;; A successful compile clears any stale error text so the
+          ;; judge buffer does not keep a previous failure forever.
+          (setq cph--last-compile-error nil)
+          (cons (list bin)
+                (lambda () (unless cph-keep-binaries (delete-file bin)))))
       (setq cph--last-compile-error
             (format "%s failed:\n%s" compiler err))
       nil)))
@@ -579,6 +583,7 @@ Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
     (if (zerop code)
         (let ((class (file-name-sans-extension
                       (file-name-nondirectory src))))
+          (setq cph--last-compile-error nil)
           (cons (append (list "java")
                         (when cph-online-judge '("-DONLINE_JUDGE"))
                         (list "-cp" dir class))
@@ -600,8 +605,10 @@ Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
       (setq err (with-current-buffer buf (buffer-string)))
       (kill-buffer buf))
     (if (zerop code)
-        (cons (list bin)
-              (lambda () (unless cph-keep-binaries (delete-file bin))))
+        (progn
+          (setq cph--last-compile-error nil)
+          (cons (list bin)
+                (lambda () (unless cph-keep-binaries (delete-file bin)))))
       (setq cph--last-compile-error err)
       nil)))
 
@@ -878,7 +885,9 @@ Return a list of (status . line) with status match|extra|missing."
   (save-some-buffers t)
   (let* ((src (cph--get "srcPath" cph--problem))
          (lang (cph--language-for-src src)))
-    (setq cph--stopped nil cph--results nil cph--running t)
+    (setq cph--stopped nil cph--results nil cph--running t
+          ;; Drop a stale compile-error block on every run request.
+          cph--last-compile-error nil)
     (cph--render-judge)
     (pcase (cph--compile src lang)
       (`(,cmd . ,cleanup)
@@ -914,6 +923,7 @@ Return a list of (status . line) with status match|extra|missing."
     (save-some-buffers t)
     (let* ((src (cph--get "srcPath" cph--problem))
            (lang (cph--language-for-src src)))
+      (setq cph--last-compile-error nil)
       (pcase (cph--compile src lang)
         (`(,cmd . ,cleanup)
          (cph--set-result id (list :status 'running))

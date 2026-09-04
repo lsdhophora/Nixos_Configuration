@@ -84,7 +84,30 @@
   (let ((res (run-all-and-get-results)))
     (assert-t "timeout detected"
               (and (plist-get (nth 0 res) :timed-out)
-                   (not (plist-get (nth 0 res) :pass))))))
+                   (not (plist-get (nth 0 res) :pass)))))
+
+  ;; 4) a compile error is shown, and the next run clears it again
+  (write-src src "int main( { syntax error here }\n")
+  (let ((res (run-all-and-get-results)))
+    (assert-t "compile error: no results" (null res))
+    (assert-t "compile error shown"
+              (with-current-buffer cph--judge-buffer
+                (string-match-p "Compile error" (buffer-string)))))
+  (write-src src
+             "#include <bits/stdc++.h>\n"
+             "using namespace std;\n"
+             "int main(){\n"
+             "long long n,m,a; cin>>n>>m>>a;\n"
+             "cout<<((n+a-1)/a)*((m+a-1)/a)<<endl;\n"
+             "}\n")
+  (let ((res (run-all-and-get-results)))
+    (assert-t "fixed solution passes again"
+              (and (= (length res) 2)
+                   (plist-get (nth 0 res) :pass)
+                   (plist-get (nth 1 res) :pass)))
+    (assert-t "stale compile error cleared"
+              (not (with-current-buffer cph--judge-buffer
+                     (string-match-p "Compile error" (buffer-string)))))))
 
 (princ (format "TOTAL FAILURES: %d\n" test-failures))
 (kill-emacs (if (> test-failures 0) 1 0))
