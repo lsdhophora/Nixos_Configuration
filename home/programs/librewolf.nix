@@ -87,8 +87,8 @@
   };
 
   # Native messaging hosts (Plasma browser integration + keepassxc).
-  # firefoxpwa was removed: PWA install is declarative via home/programs/firefoxpwa.nix
-  # (no browser extension), so no native messaging host is needed.
+  # firefoxpwa is dropped entirely: the pixiv PWA launcher never opened, so
+  # no firefoxpwa native messaging host is needed either.
   mozilla.librewolfNativeMessagingHosts = [
     pkgs.kdePackages.plasma-browser-integration
     pkgs.keepassxc

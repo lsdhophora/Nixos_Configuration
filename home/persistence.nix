@@ -25,7 +25,6 @@
       ".local/share/org.localsend.localsend_app"
       ".local/share/Shortwave"
       ".local/share/emacs"
-      ".local/share/firefoxpwa"
       ".local/share/fcitx5"
       ".local/share/gh"
       ".local/share/nix"
