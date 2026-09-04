@@ -40,6 +40,10 @@ implement the gate:
   `.git/ai-commit-msg.draft` after staging the changes. Write a fresh
   draft for every commit: the draft is deleted after each successful
   commit, so a missing draft opens a blank commit buffer.
+- **Reviewer line** — the AI writes the `Reviewed-by` trailer only for
+  its own commits (`Reviewed-by: ai` when the user asked the AI to
+  commit).  In every other case the draft ends without a `Reviewed-by`
+  line: the human enters the reviewer name at the Magit gate prompt.
 - **Magit gate** — `my/magit-review-gate` in `home/programs/emacs/init.el`
   inserts the draft into the commit buffer on open. At `C-c C-c` the
   gate asks for the reviewer name; without a valid name (whitelist
@@ -57,9 +61,9 @@ default.  It stages the changes and writes the message draft, then stops
 for human review.  Only when the user explicitly asks it to (e.g.
 "你自己 commit 和 push") may the AI commit and push, using the
 `Reviewed-by: ai` trailer, which both the Magit gate (enter `ai` at the
-prompt) and the git hook accept.  Human-reviewed commits use
-`Reviewed-by: lsdhophora`.  Either trailer keeps the audit trail in git
-history; use the human name for anything non-trivial.
+prompt) and the git hook accept.  Either trailer keeps the audit trail
+in git history.  The AI never pre-fills a human reviewer name; the
+human types it at the gate prompt.
 
 Run `just install-hooks` once per clone to enable the git hook. Do not
 use `git commit --no-verify` (or magit `-n`): that bypasses the gate.
