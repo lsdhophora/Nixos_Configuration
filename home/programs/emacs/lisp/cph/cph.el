@@ -386,7 +386,8 @@ submit-state JSON, header `cph-submit: true` drains the submit state."
 (defun cph--short-name (problem)
   "Return the short problem name for the filename, mirroring CPH.
 Codeforces: contest+letter (e.g. 1234A).  AtCoder: contest+task
-(e.g. abc123a).  Luogu: the problem id (e.g. P1001)."
+(e.g. abc123a).  Luogu: the problem id (e.g. P1001).  LibreOJ:
+the numeric problem id (e.g. 1000)."
   (let ((url (or (cph--get "url" problem) "")))
     (cond
      ((string-match "/\\(?:contest\\|gym\\)/\\([0-9]+\\)/problem/\\([A-Za-z0-9]+\\)" url)
@@ -398,6 +399,8 @@ Codeforces: contest+letter (e.g. 1234A).  AtCoder: contest+task
      ((string-match "/tasks/\\([A-Za-z0-9]+\\)_\\([A-Za-z0-9]+\\)" url)
       (concat (match-string 1 url) (match-string 2 url)))
      ((string-match "luogu\\.com\\.cn/problem/\\([A-Za-z0-9]+\\)" url)
+      (match-string 1 url))
+     ((string-match "loj\\.ac/\\(?:p\\|problem\\)/\\([0-9]+\\)" url)
       (match-string 1 url))
      (t (cph--slugify (cph--get "name" problem))))))
 

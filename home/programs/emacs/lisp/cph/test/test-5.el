@@ -19,6 +19,8 @@
 (assert-t "cf problemset" (string= (cph--short-name '(("url" . "https://codeforces.com/problemset/problem/4/A"))) "4A"))
 (assert-t "atcoder" (string= (cph--short-name '(("url" . "https://atcoder.jp/contests/abc123/tasks/abc123_a"))) "abc123a"))
 (assert-t "luogu" (string= (cph--short-name '(("url" . "https://www.luogu.com.cn/problem/P1001"))) "P1001"))
+(assert-t "libreoj" (string= (cph--short-name '(("url" . "https://loj.ac/p/1000"))) "1000"))
+(assert-t "libreoj legacy" (string= (cph--short-name '(("url" . "https://loj.ac/problem/1"))) "1"))
 (assert-t "generic slug"
           (string= (cph--short-name '(("url" . "https://example.com/x") ("name" . "A. Weird Name!")))
                    "a_weird_name_"))
