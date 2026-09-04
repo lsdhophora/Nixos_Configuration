@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   repoLib,
   ...
 }:
@@ -25,6 +26,14 @@
       sourcePrefix = "home/programs/emacs/lisp/cph/";
       paths = [ "cph.el" ];
     })
+    # rust tree-sitter grammar for rust-ts-mode.  Emacs looks for
+    # libtree-sitter-rust.so under ~/.config/emacs/tree-sitter/; the
+    # nixpkgs grammar ships it as $out/parser (a DSO with the same
+    # content), so link it under the name Emacs expects.
+    {
+      ".config/emacs/tree-sitter/libtree-sitter-rust.so".source =
+        "${pkgs.tree-sitter-grammars.tree-sitter-rust}/parser";
+    }
 
     # Placeholders (managed by Emacs itself)
     {

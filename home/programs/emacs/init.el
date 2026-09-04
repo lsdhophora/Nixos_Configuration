@@ -97,6 +97,22 @@
     (add-to-list 'eglot-server-programs
                  '(nix-mode . ("nixd" "--inlay-hints=false")))))
 
+(use-package rust-ts-mode
+  ;; Deferred: rust-ts-mode is built into Emacs and already registers
+  ;; .rs in auto-mode-alist, so the block loads on the first Rust
+  ;; buffer.  The rust tree-sitter grammar, rust-analyzer and rustfmt
+  ;; come from the nix profile (home/packages.nix + files.nix).
+  :defer t
+  :hook
+  (rust-ts-mode . eglot-ensure)
+  (rust-ts-mode . corfu-mode)
+  (before-save . (lambda () (when (eq major-mode 'rust-ts-mode) (eglot-format-buffer))))
+  :config
+  ;; rust-analyzer formats through rustfmt; eglot may still be deferred
+  ;; when rust-ts-mode loads, so register the server once eglot loads.
+  (with-eval-after-load 'eglot
+    (add-to-list 'eglot-server-programs '(rust-ts-mode . ("rust-analyzer")))))
+
 (defcustom my/git-reviewers '("lsdhophora" "ai")
   "Names allowed to approve commits.  \"ai\" skips the human gate
 (used for AI self-reviewed commits); other names are human reviews."
