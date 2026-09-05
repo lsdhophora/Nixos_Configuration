@@ -1,7 +1,7 @@
 { ... }:
 # General home persistence (impermanence).
 # /home is tmpfs; only these paths are bind-mounted from /persist/home/FeiHsueh.
-# KDE-specific entries live in ./persistence-kde.nix (merged into the same key).
+# KDE-specific entries live in ./kde/persistence-kde.nix (merged into the same key).
 {
   home.persistence."/persist" = {
     directories = [

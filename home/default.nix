@@ -17,14 +17,13 @@
     ./misc/gui.nix
     ./packages.nix
 
-    # ---- Desktop ----
+    # ---- KDE / Plasma (per-module toggles in ./kde/default.nix) ----
+    ./kde
+
+    # ---- Desktop (non-KDE) ----
     ./desktop/dconf.nix
     ./desktop/gtk.nix
-    ./desktop/plasma.nix
     ./desktop/session.nix
-    ./desktop/lid-wake.nix
-    ./desktop/kwin-myopic-defocus.nix
-    ./desktop/baloo-purge.nix
 
     # ---- Programs ----
     ./programs/emacs

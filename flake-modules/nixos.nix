@@ -44,7 +44,7 @@ in
           imports = [
             ../home/default.nix
             ../home/persistence.nix
-            ../home/persistence-kde.nix
+            ../home/kde/persistence-kde.nix
             inputs.plasma-manager.homeModules.plasma-manager
           ];
         };

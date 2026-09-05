@@ -68,7 +68,7 @@ Before you commit, check:
 - home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
-- Plasma panel/Task Manager pins are declarative via plasma-manager (`home/desktop/plasma.nix`): `plasma-org.kde.plasma.desktop-appletsrc` is regenerated on every Plasma startup and NOT persisted (KConfig atomic writes would fail on a single-file bind mount). Change pins by editing the module + `home-manager switch`, not via UI.
+- Plasma panel/Task Manager pins are declarative via plasma-manager (`home/kde/plasma.nix`): `plasma-org.kde.plasma.desktop-appletsrc` is regenerated on every Plasma startup and NOT persisted (KConfig atomic writes would fail on a single-file bind mount). Change pins by editing the module + `home-manager switch`, not via UI.
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
 - Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`

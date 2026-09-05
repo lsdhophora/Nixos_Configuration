@@ -8,7 +8,7 @@
   #      qdbus evaluateScript
   # Therefore this file regenerates on every start and does not need
   # persistence. It was removed from the files list in
-  # home/persistence-kde.nix.
+  # persistence-kde.nix (same directory).
   #
   # UI changes (unpin, drag widgets) are overwritten on the next start.
   # To change pins, edit this file + `home-manager switch --flake .#FeiHsueh`.
