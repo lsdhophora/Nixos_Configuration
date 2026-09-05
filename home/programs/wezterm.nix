@@ -85,11 +85,11 @@ in
       # resize_window, close_window.
       keys = lib.generators.mkLuaInline ''
         {
-          { key = "Enter",     mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
-          -- SplitVertical on the physical Backslash key: key = "\\" matches the
+          { key = "Enter",     mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+          -- SplitHorizontal on the physical Backslash key: key = "\\" matches the
           -- shifted char "|" instead, so the binding never fires on US layouts.
           -- "Backslash" matches the physical key regardless of shift state.
-          { key = "Backslash", mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+          { key = "Backslash", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
           { key = "h",         mods = "CTRL|SHIFT", action = wezterm.action.ActivatePaneDirection "Left" },
           { key = "l",         mods = "CTRL|SHIFT", action = wezterm.action.ActivatePaneDirection "Right" },
           { key = "k",         mods = "CTRL|SHIFT", action = wezterm.action.ActivatePaneDirection "Up" },
