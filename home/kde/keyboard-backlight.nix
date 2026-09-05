@@ -17,9 +17,12 @@ let
     object="/org/kde/Solid/PowerManagement/Actions/KeyboardBrightnessControl"
     iface="org.kde.Solid.PowerManagement.Actions.KeyboardBrightnessControl"
     qdbus="${pkgs.kdePackages.qttools}/bin/qdbus"
+    cur="$($qdbus "$service" "$object" "$iface.keyboardBrightness" 2>/dev/null)"
     max="$($qdbus "$service" "$object" "$iface.keyboardBrightnessMax" 2>/dev/null)"
-    if [ -n "$max" ] && [ "$max" -gt 0 ]; then
-      $qdbus "$service" "$object" "$iface.setKeyboardBrightness" "$max" \
+    # Use the silent variant so no OSD appears, and only when the value
+    # actually differs (the OSD would otherwise pop on every rebuild).
+    if [ -n "$cur" ] && [ -n "$max" ] && [ "$cur" != "$max" ]; then
+      $qdbus "$service" "$object" "$iface.setKeyboardBrightnessSilent" "$max" \
         >/dev/null 2>&1 || true
     fi
   '';
