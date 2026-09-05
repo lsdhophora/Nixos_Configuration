@@ -59,15 +59,7 @@
 /* Zhihu - search bar, links, global text stroke */
 @-moz-document domain("zhihu.com") {
   [class*="SearchBar-input"] {
-    transform: scale(0.9) !important;
-    transform-origin: left center !important;
-    border: 2px solid var(--MapUIFrame08B) !important;
-  }
-
-  [class*="SearchBar-input"]:focus,
-  [class*="SearchBar-input"]:focus-within {
-    outline: none !important;
-    border: 2px solid !important;
+    margin-right: auto !important;
   }
 
   a[href="/creator"] {
