@@ -18,8 +18,18 @@
             (setq inhibit-message nil)
             (setq file-name-handler-alist my/init-file-name-handler-alist)))
 
+;; Frame font pinned as an explicit frame parameter (family + size),
+;; so every frame -- including the initial one -- is created with the
+;; right size instead of depending on default-face realization timing
+;; (pgtk can transiently drop the face's :height under fontconfig load,
+;; falling back to the ~10pt default).
+(setq default-frame-alist
+      '((font . "IBM Plex Mono-14")))
 (setq initial-frame-alist
       ;; 14pt font + 1.25x Wayland scaling: 32 rows overflow the 1080p
       ;; screen, so start with 28 rows (same text capacity as 32 rows
       ;; at the old 12pt).
-      '((width . 84) (height . 28)))
+      (append
+       '((font . "IBM Plex Mono-14")
+         (width . 84) (height . 28))
+       default-frame-alist))
