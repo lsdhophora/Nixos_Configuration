@@ -7,7 +7,6 @@ Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Ch
 ```bash
 just check-fast                                    # fast static checks (~1 min)
 just check                                         # full checks (static + builds)
-just install-hooks                                 # one-time per clone: enable the commit review gate
 nixos-rebuild dry-build --flake .#flowerpot       # verify (system + home)
 run0 nixos-rebuild switch --flake .#flowerpot   # rebuild & switch (system)
 home-manager switch --flake .#FeiHsueh         # home-only rebuild (fast, no system closure)
@@ -21,52 +20,15 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 
 1. Edit → `dry-build` pass
 2. Rebuild
-3. Stage and draft: `git add -A`, then write the GNU-format message
-   to `.git/ai-commit-msg.draft` (see Commit Review Gate below)
-4. Human review: commit in Magit (`C-x g` → `c c` → `C-c C-c`)
-5. Push (if success)
+3. `git add -A`, then commit in Magit (`C-x g` → `c c`) with a
+   GNU-format message
+4. Push (if success)
+
+The AI stages, commits, and pushes only when the user asks it to.
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
 System changes (hosts, kernel, services, etc.) still require `nixos-rebuild switch`.
-
-## Commit Review Gate
-
-Every commit needs a human reviewer. The AI prepares the change and the
-message draft; the human reviews and approves the commit. Three layers
-implement the gate:
-
-- **AI draft** — the AI writes the GNU-format message to
-  `.git/ai-commit-msg.draft` after staging the changes. Write a fresh
-  draft for every commit: the draft is deleted after each successful
-  commit, so a missing draft opens a blank commit buffer.
-- **Reviewer line** — the AI writes the `Reviewed-by` trailer only for
-  its own commits (`Reviewed-by: ai` when the user asked the AI to
-  commit).  In every other case the draft ends without a `Reviewed-by`
-  line: the human enters the reviewer name at the Magit gate prompt.
-- **Magit gate** — `my/magit-review-gate` in `home/programs/emacs/init.el`
-  inserts the draft into the commit buffer on open. At `C-c C-c` the
-  gate asks for the reviewer name; without a valid name (whitelist
-  `my/git-reviewers`) the commit aborts. The name is recorded as a
-  `Reviewed-by` trailer in the message.
-- **git hook** — `hooks/commit-msg` rejects any commit without a
-  `Reviewed-by: lsdhophora` trailer, also for commits made outside
-  Magit. Merge commits are exempt.
-
-The review flow: `C-x g` → `c c` → review the draft and the inline
-`diff` → `C-c C-c` → type the reviewer name.
-
-**AI self-review skip**: the AI does **not** commit or push on its own by
-default.  It stages the changes and writes the message draft, then stops
-for human review.  Only when the user explicitly asks it to (e.g.
-"你自己 commit 和 push") may the AI commit and push, using the
-`Reviewed-by: ai` trailer, which both the Magit gate (enter `ai` at the
-prompt) and the git hook accept.  Either trailer keeps the audit trail
-in git history.  The AI never pre-fills a human reviewer name; the
-human types it at the gate prompt.
-
-Run `just install-hooks` once per clone to enable the git hook. Do not
-use `git commit --no-verify` (or magit `-n`): that bypasses the gate.
 
 ## Tests
 

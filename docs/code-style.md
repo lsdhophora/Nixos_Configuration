@@ -63,9 +63,6 @@ GNU Coding Standards define this format.
 - Describe what the change does, not what the change did.
 - Do not add `Signed-off-by` lines.
 - Write the entries in STE English.
-- End the message with a blank line and a `Reviewed-by: lsdhophora`
-  trailer. The trailer is the human review attestation. The
-  `hooks/commit-msg` hook enforces it; merge commits are exempt.
 
 Example:
 
@@ -86,4 +83,3 @@ Before you commit, check:
 3. Data-driven generation where tables exist.
 4. `dry-build` passes.
 5. The two required skills were applied when their triggers matched.
-6. The commit message ends with a `Reviewed-by:` trailer.

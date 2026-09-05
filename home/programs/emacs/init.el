@@ -213,106 +213,10 @@ folder, even when eglot's project root is a parent git root."
     (advice-add 'eglot-handle-notification :around
                 #'my/eglot-hide-rust-noise)))
 
-(defcustom my/git-reviewers '("lsdhophora" "ai")
-  "Names allowed to approve commits.  \"ai\" skips the human gate
-(used for AI self-reviewed commits); other names are human reviews."
-  :group 'magit
-  :type '(repeat string))
-
-(defcustom my/git-review-prompt-names '("lsdhophora")
-  "Names offered as completion candidates at the review prompt.
-`my/git-reviewers' still accepts the hidden \"ai\" skip when typed
-manually."
-  :group 'magit
-  :type '(repeat string))
-
 (use-package magit
   :bind (("C-x g" . magit-status))
   :config
-  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1)
-
-  ;; --- Review gate for every commit ---
-  ;; The AI writes the message draft to .git/ai-commit-msg.draft; the
-  ;; setup hook below inserts it when the commit buffer opens.  The
-  ;; human reviews the draft and the inline diff in the buffer, then
-  ;; presses C-c C-c; the finish hook asks for the reviewer name and
-  ;; aborts the commit without a name.  The name is recorded as a
-  ;; Reviewed-by trailer.  hooks/commit-msg enforces the same rule for
-  ;; commits made outside Magit.  Entering "ai" in the prompt (or
-  ;; committing with a Reviewed-by: ai trailer) skips the human gate.
-
-  (defun my/git-commit-message-region ()
-    "Return the end of the message region of the current buffer.
-The message region ends before the first line that starts with
-'#' (the git comment block / cut line)."
-    (save-excursion
-      (goto-char (point-min))
-      (if (re-search-forward "^#" nil t)
-          (match-beginning 0)
-        (point-max))))
-
-  (defun my/git-commit-message ()
-    "Return the current commit message text without git comments."
-    (let ((end (my/git-commit-message-region)))
-      (buffer-substring-no-properties (point-min) end)))
-
-  (defun my/git-insert-ai-draft ()
-    "Insert the AI-written commit message draft, if any.
-The draft lives at .git/ai-commit-msg.draft in the repository.
-Insert it only when the buffer has no message yet, so a manual or
-remembered message is never clobbered."
-    (when (and (fboundp 'magit-toplevel)
-               (magit-toplevel)
-               (string-match-p "\\`[[:space:]]*\\'" (my/git-commit-message)))
-      (let ((draft (expand-file-name
-                    ".git/ai-commit-msg.draft" (magit-toplevel))))
-        (when (file-exists-p draft)
-          (goto-char (point-min))
-          (insert (string-trim (with-temp-buffer
-                                 (insert-file-contents draft)
-                                 (buffer-string)))
-                  "\n\n")))))
-
-  (defun my/git-delete-ai-draft ()
-    "Delete the AI commit message draft after the commit succeeds."
-    (when (and (fboundp 'magit-toplevel) (magit-toplevel))
-      (let ((draft (expand-file-name
-                    ".git/ai-commit-msg.draft" (magit-toplevel))))
-        (when (file-exists-p draft)
-          (delete-file draft)))))
-
-  (defun my/git-insert-review-trailer (name)
-    "Insert a Reviewed-by trailer at the end of the message region."
-    (let ((end (my/git-commit-message-region)))
-      (goto-char end)
-      (skip-chars-backward " \t\n")
-      (insert (format "\n\nReviewed-by: %s\n" name))))
-
-  (defun my/magit-review-gate (_force)
-    "Require a reviewer before the commit is created.
-Pass when the message already carries a Reviewed-by trailer or is
-a merge message.  Otherwise ask for the reviewer name; abort the
-commit when the name is not in `my/git-reviewers'."
-    (save-excursion
-      (goto-char (point-min))
-      (cond
-       ((re-search-forward "^Reviewed-by: " (my/git-commit-message-region) t) t)
-       ((looking-at "Merge ") t)
-       (t
-        (let ((name (completing-read
-                     "Please enter your name to sign: "
-                     my/git-review-prompt-names nil nil)))
-          (if (member name my/git-reviewers)
-              (progn
-                (my/git-insert-review-trailer name)
-                t)
-            (message "Commit aborted: a reviewer is required")
-            nil))))))
-
-  (add-hook 'git-commit-setup-hook #'my/git-insert-ai-draft)
-  (add-hook 'git-commit-post-finish-hook #'my/git-delete-ai-draft)
-  (add-hook 'git-commit-finish-query-functions #'my/magit-review-gate))
-
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 (add-hook 'python-mode-hook
           (lambda ()
             (direnv-update-environment)

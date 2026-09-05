@@ -33,8 +33,3 @@ switch:
 # Rebuild home only (fast, no system closure)
 home-switch:
     home-manager switch --flake .#FeiHsueh
-
-# Install git hooks (one-time per clone): core.hooksPath -> tracked hooks/
-install-hooks:
-    git config core.hooksPath hooks
-    chmod +x hooks/commit-msg
