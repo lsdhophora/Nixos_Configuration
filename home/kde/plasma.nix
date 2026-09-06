@@ -42,6 +42,8 @@
                 "preferred://filemanager"
                 "applications:librewolf.desktop"
               ];
+              # No hover tooltip/preview popup when hovering task icons
+              appearance.showTooltips = false;
             };
           }
           {
