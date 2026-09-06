@@ -12,8 +12,8 @@
     mosh
     clang
     clang-tools
-    # Rust toolchain for CPH .rs solutions and rust-analyzer/rustfmt in
-    # Emacs (the rust tree-sitter grammar is symlinked separately in
+    # Rust toolchain for rust-analyzer/rustfmt in Emacs (the rust
+    # tree-sitter grammar is symlinked separately in
     # home/programs/emacs/files.nix).
     rustc
     cargo

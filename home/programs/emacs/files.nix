@@ -19,13 +19,6 @@
         "init.el"
       ];
     })
-    # CPH (competitive programming helper): cph.el is symlinked so
-    # edits in the repo apply without rebuild.
-    (repoLib.mkRepoLinks config {
-      targetPrefix = ".config/emacs/cph/";
-      sourcePrefix = "home/programs/emacs/lisp/cph/";
-      paths = [ "cph.el" ];
-    })
     # rust tree-sitter grammar for rust-ts-mode.  Emacs looks for
     # libtree-sitter-rust.so under ~/.config/emacs/tree-sitter/; the
     # nixpkgs grammar ships it as $out/parser (a DSO with the same

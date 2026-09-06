@@ -137,7 +137,7 @@
 
     (defun my/eglot-workspace-folders (folders &rest _)
       "Adapt the workspace folders for rust buffers.
-Standalone rust buffers (CPH solution files, no cargo project above)
+Standalone rust buffers (no cargo project above)
 get no folder, which makes rust-analyzer use detached-file mode.
 Rust buffers inside a cargo project get the cargo root as their
 folder, even when eglot's project root is a parent git root."
@@ -328,18 +328,3 @@ folder, even when eglot's project root is a parent git root."
           (or (emms-track-get track 'info-title)
               (file-name-sans-extension
                (file-name-nondirectory (emms-track-get track 'name)))))))
-
-;; --- competitive programming: cph.el (companion: lisp/cph/cph.user.js) ---
-;; cph.el is symlinked into ~/.config/emacs/cph by files.nix
-;; (mkOutOfStoreSymlink), so repo edits apply without rebuild.
-(add-to-list 'load-path (expand-file-name "cph" user-emacs-directory))
-(require 'cph)
-(setq cph-default-language "cpp")
-;; LibreOJ problems are solved in Rust, other sites keep the C++
-;; default.  Match on the URL, first rule wins.
-(setq cph-site-languages '(("loj\\.ac" . "rs")))
-(setq cph-naming-style (quote title))
-(setq cph-timeout 3000)
-;; Start the problem-fetch server.  Ignore failure: the port may already
-;; be taken by another Emacs instance.
-(ignore-errors (cph-enable))

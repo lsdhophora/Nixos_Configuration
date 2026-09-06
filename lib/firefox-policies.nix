@@ -33,7 +33,6 @@ in
     options.autoUpdate = 0;
     scripts = map (f: builtins.readFile f) [
       ./../assets/violentmonkey/bilibili-comments-avatar-beautify.js
-      ./../assets/violentmonkey/cph.user.js
       ./../assets/violentmonkey/font-weight-min-500.js
       ./../assets/violentmonkey/pixiv-downloader.user.js
       ./../assets/violentmonkey/pixiv-novel-copy.user.js
