@@ -7,28 +7,38 @@
 
 #pragma once
 
-#include "effect/offscreeneffect.h"
+#include <effect/effect.h>
 
-#include <QHash>
-#include <QMetaObject>
-#include <chrono>
+#include <map>
 #include <memory>
 
 namespace KWin
 {
 
+class GLFramebuffer;
 class GLShader;
+class GLTexture;
+class LogicalOutput;
 
 /**
  * MyopicDefocusEffect simulates myopic chromatic defocus on the whole screen.
  *
- * The green and blue color channels of every window are blurred (green a
- * little, blue more) while the red channel stays sharp.  This "red in
- * focus" filter reproduces the myopic chromatic aberration described by
- * Swiatczak et al. (2024), doi:10.15626/sjovs.v17i2.4232, and is the
- * desktop-wide equivalent of the Refractify browser extension.
+ * The green and blue color channels of the final composited desktop are
+ * blurred (green a little, blue more) while the red channel stays sharp.
+ * This "red in focus" filter reproduces the myopic chromatic aberration
+ * described by Swiatczak et al. (2024), doi:10.15626/sjovs.v17i2.4232, and is
+ * the desktop-wide equivalent of the Refractify browser extension.
+ *
+ * The effect is a *whole-screen* post pass, not a per-window filter: in
+ * paintScreen() the already-composited scene (decorations included, exactly
+ * as KWin presents it) is rendered into a per-output offscreen texture and
+ * then drawn through the fragment shader on a fullscreen quad.  Because the
+ * filter is re-applied to the freshly composited desktop on every frame,
+ * there is no cached per-window result that could go stale: a decoration
+ * repaint (e.g. the Klassy close-button hover fading out) is reflected in
+ * the very next presented frame, with no "red residue" left behind.
  */
-class MyopicDefocusEffect : public OffscreenEffect
+class MyopicDefocusEffect : public Effect
 {
     Q_OBJECT
 
@@ -39,54 +49,55 @@ public:
     bool isActive() const override;
     int requestedEffectChainPosition() const override;
     void reconfigure(ReconfigureFlags flags) override;
-    void prePaintScreen(ScreenPrePaintData &data) override;
+    void paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const Region &deviceRegion, LogicalOutput *screen) override;
 
     static bool supported();
     static bool enabledByDefault();
 
 public Q_SLOTS:
-    /**
-     * Temporarily enable/disable the filter at runtime.
-     * The kwinrc "[Plugins] myopicdefocusEnabled" flag controls whether the
-     * effect is loaded at all; this toggles it until the session ends.
-     */
-    void toggleEffect();
+    void slotScreenRemoved(LogicalOutput *screen);
 
 private:
+    // A per-output offscreen texture that holds one frame of the composited
+    // desktop (the input to the filter) plus its framebuffer.
+    struct ScreenState
+    {
+        std::unique_ptr<GLTexture> texture;
+        std::unique_ptr<GLFramebuffer> framebuffer;
+    };
+
     void loadShader();
-
-    // Decoration-freshness ("self-healing"): when a window's decoration
-    // state changes (focus change via windowActivated, or any repaint via
-    // windowDamaged), the window's screen area is scheduled for a repaint so
-    // stale content can't linger -- e.g. a sharp red close-button left behind
-    // by a skipped/coalesced hover-exit repaint, even when the compositor is
-    // otherwise idle ("no focus" case).  The refresh is deliberately
-    // non-destructive: KWin's damage pipeline keeps the offscreen target in
-    // sync, so only a repaint is needed.  (A previous version force-recreated
-    // the target with unredirect+redirect on every damage; that churn raced
-    // with the render pass and produced garbled frames, so it was removed.)
-    void onWindowActivated(EffectWindow *window);
-    void onWindowDeleted(EffectWindow *window);
-    void onWindowDamaged(EffectWindow *window);
-    void refreshWindow(EffectWindow *window);
-
+    void unloadShader();
+    void setUniforms(const QSize &textureSize);
     bool m_valid = false;
     bool m_enabled = false;
     std::unique_ptr<GLShader> m_shader;
-    QList<EffectWindow *> m_windows;
-    QHash<EffectWindow *, QMetaObject::Connection> m_damagedConnections;
-    QHash<EffectWindow *, std::chrono::steady_clock::time_point> m_lastRefresh;
-    EffectWindow *m_lastActive = nullptr;
+    std::map<LogicalOutput *, ScreenState> m_screens;
+
+    // Uniform locations (resolved once after the shader is compiled).
+    int m_locTexture = -1;
+    int m_locMvp = -1;
+    int m_locTextureWidth = -1;
+    int m_locTextureHeight = -1;
+    int m_locEffectStrength = -1;
+    int m_locKernelOffset = -1;
+    int m_locGreenKernel = -1;
+    int m_locBlueKernel = -1;
 
     // Configuration, read from kwinrc group [Effect-myopicdefocus]
     float m_greenBlurRadius = 2.5f;
     float m_blueBlurRadius = 7.0f;
     float m_effectStrength = 0.30f;
+
+    // Precomputed 1D blur kernels for the configured radii.
+    float m_kernelOffsets[7] = {};
+    float m_greenKernel[7] = {};
+    float m_blueKernel[7] = {};
 };
 
 inline int MyopicDefocusEffect::requestedEffectChainPosition() const
 {
-    return 98; // near the end of the chain, right before final composition
+    return 0; // run first so paintScreen() can capture the whole scene
 }
 
 inline bool MyopicDefocusEffect::enabledByDefault()

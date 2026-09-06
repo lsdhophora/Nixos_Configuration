@@ -7,22 +7,27 @@
 
 #include "myopicdefocus.h"
 
+#include <core/rendertarget.h>
+#include <core/renderviewport.h>
 #include <effect/effecthandler.h>
-#include <effect/effectwindow.h>
+#include <opengl/glframebuffer.h>
 #include <opengl/glshader.h>
 #include <opengl/glshadermanager.h>
+#include <opengl/gltexture.h>
+#include <opengl/glvertexbuffer.h>
 
 #include <KConfig>
 #include <KConfigGroup>
-#include <KGlobalAccel>
 
-#include <QAction>
-#include <QKeySequence>
+#include <QFile>
+#include <QMatrix4x4>
+#include <QVector2D>
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
+#include <cstring>
 #include <epoxy/gl.h>
+#include <span>
 
 static void ensureResources()
 {
@@ -38,9 +43,9 @@ namespace
 // 1 and 2, so one texture fetch covers two Gaussian taps at half weight
 // each.  The table stores the Gaussian pair-sums at those positions,
 // which keeps the total kernel energy exact while cutting the tap count
-// from 11x11 to 7x7 fetches per pixel.  The effect runs full-screen --
-// including fullscreen windows -- so on iGPUs this is what keeps the
-// compositor ahead of the frame deadline under load.
+// from 11x11 to 7x7 fetches per pixel.  The effect runs over the whole
+// composited desktop -- including fullscreen windows -- so on iGPUs this
+// is what keeps the compositor ahead of the frame deadline under load.
 constexpr int kKernelSize = 7;
 constexpr float kKernelOffsets[kKernelSize] = {
     0.0f,
@@ -73,30 +78,21 @@ void kernelWeights(float sigma, float (&out)[kKernelSize])
     out[6] = out[3];
 }
 
-void setShaderUniforms(KWin::GLShader *shader, float sigmaG, float sigmaB, float strength)
+// Minimal pass-through vertex shader: the effect runs as the first effect in
+// the chain, captures the whole composited scene into a per-output texture in
+// paintScreen() and then draws one fullscreen quad sampling that texture.
+const QByteArray s_vertexSource = QByteArrayLiteral(R"(
+#version 140
+uniform mat4 modelViewProjectionMatrix;
+in vec2 position;
+in vec2 texcoord;
+out vec2 texcoord0;
+void main()
 {
-    float greenWeights[kKernelSize];
-    float blueWeights[kKernelSize];
-    kernelWeights(sigmaG, greenWeights);
-    kernelWeights(sigmaB, blueWeights);
-
-    KWin::ShaderBinder binder(shader);
-    shader->setUniform("effectStrength", strength);
-    // KWin's GLShader has no array overload; upload the tables via the
-    // program uniform locations directly.
-    const int offsetLoc = shader->uniformLocation("kernelOffset");
-    const int greenLoc = shader->uniformLocation("greenKernel");
-    const int blueLoc = shader->uniformLocation("blueKernel");
-    if (offsetLoc >= 0) {
-        glUniform1fv(offsetLoc, kKernelSize, kKernelOffsets);
-    }
-    if (greenLoc >= 0) {
-        glUniform1fv(greenLoc, kKernelSize, greenWeights);
-    }
-    if (blueLoc >= 0) {
-        glUniform1fv(blueLoc, kKernelSize, blueWeights);
-    }
+    gl_Position = modelViewProjectionMatrix * vec4(position, 0.0, 1.0);
+    texcoord0 = texcoord;
 }
+)");
 
 } // namespace
 
@@ -104,18 +100,9 @@ namespace KWin
 {
 
 MyopicDefocusEffect::MyopicDefocusEffect()
-    : OffscreenEffect()
+    : Effect()
 {
     reconfigure(ReconfigureAll);
-
-    // Global shortcut to toggle the filter at runtime.
-    QAction *toggleAction = new QAction(this);
-    toggleAction->setObjectName(QStringLiteral("ToggleMyopicDefocus"));
-    toggleAction->setText(QStringLiteral("Toggle Myopic Defocus Effect"));
-    toggleAction->setAutoRepeat(false);
-    KGlobalAccel::self()->setDefaultShortcut(toggleAction, QList<QKeySequence>({QKeySequence(QStringLiteral("Meta+Shift+D"))}));
-    KGlobalAccel::self()->setShortcut(toggleAction, QList<QKeySequence>({QKeySequence(QStringLiteral("Meta+Shift+D"))}));
-    connect(toggleAction, &QAction::triggered, this, &MyopicDefocusEffect::toggleEffect);
 
     // The kwinrc "[Plugins] myopicdefocusEnabled" flag decides whether the
     // effect is loaded; once loaded, the filter is on by default.
@@ -123,86 +110,16 @@ MyopicDefocusEffect::MyopicDefocusEffect()
         m_enabled = true;
     }
 
-    // Self-healing: keep the screen in sync with decoration state changes
-    // (focus change via windowActivated, titlebar/button repaints via
-    // windowDamaged).  The filter keeps the red channel sharp, so a stale
-    // frame shows as a sharp red close-button that lingers after the real
-    // decoration turned grey -- visible as a "red edge" when the compositor
-    // is otherwise idle (e.g. nothing focused).  The refresh is a plain
-    // repaint: KWin's damage pipeline keeps the offscreen target in sync,
-    // so no target recreation is needed.
-    connect(effects, &EffectsHandler::windowActivated, this, &MyopicDefocusEffect::onWindowActivated);
-    connect(effects, &EffectsHandler::windowDeleted, this, &MyopicDefocusEffect::onWindowDeleted);
+    connect(effects, &EffectsHandler::screenRemoved, this, &MyopicDefocusEffect::slotScreenRemoved);
 }
 
-void MyopicDefocusEffect::onWindowActivated(EffectWindow *window)
+MyopicDefocusEffect::~MyopicDefocusEffect()
 {
-    // Both the window that lost focus (its decoration went grey) and the one
-    // that gained it may keep stale sharp-red pixels on screen; force both
-    // areas to re-composite this frame.
-    if (m_lastActive && m_lastActive != window) {
-        refreshWindow(m_lastActive);
+    if (effects) {
+        effects->makeOpenGLContextCurrent();
     }
-    refreshWindow(window);
-    m_lastActive = window;
+    unloadShader();
 }
-
-void MyopicDefocusEffect::onWindowDamaged(EffectWindow *window)
-{
-    if (!m_enabled || !m_valid || !window) {
-        return;
-    }
-    // Only decorated windows have titlebar buttons.  Scheduling extra
-    // repaints for undecorated content (videos, games, fullscreen terminals)
-    // would churn the GPU for nothing.
-    if (!window->hasDecoration()) {
-        return;
-    }
-    // Rate-limit the repaint: under a damage storm (hover, video, animation)
-    // flushing the whole window area on every event would inflate the
-    // compositor's load.  A 250 ms budget still flushes stale decoration
-    // pixels (red close-button) without amplifying load.
-    const auto now = std::chrono::steady_clock::now();
-    auto it = m_lastRefresh.find(window);
-    if (it != m_lastRefresh.end() && (now - it.value()) < std::chrono::milliseconds(250)) {
-        return;
-    }
-    m_lastRefresh.insert(window, now);
-    refreshWindow(window);
-}
-
-void MyopicDefocusEffect::refreshWindow(EffectWindow *window)
-{
-    if (!m_enabled || !m_valid || !window) {
-        return;
-    }
-    // Repaint only this window's screen area, not the whole screen.  KWin
-    // coalesces repaint regions per frame, so damage storms (hover, video)
-    // naturally batch here.
-    //
-    // A previous fix recreated the offscreen target (unredirect+redirect)
-    // on every damage event; that churn raced with the render pass and
-    // produced garbled frames (fresh targets sampled before being filled),
-    // so it was removed.  The offscreen target stays in sync through KWin's
-    // own damage pipeline -- a repaint is all we need to flush stale
-    // decoration pixels when the compositor would otherwise sit idle.
-    effects->addRepaint(window->expandedGeometry());
-}
-
-void MyopicDefocusEffect::onWindowDeleted(EffectWindow *window)
-{
-    auto it = m_damagedConnections.find(window);
-    if (it != m_damagedConnections.end()) {
-        disconnect(*it);
-        m_damagedConnections.erase(it);
-    }
-    m_lastRefresh.remove(window);
-    if (m_lastActive == window) {
-        m_lastActive = nullptr;
-    }
-}
-
-MyopicDefocusEffect::~MyopicDefocusEffect() = default;
 
 bool MyopicDefocusEffect::supported()
 {
@@ -226,11 +143,12 @@ void MyopicDefocusEffect::reconfigure(ReconfigureFlags flags)
     m_effectStrength = conf.readEntry("EffectStrength", 0.30);
     m_effectStrength = std::clamp(m_effectStrength, 0.0f, 1.0f);
 
+    kernelWeights(m_greenBlurRadius, m_greenKernel);
+    kernelWeights(m_blueBlurRadius, m_blueKernel);
+    std::memcpy(m_kernelOffsets, kKernelOffsets, sizeof(kKernelOffsets));
+
     if (!m_valid) {
         loadShader();
-    } else if (m_shader) {
-        // Push new uniform values to the existing program.
-        setShaderUniforms(m_shader.get(), m_greenBlurRadius, m_blueBlurRadius, m_effectStrength);
     }
 
     effects->addRepaintFull();
@@ -247,79 +165,170 @@ void MyopicDefocusEffect::loadShader()
 
     ensureResources();
 
-    m_shader = ShaderManager::instance()->generateShaderFromFile(
-        ShaderTrait::MapTexture,
-        QString(), // use the built-in MapTexture vertex shader
-        QStringLiteral(":/effects/myopicdefocus/shaders/myopicdefocus.frag"));
+    QFile fragFile(QStringLiteral(":/effects/myopicdefocus/shaders/myopicdefocus.frag"));
+    if (!fragFile.open(QIODevice::ReadOnly)) {
+        qWarning() << "MyopicDefocus: failed to read the embedded fragment shader";
+        return;
+    }
+    const QByteArray fragSource = fragFile.readAll();
+    fragFile.close();
 
+    m_shader = ShaderManager::instance()->generateCustomShader(ShaderTrait::MapTexture, s_vertexSource, fragSource);
     if (!m_shader) {
-        qWarning() << "MyopicDefocus: failed to load the fragment shader";
+        qWarning() << "MyopicDefocus: failed to compile the shader program";
         m_shader.reset();
         return;
     }
 
-    setShaderUniforms(m_shader.get(), m_greenBlurRadius, m_blueBlurRadius, m_effectStrength);
+    m_locTexture = m_shader->uniformLocation("sampler");
+    m_locMvp = m_shader->uniformLocation("modelViewProjectionMatrix");
+    m_locTextureWidth = m_shader->uniformLocation("textureWidth");
+    m_locTextureHeight = m_shader->uniformLocation("textureHeight");
+    m_locEffectStrength = m_shader->uniformLocation("effectStrength");
+    m_locKernelOffset = m_shader->uniformLocation("kernelOffset");
+    m_locGreenKernel = m_shader->uniformLocation("greenKernel");
+    m_locBlueKernel = m_shader->uniformLocation("blueKernel");
 
     m_valid = true;
 }
 
-void MyopicDefocusEffect::prePaintScreen(ScreenPrePaintData &data)
+void MyopicDefocusEffect::unloadShader()
 {
-    if (m_enabled && m_valid) {
-        // Self-healing bookkeeping: keep every visible window on the
-        // current desktop redirected, so the filter always covers the
-        // full screen no matter which windows appear, vanish, move to
-        // another desktop or get minimized.
-        const auto windows = effects->stackingOrder();
-        for (EffectWindow *window : windows) {
-            const bool wantRedirect = window->isOnCurrentDesktop() && !window->isMinimized();
-            const bool haveRedirect = m_windows.contains(window);
-            if (wantRedirect && !haveRedirect) {
-                redirect(window);
-                setShader(window, m_shader.get());
-                m_windows.append(window);
-
-                // Self-healing: any decoration/content repaint for this
-                // window schedules a screen repaint of its area, so stale
-                // sharp-red pixels (e.g. the close-button hover highlight)
-                // can't linger when the compositor is idle.
-                m_damagedConnections.insert(
-                    window,
-                    connect(window, &EffectWindow::windowDamaged, this, &MyopicDefocusEffect::onWindowDamaged));
-            } else if (!wantRedirect && haveRedirect) {
-                auto it = m_damagedConnections.find(window);
-                if (it != m_damagedConnections.end()) {
-                    disconnect(*it);
-                    m_damagedConnections.erase(it);
-                }
-                unredirect(window);
-                m_windows.removeOne(window);
-            }
-        }
-    }
-
-    effects->prePaintScreen(data);
+    m_screens.clear(); // frees the textures and framebuffers
+    m_shader.reset();
+    m_valid = false;
 }
 
-void MyopicDefocusEffect::toggleEffect()
+void MyopicDefocusEffect::setUniforms(const QSize &textureSize)
 {
-    if (m_enabled) {
-        m_enabled = false;
-        for (EffectWindow *window : std::as_const(m_windows)) {
-            unredirect(window);
-        }
-        m_windows.clear();
-        for (auto &conn : m_damagedConnections) {
-            disconnect(conn);
-        }
-        m_damagedConnections.clear();
-        m_lastRefresh.clear();
-        m_lastActive = nullptr;
-    } else {
-        m_enabled = m_valid;
+    ShaderBinder binder(m_shader.get());
+
+    if (m_locTexture >= 0) {
+        m_shader->setUniform(m_locTexture, 0);
+    }
+    if (m_locTextureWidth >= 0) {
+        m_shader->setUniform(m_locTextureWidth, textureSize.width());
+    }
+    if (m_locTextureHeight >= 0) {
+        m_shader->setUniform(m_locTextureHeight, textureSize.height());
+    }
+    if (m_locEffectStrength >= 0) {
+        m_shader->setUniform(m_locEffectStrength, m_effectStrength);
+    }
+    if (m_locKernelOffset >= 0) {
+        glUniform1fv(m_locKernelOffset, kKernelSize, m_kernelOffsets);
+    }
+    if (m_locGreenKernel >= 0) {
+        glUniform1fv(m_locGreenKernel, kKernelSize, m_greenKernel);
+    }
+    if (m_locBlueKernel >= 0) {
+        glUniform1fv(m_locBlueKernel, kKernelSize, m_blueKernel);
+    }
+}
+
+void MyopicDefocusEffect::paintScreen(const RenderTarget &renderTarget,
+                                      const RenderViewport &viewport,
+                                      int mask,
+                                      const Region &deviceRegion,
+                                      LogicalOutput *screen)
+{
+    if (!m_valid || !renderTarget.texture()) {
+        effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+        return;
     }
 
-    effects->addRepaintFull();
+    ScreenState &state = m_screens[screen];
+    const qreal scale = viewport.scale();
+    const QSize nativeSize = (QSizeF(screen->geometry().size()) * scale).toSize();
+    const GLenum format = renderTarget.texture()->internalFormat();
+
+    if (nativeSize.isEmpty()) {
+        effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+        return;
+    }
+
+    if (!state.texture || state.texture->size() != nativeSize || state.texture->internalFormat() != format) {
+        state.framebuffer.reset();
+        state.texture = GLTexture::allocate(format, nativeSize);
+        if (!state.texture) {
+            m_screens.erase(screen);
+            effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+            return;
+        }
+        state.texture->setFilter(GL_LINEAR);
+        state.texture->setWrapMode(GL_CLAMP_TO_EDGE);
+        state.framebuffer = std::make_unique<GLFramebuffer>(state.texture.get());
+        if (!state.framebuffer || !state.framebuffer->valid()) {
+            m_screens.erase(screen);
+            effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+            return;
+        }
+    }
+
+    // Step 1: render the already-composited scene (decorations included) into
+    // this output's texture.  The scene is drawn by the rest of the effect
+    // chain into our framebuffer, so the texture always holds the desktop
+    // exactly as it would have been presented this frame.
+    RenderTarget sceneTarget(state.framebuffer.get(), renderTarget.colorDescription());
+    RenderViewport sceneViewport(viewport.renderRect(), viewport.scale(), sceneTarget, QPoint());
+    GLFramebuffer::pushFramebuffer(state.framebuffer.get());
+    effects->paintScreen(sceneTarget, sceneViewport, mask, deviceRegion, screen);
+    GLFramebuffer::popFramebuffer();
+
+    // Step 2: draw the captured desktop through the per-channel blur.
+    const RectF outputRect = screen->geometry().scaled(scale);
+    const float x0 = outputRect.left();
+    const float y0 = outputRect.top();
+    const float x1 = outputRect.right();
+    const float y1 = outputRect.bottom();
+
+    GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
+    vbo->reset();
+    vbo->setAttribLayout(std::span(GLVertexBuffer::GLVertex2DLayout), sizeof(GLVertex2D));
+    const auto vertices = vbo->map<GLVertex2D>(6);
+    if (!vertices) {
+        effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
+        return;
+    }
+    const auto v = *vertices;
+    v[0] = GLVertex2D{ .position = QVector2D(x0, y0), .texcoord = QVector2D(0.0f, 1.0f) };
+    v[1] = GLVertex2D{ .position = QVector2D(x1, y1), .texcoord = QVector2D(1.0f, 0.0f) };
+    v[2] = GLVertex2D{ .position = QVector2D(x0, y1), .texcoord = QVector2D(0.0f, 0.0f) };
+    v[3] = GLVertex2D{ .position = QVector2D(x0, y0), .texcoord = QVector2D(0.0f, 1.0f) };
+    v[4] = GLVertex2D{ .position = QVector2D(x1, y0), .texcoord = QVector2D(1.0f, 1.0f) };
+    v[5] = GLVertex2D{ .position = QVector2D(x1, y1), .texcoord = QVector2D(1.0f, 0.0f) };
+    vbo->unmap();
+
+    ShaderManager *shaderManager = ShaderManager::instance();
+    shaderManager->pushShader(m_shader.get());
+
+    if (m_locMvp >= 0) {
+        m_shader->setUniform(m_locMvp, viewport.projectionMatrix());
+    }
+    setUniforms(nativeSize);
+
+    const GLboolean blendWasEnabled = glIsEnabled(GL_BLEND);
+    if (blendWasEnabled) {
+        glDisable(GL_BLEND);
+    }
+    glActiveTexture(GL_TEXTURE0);
+    state.texture->bind();
+    vbo->bindArrays();
+    vbo->draw(GL_TRIANGLES, 0, 6);
+    vbo->unbindArrays();
+    state.texture->unbind();
+    if (blendWasEnabled) {
+        glEnable(GL_BLEND);
+    }
+    shaderManager->popShader();
+}
+
+void MyopicDefocusEffect::slotScreenRemoved(LogicalOutput *screen)
+{
+    if (effects) {
+        effects->makeOpenGLContextCurrent();
+    }
+    m_screens.erase(screen);
 }
 
 } // namespace KWin
