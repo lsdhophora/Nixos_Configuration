@@ -231,6 +231,7 @@ in
           [
             ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
             ./../../patches/klassy/remove-empty-corners-tooltip.patch
+            ./../../patches/klassy/fix-button-edge-gap.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {
