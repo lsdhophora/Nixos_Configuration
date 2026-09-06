@@ -28,6 +28,8 @@ The AI stages, commits, and pushes only when the user asks it to.
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
+Exception: declarative Plasma/KDE config (`home/kde/*.nix`, e.g. `plasma.nix` panels) must be followed by a full OS rebuild (`run0 nixos-rebuild switch --flake .#flowerpot`) to take effect; `home-manager switch` alone does not apply it. The regenerated panel layout is only applied at the next Plasma session start.
+
 System changes (hosts, kernel, services, etc.) still require `nixos-rebuild switch`.
 
 ## Tests
@@ -68,7 +70,7 @@ Before you commit, check:
 - home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
-- Plasma panel/Task Manager pins are declarative via plasma-manager (`home/kde/plasma.nix`): `plasma-org.kde.plasma.desktop-appletsrc` is regenerated on every Plasma startup and NOT persisted (KConfig atomic writes would fail on a single-file bind mount). Change pins by editing the module + `home-manager switch`, not via UI.
+- Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`): `plasma-org.kde.plasma.desktop-appletsrc` is regenerated on every Plasma startup and NOT persisted (KConfig atomic writes would fail on a single-file bind mount). Change them by editing the module, not via UI — an OS rebuild is required for them to take effect, and they apply at the next Plasma session start.
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
 - Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`
