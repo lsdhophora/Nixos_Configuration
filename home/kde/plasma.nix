@@ -18,7 +18,7 @@
     panels = [
       {
         location = "bottom";
-        height = 38;
+        height = 44;
         widgets = [
           {
             kickoff = {
@@ -26,7 +26,14 @@
               settings.General.systemFavorites = "suspend,hibernate,reboot,shutdown";
             };
           }
-          "org.kde.plasma.pager"
+          # Flexible spacer (expanding = Plasma default; mirrors the live panel).
+          # Explicit `expanding = true` avoids the inert `length` leftovers the
+          # Plasma UI writes for flexible spacers.
+          {
+            panelSpacer = {
+              expanding = true;
+            };
+          }
           {
             # Task manager pinned apps
             iconTasks = {
@@ -37,7 +44,11 @@
               ];
             };
           }
-          "org.kde.plasma.marginsseparator"
+          {
+            panelSpacer = {
+              expanding = true;
+            };
+          }
           {
             systemTray = {
               # Icons fill the panel height (same height as taskbar icons)
@@ -63,6 +74,8 @@
           }
           "org.kde.plasma.digitalclock"
           "org.kde.plasma.showdesktop"
+          # marginsseparator sits at the far right edge in the live layout
+          "org.kde.plasma.marginsseparator"
         ];
       }
     ];
