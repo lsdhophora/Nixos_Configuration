@@ -1,36 +1,25 @@
-diff --git a/kdecoration/breezebutton.cpp b/kdecoration/breezebutton.cpp
-index abcdef123456..123456abcdef 100644
---- a/kdecoration/breezebutton.cpp
-+++ b/kdecoration/breezebutton.cpp
-@@ -718,8 +718,14 @@ void Button::paintFullHeightButtonBackground(QPainter *painter) const
-     bool drawOutlineUsingPath = false;
-
-     qreal penWidth = PenWidth::Symbol;
--    qreal geometryShrinkOffsetHorizontal = PenWidth::Symbol * 1.5;
-+    qreal geometryShrinkOffsetHorizontal = PenWidth::Symbol * 1.5;
-     if (KWindowSystem::isPlatformX11()) {
-         penWidth *= m_systemScale;
-         geometryShrinkOffsetHorizontal *= m_systemScale;
-     }
+diff -ruN kd-orig/kdecoration/breezebutton.cpp kd-pat/kdecoration/breezebutton.cpp
+--- kd-orig/kdecoration/breezebutton.cpp	2026-09-07 07:49:31.370652278 +0800
++++ kd-pat/kdecoration/breezebutton.cpp	2026-09-07 07:49:37.989944468 +0800
+@@ -24,6 +24,8 @@
+ #include <QPainterPath>
+ #include <QVariantAnimation>
+ 
++#include <cmath>
 +
+ namespace Breeze
+ {
+ 
+@@ -733,6 +735,12 @@
+         geometryShrinkOffsetHorizontal *= m_devicePixelRatio;
+     }
+ 
 +    // Round to even integer to avoid pixel gaps at edges with anti-aliasing
 +    geometryShrinkOffsetHorizontal = std::round(geometryShrinkOffsetHorizontal);
 +    if (std::fmod(geometryShrinkOffsetHorizontal, 2.0) != 0) {
 +        geometryShrinkOffsetHorizontal += 1.0;
 +    }
-
++
      if (m_outlineColor.isValid()) {
          qreal geometryShrinkOffsetVertical = geometryShrinkOffsetHorizontal;
-diff --git a/kdecoration/breezebutton.h b/kdecoration/breezebutton.h
-index 123456abcdef..abcdef123456 100644
---- a/kdecoration/breezebutton.h
-+++ b/kdecoration/breezebutton.h
-@@ -18,6 +18,8 @@
- #include <KDecoration3/DecorationButton>
-
- #include <QHash>
-+#include <cmath>
-+#include <QHash>
- #include <QImage>
-
- class QVariantAnimation;
+ 
