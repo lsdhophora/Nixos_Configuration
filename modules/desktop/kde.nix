@@ -24,6 +24,14 @@ let
     plasma-workspace = [
       ./../../patches/plasma-workspace/jobitem-null-check.patch
     ];
+    # The Power & Battery applet switched power profiles only on wheel events
+    # whose |angleDelta| >= 60 (Math.round(delta/120) per event, remainder
+    # dropped). Touchpads and high-resolution wheels send many small deltas, so
+    # scrolling was hit-or-miss. Accumulate the delta across events and advance
+    # one profile per full 120, keeping the remainder (volume applet idiom).
+    powerdevil = [
+      ./../../patches/powerdevil/battery-widget-wheel-accumulate.patch
+    ];
     # Greeter: revert to the fresh-start idle state on aboutToSuspend, so the
     # first frame after wake shows no stale button highlight (hovered/active
     # focus survive suspend; the compositor sends no pointer event to clear

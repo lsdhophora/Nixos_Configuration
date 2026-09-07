@@ -1,0 +1,58 @@
+diff -ruN pd-orig/applets/batterymonitor/main.qml pd-pat/applets/batterymonitor/main.qml
+--- pd-orig/applets/batterymonitor/main.qml	2026-09-07 07:44:50.270670880 +0800
++++ pd-pat/applets/batterymonitor/main.qml	2026-09-07 07:44:54.887164962 +0800
+@@ -225,6 +225,12 @@
+ 
+         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+         property bool wasExpanded: false
++        // Accumulated scroll wheel delta. Touchpads and high-resolution wheels
++        // deliver many small angleDelta events instead of one 120-per-notch
++        // event, so each event must add to a remainder that persists between
++        // events instead of being judged on its own (same idiom as the volume
++        // applet in plasma-pa).
++        property int pendingProfileScroll: 0
+         onPressed: wasExpanded = batterymonitor.expanded
+         onClicked: mouse => {
+             if (mouse.button === Qt.MiddleButton) {
+@@ -244,15 +250,34 @@
+                 return;
+             }
+ 
+-            let { activeProfile } = powerProfilesControl;
+-            let newProfile = activeProfile;
+-
+             const delta = (wheel.inverted ? -1 : 1) * (wheel.angleDelta.y ? wheel.angleDelta.y : -wheel.angleDelta.x);
++            if ((pendingProfileScroll > 0 && delta < 0) || (pendingProfileScroll < 0 && delta > 0)) {
++                // Reset the remainder when the scroll direction flips, as there
++                // might be a leftover from the previous wheel action.
++                pendingProfileScroll = 0;
++            }
++            pendingProfileScroll += delta;
++
++            // Advance one profile per full 120 of accumulated angle (one wheel
++            // "click"); keep the remainder for the next event.
+             // Magic number 120 for common "one click"
+-            // See: https://qt-project.org/doc/qt-5/qml-qtquick-wheelevent.html#angleDelta-prop
+-            const steps = Math.round(delta/120);
+-            const newProfileIndex = Math.max(0, Math.min(profiles.length - 1, profiles.indexOf(activeProfile) + steps));
+-            batterymonitor.activateProfileRequested(profiles[newProfileIndex])
++            // See: https://doc.qt.io/qt-6/qml-qtquick-wheelevent.html#angleDelta-prop
++            let { activeProfile } = powerProfilesControl;
++            let profileIndex = profiles.indexOf(activeProfile);
++            let newProfileIndex = profileIndex;
++            while (pendingProfileScroll >= 120) {
++                pendingProfileScroll -= 120;
++                newProfileIndex = Math.min(profiles.length - 1, newProfileIndex + 1);
++            }
++            while (pendingProfileScroll <= -120) {
++                pendingProfileScroll += 120;
++                newProfileIndex = Math.max(0, newProfileIndex - 1);
++            }
++
++            if (newProfileIndex === profileIndex) {
++                return;
++            }
++            batterymonitor.activateProfileRequested(profiles[newProfileIndex]);
+         }
+     }
+ 
