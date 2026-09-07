@@ -49,6 +49,7 @@
                 "applications:org.wezfurlong.wezterm.desktop"
                 "preferred://filemanager"
                 "applications:librewolf.desktop"
+                "applications:emacs.desktop"
               ];
               # No hover tooltip/preview popup when hovering task icons
               appearance.showTooltips = false;

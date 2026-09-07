@@ -228,6 +228,13 @@ folder, even when eglot's project root is a parent git root."
   :config
   (direnv-mode))
 
+;; --- org: todo list ---
+;; Todos live in ~/Documents/todo.org (a persisted directory); the
+;; dashboard renders the open TODO headlines at startup via its
+;; agenda item.
+(setq org-directory "~/Documents")
+(setq org-agenda-files (list (expand-file-name "todo.org" org-directory)))
+
 ;; --- dashboard ---
 ;; Deferred: dashboard.el only needs to render at the startup hooks,
 ;; which run after init.el.  Register the same hooks that
@@ -252,7 +259,9 @@ folder, even when eglot's project root is a parent git root."
   (setq dashboard-set-footer nil)
   (setq dashboard-show-shortcuts nil)
   (setq dashboard-set-navigator nil)
-  (setq dashboard-items '())
+  ;; Show org entries that are TODO and not DONE; no time filtering.
+  (setq dashboard-filter-agenda-entry 'dashboard-filter-agenda-by-todo)
+  (setq dashboard-items '((agenda . 10)))
   :custom-face
   (dashboard-items-face ((t :height 1.0))))
 
