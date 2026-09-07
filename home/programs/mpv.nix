@@ -66,6 +66,8 @@ in
         volumebar_match_seek_color = true;
 
         window_controls = "no";
+        # Wayland has no always-on-top protocol: the modernz Pin window (ontop) button is ineffective, so hide it.
+        ontop_button = false;
         title_font_size = 28;
         chapter_title_font_size = 20;
         time_font_size = 20;
