@@ -261,7 +261,19 @@ folder, even when eglot's project root is a parent git root."
   (setq dashboard-set-navigator nil)
   ;; Show org entries that are TODO and not DONE; no time filtering.
   (setq dashboard-filter-agenda-entry 'dashboard-filter-agenda-by-todo)
+  ;; Drop the org category/time prefix columns ("todo:") and the wide
+  ;; todo-state column: render each entry as "TODO <headline>" flush with
+  ;; the heading.
+  (setq dashboard-agenda-prefix-format "")
   (setq dashboard-items '((agenda . 10)))
+  ;; dashboard-insert-section-list indents every item line by standard-indent
+  ;; (default 4) while it renders.  Zero it for the whole render pass (the
+  ;; mode hook runs after the items are already inserted, so it cannot fix it)
+  ;; to keep item lines flush under the heading.
+  (advice-add 'dashboard-insert-items :around
+              (lambda (orig &rest args)
+                (let ((standard-indent 0))
+                  (apply orig args))))
   :custom-face
   (dashboard-items-face ((t :height 1.0))))
 

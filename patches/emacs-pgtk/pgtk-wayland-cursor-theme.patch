@@ -1,0 +1,49 @@
+Push the Plasma cursor theme and size to GDK on Wayland
+
+GDK's Wayland backend falls back to a hard-coded 24px cursor theme
+when its settings channel lacks "gtk-cursor-theme-size".  Read the
+theme and size from ~/.config/gtk-3.0/settings.ini (where
+kde-gtk-config mirrors the Plasma cursor settings) with GKeyFile and
+push them down to GDK before any frame cursor is created.  Without
+this, the pointer inside Emacs buffers is smaller than the system
+cursor under KDE Plasma Wayland.
+--- a/src/pgtkterm.c
++++ b/src/pgtkterm.c
+@@ -7146,6 +7146,37 @@
+   dpyinfo->name_list_element = Fcons (lisp_dpy_name, Qnil);
+   dpyinfo->gdpy = dpy;
+ 
++#ifdef GDK_WINDOWING_WAYLAND
++  if (GDK_IS_WAYLAND_DISPLAY (dpy))
++    {
++      /* GDK's Wayland backend falls back to a 24px cursor theme when its
++	 settings channel lacks "gtk-cursor-theme-size".  Read the theme and
++	 size from ~/.config/gtk-3.0/settings.ini (where kde-gtk-config
++	 mirrors the Plasma cursor settings) and push them down to GDK
++	 before any frame cursor is created.  */
++      gchar *config_path = g_build_filename (g_get_user_config_dir (),
++					     "gtk-3.0", "settings.ini", NULL);
++      GKeyFile *key_file = g_key_file_new ();
++      gchar *theme = NULL;
++      gint size = 0;
++
++      if (g_key_file_load_from_file (key_file, config_path,
++				     G_KEY_FILE_NONE, NULL))
++	{
++	  theme = g_key_file_get_string (key_file, "Settings",
++					 "gtk-cursor-theme-name", NULL);
++	  size = g_key_file_get_integer (key_file, "Settings",
++					 "gtk-cursor-theme-size", NULL);
++	}
++      if (theme && size > 0)
++	gdk_wayland_display_set_cursor_theme (dpy, theme, size);
++      g_free (theme);
++      g_key_file_free (key_file);
++      g_free (config_path);
++    }
++#endif
++
++
+   /* https://lists.gnu.org/r/emacs-devel/2015-11/msg00194.html  */
+   dpyinfo->smallest_font_height = 1;
+   dpyinfo->smallest_char_width = 1;

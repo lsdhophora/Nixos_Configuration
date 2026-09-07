@@ -12,11 +12,20 @@ in
     enable = true;
     # Emit one separator below a popup menu title instead of two (see
     # patches/emacs-pgtk/popup-title-single-separator.patch).
-    package = unstableEmacs.emacs-pgtk.overrideAttrs (oldAttrs: {
-      patches = (oldAttrs.patches or [ ]) ++ [
-        ./../../../patches/emacs-pgtk/popup-title-single-separator.patch
-      ];
-    });
+    # withNativeCompilation = false: skip gccemacs native-compiling of every
+    # .el file, which dominates the build time and is not needed locally.
+    package =
+      (unstableEmacs.emacs-pgtk.override { withNativeCompilation = false; }).overrideAttrs
+        (oldAttrs: {
+          patches = (oldAttrs.patches or [ ]) ++ [
+            ./../../../patches/emacs-pgtk/popup-title-single-separator.patch
+            # Push the GtkSettings cursor theme/size down to GDK on Wayland:
+            # GDK falls back to a hard-coded 24px cursor there (KDE does not
+            # provide "gtk-cursor-theme-size" on GDK's settings channel), which
+            # makes the pointer inside buffers smaller than the system cursor.
+            ./../../../patches/emacs-pgtk/pgtk-wayland-cursor-theme.patch
+          ];
+        });
     extraPackages =
       _: with unstableEmacs.emacs-pgtk.pkgs; [
         direnv
