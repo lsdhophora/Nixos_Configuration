@@ -3,7 +3,10 @@
 {
   dconf.settings = {
     "org/gnome/desktop/interface" = {
-      cursor-size = 24;
+      # No cursor-size/cursor-theme here: kde-gtk-config's kded "gtkconfig"
+      # daemon owns those on Wayland (writes kcminputrc's cursorSize into
+      # GSettings and gtk-3.0/settings.ini).  Pinning them here made GTK
+      # cursors drift from the desktop cursor after every home-manager switch.
       enable-animations = true;
       font-antialiasing = "rgba";
       font-hinting = "full";
