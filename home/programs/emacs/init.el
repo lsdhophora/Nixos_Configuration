@@ -355,3 +355,15 @@ folder, even when eglot's project root is a parent git root."
           (or (emms-track-get track 'info-title)
               (file-name-sans-extension
                (file-name-nondirectory (emms-track-get track 'name)))))))
+
+;; --- cph (competitive programming helper, Codeforces) ---
+;; cph.el is symlinked into ~/.config/emacs/cph by files.nix
+;; (mkOutOfStoreSymlink), so repo edits apply without rebuild.
+;; Companion: lisp/cph/cph.user.js in the browser (see the README in
+;; that directory).  Only download-and-run: no submit flow.
+(add-to-list 'load-path (expand-file-name "cph" user-emacs-directory))
+;; Start the problem-fetch server.  Ignore failure: the port may already
+;; be taken by another Emacs instance.
+(ignore-errors
+  (require 'cph)
+  (cph-enable))

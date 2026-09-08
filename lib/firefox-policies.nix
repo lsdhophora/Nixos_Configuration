@@ -37,6 +37,9 @@ in
       ./../assets/violentmonkey/pixiv-downloader.user.js
       ./../assets/violentmonkey/pixiv-novel-copy.user.js
       ./../assets/violentmonkey/reddit-search-gradient-border-fix.user.js
+      # CPH companion: Codeforces problems to the Emacs CPH server.
+      # It lives next to the Emacs package (home/programs/emacs/lisp/cph/).
+      ./../home/programs/emacs/lisp/cph/cph.user.js
     ];
   };
 }
