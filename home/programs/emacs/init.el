@@ -235,6 +235,12 @@ folder, even when eglot's project root is a parent git root."
 (setq org-directory "~/Documents")
 (setq org-agenda-files (list (expand-file-name "todo.org" org-directory)))
 
+;; org-attach (attachments per entry, default key C-c C-a) is not part of
+;; the org core that loads when an org buffer opens; load it explicitly
+;; whenever org is loaded so its commands are always available.
+(with-eval-after-load 'org
+  (require 'org-attach))
+
 ;; --- dashboard ---
 ;; Deferred: dashboard.el only needs to render at the startup hooks,
 ;; which run after init.el.  Register the same hooks that
