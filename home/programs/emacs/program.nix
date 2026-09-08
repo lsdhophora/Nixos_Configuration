@@ -19,10 +19,11 @@ in
         (oldAttrs: {
           patches = (oldAttrs.patches or [ ]) ++ [
             ./../../../patches/emacs-pgtk/popup-title-single-separator.patch
-            # Push the GtkSettings cursor theme/size down to GDK on Wayland:
-            # GDK falls back to a hard-coded 24px cursor there (KDE does not
-            # provide "gtk-cursor-theme-size" on GDK's settings channel), which
-            # makes the pointer inside buffers smaller than the system cursor.
+            # Read the cursor theme/size via GtkSettings and push them down to
+            # GDK on Wayland: GDK falls back to a hard-coded 24px cursor there
+            # (KDE does not provide "gtk-cursor-theme-size" on GDK's settings
+            # channel), which makes the pointer inside buffers smaller than the
+            # system cursor.
             ./../../../patches/emacs-pgtk/pgtk-wayland-cursor-theme.patch
           ];
         });
