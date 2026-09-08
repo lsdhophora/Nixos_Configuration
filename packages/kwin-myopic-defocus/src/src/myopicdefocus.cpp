@@ -263,17 +263,34 @@ void MyopicDefocusEffect::paintScreen(const RenderTarget &renderTarget,
             effects->paintScreen(renderTarget, viewport, mask, deviceRegion, screen);
             return;
         }
+        // The texture is brand new and empty.  KWin only repaints the
+        // damaged region of each frame into it, so until every pixel has
+        // been damaged at least once the fullscreen quad would show mostly
+        // stale/black content.  This matters because different render passes
+        // use different textures for the same output -- the real screen
+        // buffer is e.g. RGB10_A2 while screenshot and screencast targets
+        // are RGBA8 -- so a screenshot press re-creates the texture, and the
+        // next real frame would otherwise go black except for the small
+        // region that happens to be damaged (e.g. around the cursor).
+        state.complete = false;
+        effects->addRepaintFull();
     }
 
     // Step 1: render the already-composited scene (decorations included) into
     // this output's texture.  The scene is drawn by the rest of the effect
     // chain into our framebuffer, so the texture always holds the desktop
     // exactly as it would have been presented this frame.
+    //
+    // A freshly (re)created texture does not trust the frame's incremental
+    // damage yet: ask for the whole screen instead, so the texture is fully
+    // valid from this frame on and the desktop cannot go black.
+    const Region captureRegion = state.complete ? deviceRegion : Region::infinite();
     RenderTarget sceneTarget(state.framebuffer.get(), renderTarget.colorDescription());
     RenderViewport sceneViewport(viewport.renderRect(), viewport.scale(), sceneTarget, QPoint());
     GLFramebuffer::pushFramebuffer(state.framebuffer.get());
-    effects->paintScreen(sceneTarget, sceneViewport, mask, deviceRegion, screen);
+    effects->paintScreen(sceneTarget, sceneViewport, mask, captureRegion, screen);
     GLFramebuffer::popFramebuffer();
+    state.complete = true;
 
     // Step 2: draw the captured desktop through the per-channel blur.
     const RectF outputRect = screen->geometry().scaled(scale);

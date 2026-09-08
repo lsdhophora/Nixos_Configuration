@@ -64,6 +64,12 @@ private:
     {
         std::unique_ptr<GLTexture> texture;
         std::unique_ptr<GLFramebuffer> framebuffer;
+        // Whether the texture already contains the whole desktop.  KWin only
+        // repaints the damaged region of a frame into it, so right after the
+        // texture is (re)created it would be mostly empty -- the effect must
+        // then recapture the entire screen once before trusting incremental
+        // damage again.
+        bool complete = false;
     };
 
     void loadShader();
