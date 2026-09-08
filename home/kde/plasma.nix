@@ -105,5 +105,16 @@
     configFile."plasmashellrc" = {
       "KDE Action Restrictions"."plasma/allow_configure_when_locked" = false;
     };
+
+    # Default terminal emulator: WezTerm.  KDE consumers (Dolphin/Konsole
+    # "Open Terminal Here", KRunner, the desktop context menu, ...) read these
+    # keys from ~/.config/kdeglobals (what System Settings -> Default
+    # Applications writes).  plasma-manager writes config files in place (no
+    # atomic rename), so this works even though kdeglobals is a single-file
+    # bind mount from /persist.
+    configFile."kdeglobals" = {
+      General.TerminalApplication = "wezterm";
+      General.TerminalService = "org.wezfurlong.wezterm.desktop";
+    };
   };
 }
