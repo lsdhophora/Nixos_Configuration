@@ -231,9 +231,16 @@ folder, even when eglot's project root is a parent git root."
 ;; --- org: todo list ---
 ;; Todos live in ~/Documents/todo.org (a persisted directory); the
 ;; dashboard renders the open TODO headlines at startup via its
-;; agenda item.
+;; agenda item.  Create the file when it is missing: an absent
+;; org-agenda file makes org-agenda prompt "Remove or abort?" during
+;; startup and leaves Emacs sitting on *scratch* waiting for input.
 (setq org-directory "~/Documents")
-(setq org-agenda-files (list (expand-file-name "todo.org" org-directory)))
+(let ((todo-file (expand-file-name "todo.org" org-directory)))
+  (unless (file-exists-p todo-file)
+    (make-directory org-directory t)
+    (with-temp-file todo-file
+      (insert "#+title: Todo\n")))
+  (setq org-agenda-files (list todo-file)))
 
 ;; org-attach (attachments per entry, default key C-c C-a) is not part of
 ;; the org core that loads when an org buffer opens; load it explicitly
