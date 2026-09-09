@@ -14,26 +14,32 @@
     (princ (format "FAIL: %s\n" label))))
 
 ;; --- unit: short names (Codeforces only) ---
-(assert-t "cf contest" (string= (cph--short-name '(("url" . "https://codeforces.com/contest/1234/problem/A"))) "1234A"))
-(assert-t "cf gym" (string= (cph--short-name '(("url" . "https://codeforces.com/gym/1001/problem/B2"))) "1001B2"))
-(assert-t "cf problemset" (string= (cph--short-name '(("url" . "https://codeforces.com/problemset/problem/4/A"))) "4A"))
+(defun prob (json) "Build a `cph-problem' from a JSON-style alist for these tests."
+  (cph--problem-from-json json))
+(assert-t "cf contest"
+          (string= (cph--short-name (prob '(("url" . "https://codeforces.com/contest/1234/problem/A")))) "1234A"))
+(assert-t "cf gym"
+          (string= (cph--short-name (prob '(("url" . "https://codeforces.com/gym/1001/problem/B2")))) "1001B2"))
+(assert-t "cf problemset"
+          (string= (cph--short-name (prob '(("url" . "https://codeforces.com/problemset/problem/4/A")))) "4A"))
 (assert-t "generic slug"
-          (string= (cph--short-name '(("url" . "https://example.com/x") ("name" . "A. Weird Name!")))
+          (string= (cph--short-name (prob '(("url" . "https://example.com/x")
+                                            ("name" . "A. Weird Name!"))))
                    "a_weird_name_"))
-(assert-t "no name slug" (string= (cph--short-name nil) "problem"))
+(assert-t "no name slug" (string= (cph--short-name (prob '())) "problem"))
 
 ;; --- unit: solution naming (CF<contest>[-D<div>]-<index>/<Title>.<lang>) ---
 (assert-t "title stem A."
-          (string= (cph--title-stem '(("name" . "A. Vanya and Fence")))
+          (string= (cph--title-stem (prob '(("name" . "A. Vanya and Fence"))))
                    "Vanya and Fence"))
 (assert-t "title stem D1"
-          (string= (cph--title-stem '(("name" . "D1. Mocha and Diana (Easy Version)")))
+          (string= (cph--title-stem (prob '(("name" . "D1. Mocha and Diana (Easy Version)"))))
                    "Mocha and Diana (Easy Version)"))
 (assert-t "title stem A1"
-          (string= (cph--title-stem '(("name" . "A1. Balanced Shuffle (Easy)")))
+          (string= (cph--title-stem (prob '(("name" . "A1. Balanced Shuffle (Easy)"))))
                    "Balanced Shuffle (Easy)"))
 (assert-t "title stem without index"
-          (string= (cph--title-stem '(("name" . "Plain Title")))
+          (string= (cph--title-stem (prob '(("name" . "Plain Title"))))
                    "Plain Title"))
 (assert-t "div token D2"
           (string= (cph--div-token "Codeforces Round 355 (Div. 2)") "D2"))
@@ -72,9 +78,9 @@
                    "A. X - Y- Z!"))
 (assert-t "file stem trims trailing dots"
           (string= (cph--file-stem "Weird. ") "Weird"))
-(let* ((problem '(("name" . "A. Vanya and Fence")
-                  ("url" . "https://codeforces.com/contest/677/problem/A")
-                  ("group" . "Codeforces Round 355 (Div. 2)")))
+(let* ((problem (prob '(("name" . "A. Vanya and Fence")
+                         ("url" . "https://codeforces.com/contest/677/problem/A")
+                         ("group" . "Codeforces Round 355 (Div. 2)"))))
        (path (cph--solution-path problem "cpp")))
   (assert-t "solution path file"
             (string= (file-name-nondirectory path) "Vanya and Fence.cpp"))
@@ -84,8 +90,9 @@
                       (expand-file-name "CF677-D2-A" (cph--solution-dir))))))
 (assert-t "fallback path without contest url"
           (string= (file-name-nondirectory
-                    (cph--solution-path '(("name" . "X")
-                                          ("url" . "https://example.com/x")) "cpp"))
+                    (cph--solution-path
+                     (prob '(("name" . "X") ("url" . "https://example.com/x")))
+                     "cpp"))
                    "x.cpp"))
 
 ;; --- unit: language selection ---
@@ -111,15 +118,19 @@
 
 ;; --- unit: .prob round trip ---
 (let* ((src (expand-file-name "roundtrip/X.cpp" cph-test-dir))
-       (problem '(("name" . "X") ("url" . "https://codeforces.com/problemset/problem/1/X")
-                  ("tests" . ((("input" . "1") ("output" . "2") ("id" . 7)))))))
+       (problem (prob '(("name" . "X")
+                        ("url" . "https://codeforces.com/problemset/problem/1/X")
+                        ("tests" . (( ("input" . "1") ("output" . "2")
+                                      ("id" . 7))))))))
   (cph--save-problem src problem)
   (let ((back (with-temp-buffer
                 (setq buffer-file-name src)
                 (cph--problem-for-buffer))))
-    (assert-t "round trip name" (string= (cph--get "name" back) "X"))
-    (assert-t "round trip tests" (= (length (cph--get "tests" back)) 1))
-    (assert-t "round trip id" (= (cph--get "id" (car (cph--get "tests" back))) 7))))
+    (assert-t "round trip name" (string= (cph-problem-name back) "X"))
+    (assert-t "round trip tests"
+              (= (length (cph-problem-tests back)) 1))
+    (assert-t "round trip id"
+              (= (cph-test-id (car (cph-problem-tests back))) 7))))
 
 (princ (format "TOTAL FAILURES: %d\n" test-failures))
 (kill-emacs (if (> test-failures 0) 1 0))

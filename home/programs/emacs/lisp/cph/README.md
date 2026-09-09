@@ -1,4 +1,4 @@
-# CPH for Emacs (Codeforces only)
+# CPH for Emacs
 
 A minimal clone of the **Competitive Programming Helper (CPH)**
 VSCode extension for Emacs.  It supports Codeforces only and does
@@ -53,7 +53,8 @@ Standalone setup:
 ```
 
 No external packages are required (pure elisp + `json.el`).
-Emacs >= 29.
+Emacs >= 29; the lldb debugger additionally needs the GUD lldb
+support built into Emacs >= 30.
 
 In the judge buffer (`*cph-judge*`):
 
@@ -61,7 +62,7 @@ In the judge buffer (`*cph-judge*`):
 |---|---|
 | `g` | run all testcases (compile once) |
 | `p` / `RET` | run the testcase at point |
-| `d` | debug the testcase at point with lldb |
+| `d` | debug the testcase at point with lldb (GUD) |
 | `k` | stop running testcases |
 | `s` | open the solution file |
 | `q` | quit window |
@@ -131,16 +132,38 @@ Mirror CPH: normalize CRLF, trim the whole output, split on newlines,
 then require equal line counts and equal trimmed lines.  A test fails
 on timeout, signal, non-zero exit, non-empty stderr, or wrong output.
 
-## Debugging with lldb
+## Debugging with lldb (GUD)
 
 Place the cursor on a testcase in the judge buffer and press `d`.
-The solution compiles with `-g` (optimization off), the testcase
-input is redirected from a temp file, and an interactive lldb session
-starts in the `*cph-lldb*` buffer.  lldb stops at `main`; set more
-breakpoints, then step and inspect.
+The solution compiles with `-g` (optimization off), and a GUD lldb
+session starts on the binary with the testcase input redirected from
+a temp file.
 
-lldb comes from `home/packages.nix` and matches the clang version.
-Only compiled languages (c, cpp, rs) can be debugged.
+GUD is Emacs's own debugger interface, not a terminal: the solution
+source opens in a buffer with an arrow on the current line, and the
+usual GUD keys drive the session from the `*gud-*` buffer.
+
+| Key | Action |
+|---|---|
+| `C-c C-n` | next line (step over) |
+| `C-c C-s` | step into |
+| `C-c C-r` | continue |
+| `C-c C-f` | finish current function |
+| `C-c C-b` | set breakpoint at current source line |
+| `C-c C-d` | remove breakpoint at current line |
+| `C-c C-p` | print expression at point |
+| `C-c C-u` | run to the current source line |
+| `TAB` | complete an lldb command |
+
+These commands are also available from any buffer through the
+`C-x C-a` prefix (for example `C-x C-a C-n`) and from the Gud menu.
+The session stops at `main`; set more breakpoints, then step and
+inspect.  The binary and the temp input file are deleted when the
+session ends; `cph-keep-binaries` keeps the binary.
+
+This GUD lldb integration is built into Emacs 30 (GUD); lldb comes
+from `home/packages.nix` and matches the clang version.  Only
+compiled languages (c, cpp, rs) can be debugged.
 
 ## Supported languages
 

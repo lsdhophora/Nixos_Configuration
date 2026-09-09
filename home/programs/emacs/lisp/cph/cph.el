@@ -1,4 +1,4 @@
-;;; cph.el --- Competitive programming helper for Emacs (Codeforces) -*- lexical-binding: t; -*-
+;;; cph.el --- Competitive programming helper for Emacs -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 FeiHsueh
 
@@ -23,7 +23,9 @@
 ;;      .prob metadata, open the file and the judge buffer.
 ;;   2. Run: compile the solution once, run each sample, compare with
 ;;      CPH semantics, show PASS/FAIL and a line diff.
-;;   3. Debug: start lldb on the testcase at point (requires lldb).
+;;   3. Debug: start a GUD lldb session on the testcase at point.
+;;      GUD is Emacs's own debugger interface; this needs Emacs 30
+;;      (built-in GUD lldb support) and lldb on PATH.
 ;;
 ;; There is no submit flow and no ONLINE_JUDGE handling.
 ;;
@@ -36,10 +38,14 @@
 ;; In the judge buffer (*cph-judge*):
 ;;   g    run all testcases
 ;;   p    run the testcase at point
-;;   d    debug the testcase at point (lldb)
+;;   d    debug the testcase at point (lldb through GUD)
 ;;   k    stop the running testcases
 ;;   s    open the solution file
 ;;   q    quit the window
+;;
+;; Debugging opens a GUD lldb session (not an ansi-term).  The usual
+;; GUD keys apply in the *gud-* buffer: C-c C-n next, C-c C-s step,
+;; C-c C-r continue, C-c C-b breakpoint, C-c C-p print expression.
 ;;
 ;; In a solution buffer (cph-mode):
 ;;   C-c C-r   run all testcases of the problem
@@ -53,7 +59,7 @@
 (require 'json)
 
 (defgroup cph nil
-  "Competitive programming helper for Emacs (Codeforces)."
+  "Competitive programming helper for Emacs."
   :group 'tools
   :prefix "cph-")
 
@@ -123,11 +129,13 @@ Compilers must be on PATH.")
   "The judge buffer, or nil.")
 (defvar cph--running-procs nil
   "Processes of currently running testcases.")
+(defvar cph--debug-process nil
+  "Process of the current GUD lldb debug session, or nil.")
 (defvar cph--id-counter 0
   "Counter for testcase ids.")
 
 (defvar-local cph--problem nil
-  "Problem alist for the current judge buffer.")
+  "Problem record (`cph-problem') of the current judge buffer.")
 (defvar-local cph--results nil
   "Alist mapping testcase id -> result plist.")
 (defvar-local cph--tc-header-lines nil
@@ -159,18 +167,71 @@ Compilers must be on PATH.")
   "Return a fresh numeric testcase id."
   (cl-incf cph--id-counter))
 
-(defun cph--get (key alist)
-  "Return the value of KEY in ALIST, comparing keys with `equal'."
-  (let ((cell (assoc key alist)))
-    (and cell (cdr cell))))
+;; ---------------------------------------------------------------------------
+;; Problem model (native records)
+;;
+;; The companion wire format and the .prob metadata are JSON with
+;; string keys.  cph decodes JSON into the records below once, at the
+;; boundary, so the rest of the code reads native accessors instead of
+;; magic strings.
 
-(defun cph--put (alist key value)
-  "Return ALIST with KEY set to VALUE, mutating in place."
-  (let ((cell (assoc key alist)))
-    (if cell
-        (setcdr cell value)
-      (push (cons key value) alist)))
-  alist)
+(cl-defstruct (cph-problem (:constructor cph--problem-new)
+                           (:copier nil))
+  "A problem sent by the companion, decoded from JSON."
+  name group url time-limit memory-limit tests src-path)
+
+(cl-defstruct (cph-test (:constructor cph--test-new)
+                        (:copier nil))
+  "One sample testcase of a problem."
+  id input output)
+
+(defun cph--json-field (json key)
+  "Value of KEY in the string-keyed JSON alist JSON."
+  (cdr (assoc key json)))
+
+(defun cph--problem-from-json (json)
+  "Decode the string-keyed JSON alist JSON into a `cph-problem'."
+  (cph--problem-new
+   :name (cph--json-field json "name")
+   :group (cph--json-field json "group")
+   :url (cph--json-field json "url")
+   :time-limit (cph--json-field json "timeLimit")
+   :memory-limit (cph--json-field json "memoryLimit")
+   :src-path (cph--json-field json "srcPath")
+   :tests (mapcar #'cph--test-from-json (cph--json-field json "tests"))))
+
+(defun cph--test-from-json (json)
+  "Decode the string-keyed JSON alist JSON into a `cph-test'."
+  (cph--test-new :id (cph--json-field json "id")
+                 :input (cph--json-field json "input")
+                 :output (cph--json-field json "output")))
+
+(defun cph--problem-to-json (problem)
+  "Encode PROBLEM as a string-keyed JSON alist.
+Keeps the competitive-companion key names, so the .prob metadata
+stays compatible with the original CPH layout."
+  (delq nil
+        (list (and (cph-problem-name problem)
+                   (cons "name" (cph-problem-name problem)))
+              (and (cph-problem-group problem)
+                   (cons "group" (cph-problem-group problem)))
+              (and (cph-problem-url problem)
+                   (cons "url" (cph-problem-url problem)))
+              (and (cph-problem-time-limit problem)
+                   (cons "timeLimit" (cph-problem-time-limit problem)))
+              (and (cph-problem-memory-limit problem)
+                   (cons "memoryLimit" (cph-problem-memory-limit problem)))
+              (and (cph-problem-src-path problem)
+                   (cons "srcPath" (cph-problem-src-path problem)))
+              (cons "tests"
+                    (mapcar #'cph--test-to-json
+                            (cph-problem-tests problem))))))
+
+(defun cph--test-to-json (test)
+  "Encode TEST as a string-keyed JSON alist."
+  (list (cons "id" (cph-test-id test))
+        (cons "input" (cph-test-input test))
+        (cons "output" (cph-test-output test))))
 
 ;; ---------------------------------------------------------------------------
 ;; HTTP server (mirrors the CPH companion server on port 27121)
@@ -322,13 +383,13 @@ The request body is the problem JSON from the userscript."
 (defun cph--short-name (problem)
   "Return the short problem name for the filename, mirroring CPH.
 Codeforces: contest code plus problem letter, for example 1234A."
-  (let ((url (or (cph--get "url" problem) "")))
+  (let ((url (or (cph-problem-url problem) "")))
     (cond
      ((string-match "/\\(?:contest\\|gym\\)/\\([0-9]+\\)/problem/\\([A-Za-z0-9]+\\)" url)
       (concat (match-string 1 url) (match-string 2 url)))
      ((string-match "/problemset/problem/\\([0-9]+\\)/\\([A-Za-z0-9]+\\)" url)
       (concat (match-string 1 url) (match-string 2 url)))
-     (t (cph--slugify (cph--get "name" problem))))))
+     (t (cph--slugify (cph-problem-name problem))))))
 
 (defun cph--contest-parts (url)
   "Return (CONTEST-ID . INDEX) parsed from a Codeforces problem URL.
@@ -372,7 +433,7 @@ A. Vanya and Fence -> Vanya and Fence (the index letter already
 lives in the folder id)."
   (replace-regexp-in-string
    "^[A-Za-z][0-9]*\\.[ \t]*" ""
-   (string-trim (or (cph--get "name" problem) ""))))
+   (string-trim (or (cph-problem-name problem) ""))))
 
 (defun cph--file-stem (title)
   "Make TITLE safe as one file name component."
@@ -388,8 +449,8 @@ for example .../CF677-D2-A/Vanya and Fence.cpp.  The directory is
 created on demand by the caller.  Problems without a contest-shaped
 URL fall back to the flat name <short>.<lang>."
   (let* ((base (cph--solution-dir))
-         (url (or (cph--get "url" problem) ""))
-         (id (cph--problem-id url (cph--get "group" problem))))
+         (url (or (cph-problem-url problem) ""))
+         (id (cph--problem-id url (cph-problem-group problem))))
     (if id
         (let* ((title (cph--file-stem (cph--title-stem problem)))
                (stem (if (string-empty-p title)
@@ -437,31 +498,36 @@ folder's .cph directory regardless of `cph-save-location'."
    (expand-file-name ".cph" (file-name-directory src))))
 
 (defun cph--save-problem (src problem)
-  "Persist PROBLEM to the .prob file next to SRC."
+  "Persist the `cph-problem' PROBLEM to the .prob file next to SRC."
   (let ((f (cph--problem-file src)))
     (make-directory (file-name-directory f) t)
-    (with-temp-file f (insert (json-encode problem)))))
+    (with-temp-file f
+      (insert (json-encode (cph--problem-to-json problem))))))
 
 (defun cph--problem-for-buffer ()
-  "Load the problem associated with the current buffer's file."
+  "Load the `cph-problem' associated with the current buffer's file."
   (let ((src (buffer-file-name)))
     (when src
       (let ((f (cph--problem-file src)))
         (and (file-exists-p f)
-             (cph--json-read (with-temp-buffer
-                               (insert-file-contents f)
-                               (buffer-string))))))))
+             (cph--problem-from-json
+              (cph--json-read (with-temp-buffer
+                                (insert-file-contents f)
+                                (buffer-string)))))))))
 
 (defun cph--handle-problem (problem)
   "Handle a problem JSON alist from the companion server."
+  (setq problem (cph--problem-from-json problem))
   (let* ((lang (cph--choose-language))
-         (name (cph--get "name" problem))
+         (name (cph-problem-name problem))
          (src (cph--solution-path problem lang)))
-    (setq problem (cph--put problem "tests"
-                            (mapcar (lambda (tc)
-                                      (cons (cons "id" (cph--new-id)) tc))
-                                    (cph--get "tests" problem))))
-    (setq problem (cph--put problem "srcPath" src))
+    (setf (cph-problem-tests problem)
+          (mapcar (lambda (tc)
+                    (cph--test-new :id (cph--new-id)
+                                   :input (cph-test-input tc)
+                                   :output (cph-test-output tc)))
+                  (cph-problem-tests problem)))
+    (setf (cph-problem-src-path problem) src)
     (let ((created (not (file-exists-p src))))
       (when created
         (make-directory (file-name-directory src) t)
@@ -471,7 +537,7 @@ folder's .cph directory regardless of `cph-save-location'."
       (when created (cph--goto-placeholder))
       (cph-mode 1)
       (cph--log "fetched problem: %s -> %s (%d tests)"
-                name src (length (cph--get "tests" problem)))
+                name src (length (cph-problem-tests problem)))
       (cph--show-judge problem))))
 
 ;; ---------------------------------------------------------------------------
@@ -582,8 +648,8 @@ Result keys: :stdout :stderr :code :signal :time :timed-out."
                   always (string= (string-trim a) (string-trim b))))))
 
 (defun cph--lcs-diff (e r)
-  "Return an LCS line diff of E and R as (status . line) items.
-Status is match, extra, or missing."
+  "Return an LCS line diff of E and R as (STATUS . line) items.
+STATUS is the keyword :match, :extra, or :missing."
   (let* ((n (length e)) (m (length r))
          (dp (make-vector (1+ n) nil)))
     (dotimes (i (1+ n))
@@ -598,18 +664,18 @@ Status is match, extra, or missing."
     (let ((out nil) (i n) (j m))
       (while (and (> i 0) (> j 0))
         (if (string= (nth (1- i) e) (nth (1- j) r))
-            (progn (push (cons "match" (nth (1- j) r)) out)
+            (progn (push (cons :match (nth (1- j) r)) out)
                    (cl-decf i) (cl-decf j))
           (if (>= (aref (aref dp i) (1- j))
                   (aref (aref dp (1- i)) j))
-              (progn (push (cons "extra" (nth (1- j) r)) out)
+              (progn (push (cons :extra (nth (1- j) r)) out)
                      (cl-decf j))
-            (progn (push (cons "missing" (nth (1- i) e)) out)
+            (progn (push (cons :missing (nth (1- i) e)) out)
                    (cl-decf i)))))
       (while (> j 0)
-        (push (cons "extra" (nth (1- j) r)) out) (cl-decf j))
+        (push (cons :extra (nth (1- j) r)) out) (cl-decf j))
       (while (> i 0)
-        (push (cons "missing" (nth (1- i) e)) out) (cl-decf i))
+        (push (cons :missing (nth (1- i) e)) out) (cl-decf i))
       out)))
 
 (defun cph--diff-lines (expected received)
@@ -648,11 +714,14 @@ wrong output."
 
 (defun cph--set-result (id result)
   "Store RESULT for testcase ID in the judge buffer."
-  (setq cph--results (cph--put cph--results id result)))
+  (let ((cell (assoc id cph--results)))
+    (if cell
+        (setcdr cell result)
+      (push (cons id result) cph--results))))
 
 (defun cph--tc-number (tc)
   "Return the 1-based display number of TC."
-  (1+ (cl-position tc (cph--get "tests" cph--problem))))
+  (1+ (cl-position tc (cph-problem-tests cph--problem))))
 
 (defun cph--result-label (res)
   "Return a status label for result plist RES."
@@ -668,30 +737,30 @@ wrong output."
 
 (defun cph--insert-diff (diff)
   "Insert a human-readable summary of DIFF."
-  (let ((extra (cl-count-if (lambda (x) (string= (car x) "extra")) diff))
-        (missing (cl-count-if (lambda (x) (string= (car x) "missing")) diff)))
+  (let ((extra (cl-count-if (lambda (x) (eq (car x) :extra)) diff))
+        (missing (cl-count-if (lambda (x) (eq (car x) :missing)) diff)))
     (insert (format "  Diff: %d extra line(s), %d missing line(s)\n"
                     extra missing))
     (when (> extra 0)
       (insert "    extra:\n")
-      (dolist (x (cl-remove-if-not (lambda (x) (string= (car x) "extra")) diff))
+      (dolist (x (cl-remove-if-not (lambda (x) (eq (car x) :extra)) diff))
         (insert (format "      + %s\n" (cdr x)))))
     (when (> missing 0)
       (insert "    missing:\n")
-      (dolist (x (cl-remove-if-not (lambda (x) (string= (car x) "missing")) diff))
+      (dolist (x (cl-remove-if-not (lambda (x) (eq (car x) :missing)) diff))
         (insert (format "      - %s\n" (cdr x)))))))
 
 (defun cph--insert-testcase (tc num)
   "Insert the section for testcase TC numbered NUM."
-  (let* ((id (cph--get "id" tc))
+  (let* ((id (cph-test-id tc))
          (res (cdr (assoc id cph--results)))
          (header-line (line-number-at-pos (point))))
     (push (cons header-line id) cph--tc-header-lines)
     (insert (format "Test %d %s\n" num (cph--result-label res)))
     (insert "  Input:\n")
-    (cph--insert-lines "    " (cph--get "input" tc))
+    (cph--insert-lines "    " (cph-test-input tc))
     (insert "  Expected:\n")
-    (cph--insert-lines "    " (cph--get "output" tc))
+    (cph--insert-lines "    " (cph-test-output tc))
     (when res
       (if (eq (plist-get res :status) 'running)
           (insert "  Running...\n")
@@ -717,22 +786,22 @@ wrong output."
       (erase-buffer)
       (setq cph--tc-header-lines nil)
       (when cph--problem
-        (insert (format "%s\n" (cph--get "name" cph--problem)))
+        (insert (format "%s\n" (cph-problem-name cph--problem)))
         (insert (format "  %s | %s\n"
-                        (cph--get "group" cph--problem)
-                        (cph--get "url" cph--problem)))
+                        (cph-problem-group cph--problem)
+                        (cph-problem-url cph--problem)))
         (insert (format "  Time %s ms | Memory %s MB\n"
-                        (or (cph--get "timeLimit" cph--problem) "?")
-                        (or (cph--get "memoryLimit" cph--problem) "?")))
+                        (or (cph-problem-time-limit cph--problem) "?")
+                        (or (cph-problem-memory-limit cph--problem) "?")))
         (insert (format "  server: %s\n\n"
                         (if (process-live-p cph--server-process)
                             (format "%s:%s" cph-host cph-port)
                           "stopped")))
         (when cph--last-compile-error
           (insert (format "  Compile error:\n%s\n\n" cph--last-compile-error)))
-        (insert "  g run all | p run at point | d debug at point | k stop | s source | q quit\n\n")
+        (insert "  g run all | p run at point | d debug at point (GUD) | k stop | s source | q quit\n\n")
         (let ((num 0))
-          (dolist (tc (cph--get "tests" cph--problem))
+          (dolist (tc (cph-problem-tests cph--problem))
             (cl-incf num)
             (cph--insert-testcase tc num))))
       (goto-char (point-min)))
@@ -784,14 +853,15 @@ wrong output."
   (interactive)
   (unless cph--problem (user-error "No problem in the judge buffer"))
   (save-some-buffers t)
-  (let* ((src (cph--get "srcPath" cph--problem))
+  (let* ((src (cph-problem-src-path cph--problem))
          (lang (cph--language-for-src src)))
     (setq cph--stopped nil cph--results nil cph--running t
           cph--last-compile-error nil)
     (cph--render-judge)
     (pcase (cph--compile src lang)
       (`(,cmd . ,cleanup)
-       (cph--run-tests-seq cmd cleanup (cph--get "tests" cph--problem) 0))
+       (cph--run-tests-seq cmd cleanup
+                           (cph-problem-tests cph--problem) 0))
       (_ (setq cph--running nil)
          (cph--render-judge)))))
 
@@ -804,12 +874,12 @@ wrong output."
         (cph--render-judge))
     (when (and cph--running (not cph--stopped))
       (let ((tc (nth i tests)))
-        (cph--exec cmd (cph--get "input" tc)
+        (cph--exec cmd (cph-test-input tc)
                    (lambda (r)
                      (with-current-buffer cph--judge-buffer
-                       (cph--set-result (cph--get "id" tc)
+                       (cph--set-result (cph-test-id tc)
                                         (cph--finalize-result
-                                         r (cph--get "output" tc)))
+                                         r (cph-test-output tc)))
                        (cph--render-judge)
                        (cph--run-tests-seq cmd cleanup tests (1+ i)))))))))
 
@@ -817,29 +887,29 @@ wrong output."
   "Compile and run the testcase at point."
   (interactive)
   (let* ((id (cph--tc-at-point))
-         (tc (and id (cl-find id (cph--get "tests" cph--problem)
-                              :key (lambda (x) (cph--get "id" x))))))
+         (tc (and id (cl-find id (cph-problem-tests cph--problem)
+                              :key #'cph-test-id))))
     (unless tc (user-error "No testcase at point"))
     (save-some-buffers t)
-    (let* ((src (cph--get "srcPath" cph--problem))
+    (let* ((src (cph-problem-src-path cph--problem))
            (lang (cph--language-for-src src)))
       (setq cph--last-compile-error nil)
       (pcase (cph--compile src lang)
         (`(,cmd . ,cleanup)
          (cph--set-result id (list :status 'running))
          (cph--render-judge)
-         (cph--exec cmd (cph--get "input" tc)
+         (cph--exec cmd (cph-test-input tc)
                     (lambda (r)
                       (funcall cleanup)
                       (with-current-buffer cph--judge-buffer
                         (cph--set-result id
                                          (cph--finalize-result
-                                          r (cph--get "output" tc)))
+                                          r (cph-test-output tc)))
                         (cph--render-judge)))))
         (_ (cph--render-judge))))))
 
 ;; ---------------------------------------------------------------------------
-;; Debugging (lldb)
+;; Debugging (lldb through GUD, Emacs's own debugger interface)
 
 (defun cph--write-input-file (input)
   "Write INPUT to a temp file and return the file name."
@@ -847,38 +917,112 @@ wrong output."
     (with-temp-file f (insert input))
     f))
 
+(defun cph--lldb-session-cleanup (proc bin input-file)
+  "Delete the temp files of a finished GUD session.
+PROC is the lldb process; BIN and INPUT-FILE are the temp files.
+Keep BIN when `cph-keep-binaries' is non-nil."
+  (when (eq proc cph--debug-process)
+    (setq cph--debug-process nil))
+  (ignore-errors
+    (unless cph-keep-binaries (delete-file bin))
+    (delete-file input-file)))
+
+(defun cph--lldb-track-process (proc bin input-file)
+  "Clean up BIN and INPUT-FILE when the lldb process PROC exits.
+The sentinel that GUD installed keeps running; this one only adds
+the temp-file cleanup after it."
+  (if (not (process-live-p proc))
+      ;; The process died before we could arm the cleanup.
+      (cph--lldb-session-cleanup proc bin input-file)
+    (let ((old-sentinel (process-sentinel proc)))
+      (set-process-sentinel
+       proc
+       (lambda (p event)
+         (when old-sentinel (funcall old-sentinel p event))
+         (when (not (process-live-p p))
+           (cph--lldb-session-cleanup p bin input-file)))))))
+
+(defun cph--lldb-start (bin input-file)
+  "Start a GUD lldb session for BIN with INPUT-FILE on stdin.
+Return the lldb process.  The session breaks at main and launches
+the program, so the debugger stops at main, ready for stepping.
+On failure, delete the temp files and signal a user-error."
+  (require 'gud)
+  (unless (fboundp 'lldb)
+    (user-error "CPH lldb debugging needs Emacs 30 (built-in GUD lldb)"))
+  (unless (executable-find "lldb")
+    (user-error "lldb is not installed"))
+  (let (proc)
+    (condition-case err
+        (progn
+          (lldb (format "%s %s" (executable-find "lldb")
+                        (shell-quote-argument bin)))
+          (setq proc (get-buffer-process (current-buffer)))
+          (unless proc (error "GUD failed to start lldb"))
+          ;; These commands queue behind GUD's own lldb initialization,
+          ;; which installs the frame format used to track source lines.
+          (process-send-string proc "breakpoint set --name main\n")
+          (process-send-string
+           proc (format "settings set target.input-path %s\n"
+                        (shell-quote-argument input-file)))
+          (process-send-string proc "process launch\n"))
+      (error
+       (when (and proc (process-live-p proc))
+         (delete-process proc))
+       (unless cph-keep-binaries (ignore-errors (delete-file bin)))
+       (ignore-errors (delete-file input-file))
+       (user-error "lldb session failed to start: %s"
+                   (error-message-string err))))
+    (cph--lldb-track-process proc bin input-file)
+    proc))
+
+(defun cph--lldb-kill-session ()
+  "Stop the current CPH GUD debug session, if any."
+  (let ((proc (and (process-live-p cph--debug-process)
+                   cph--debug-process)))
+    (when proc
+      (let ((buf (process-buffer proc)))
+        (delete-process proc)
+        (when (and buf (buffer-live-p buf))
+          (kill-buffer buf))))))
+
 (defun cph-debug-testcase-at-point ()
-  "Compile with debug info and start lldb on the testcase at point.
-The testcase input is redirected from a temp file.  The lldb session
-runs in a term buffer named *cph-lldb*.  A breakpoint at main stops
-right after the launch; then set your own breakpoints and step."
+  "Debug the testcase at point with lldb inside GUD.
+Compile the solution with debug info and start a GUD lldb session on
+the binary.  The session breaks at main, redirects the testcase input
+from a temp file, and stops there, ready for your breakpoints and
+stepping.
+
+GUD is Emacs's own debugger interface, not a terminal: the source
+file opens with the current line marked, and the GUD keys (C-c C-n
+next, C-c C-s step, C-c C-r continue, C-c C-b set breakpoint, C-c C-p
+print expression) drive the session from the *gud-* buffer.  The
+binary and the input file are deleted when the session ends; set
+`cph-keep-binaries' to keep the binary."
   (interactive)
   (let* ((id (cph--tc-at-point))
-         (tc (and id (cl-find id (cph--get "tests" cph--problem)
-                              :key (lambda (x) (cph--get "id" x))))))
+         (tc (and id (cl-find id (cph-problem-tests cph--problem)
+                              :key #'cph-test-id))))
     (unless tc (user-error "No testcase at point"))
     (save-some-buffers t)
-    (let* ((src (cph--get "srcPath" cph--problem))
+    (let* ((src (cph-problem-src-path cph--problem))
            (lang (cph--language-for-src src)))
       (setq cph--last-compile-error nil)
       (pcase (cph--compile src lang t)
         (`(,cmd . ,_cleanup)
-         ;; Keep the binary: lldb runs it for the whole session.  The
-         ;; temp files live in /tmp and disappear on reboot.
-         (let* ((lldb (executable-find "lldb"))
-                (input-file (cph--write-input-file (cph--get "input" tc)))
-                (bin (car cmd))
-                (args (list "-o" "breakpoint set --name main"
-                            "-o" (format "process launch -i %s" input-file)
-                            "--" bin))
-                (launch (mapconcat #'shell-quote-argument
-                                   (cons lldb args) " ")))
-           (unless lldb (user-error "lldb is not installed"))
-           (when (get-buffer "*cph-lldb*")
-             (kill-buffer "*cph-lldb*"))
-           (require 'term)
-           (ansi-term launch "*cph-lldb*")
-           (cph--log "lldb started on %s (input %s)" bin input-file)))
+         (let ((bin (car cmd)))
+           ;; Replace any previous CPH debug session first; the lldb
+           ;; process owns the binary for its whole lifetime.
+           (cph--lldb-kill-session)
+           ;; Compute the testcase number here: the GUD session below
+           ;; switches the current buffer away from the judge buffer.
+           (let* ((num (cph--tc-number tc))
+                  (input-file
+                   (cph--write-input-file (cph-test-input tc)))
+                  (proc (cph--lldb-start bin input-file)))
+             (setq cph--debug-process proc)
+             (cph--log "lldb (GUD) debug session on %s, testcase %d, input %s"
+                       (file-name-nondirectory bin) num input-file))))
         (_ (cph--render-judge))))))
 
 (defun cph-stop ()
@@ -893,7 +1037,7 @@ right after the launch; then set your own breakpoints and step."
 (defun cph-show-source ()
   "Open the solution file of the problem in the judge buffer."
   (interactive)
-  (when-let ((src (cph--get "srcPath" cph--problem)))
+  (when-let ((src (cph-problem-src-path cph--problem)))
     (find-file src)))
 
 ;; ---------------------------------------------------------------------------

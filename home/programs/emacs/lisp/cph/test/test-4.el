@@ -51,9 +51,9 @@
        (problem (cph--json-read body)))
   (cph--handle-problem problem))
 
-(let* ((src (cph--get "srcPath"
-                      (with-current-buffer (cph--make-judge-buffer)
-                        cph--problem))))
+(let* ((src (cph-problem-src-path
+              (with-current-buffer (cph--make-judge-buffer)
+                cph--problem))))
 
   ;; 1) wrong solution: everything fails
   (write-src src "int main(){return 0;}\n")

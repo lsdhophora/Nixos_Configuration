@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         CPH Companion for Emacs (Codeforces)
+// @name         CPH Companion for Emacs
 // @namespace    https://github.com/FeiHsueh
 // @version      1.2.0
 // @description  Send a Codeforces problem to the Emacs CPH server (127.0.0.1:27121). Minimal clone of the VSCode CPH companion.
