@@ -49,8 +49,10 @@
                (insert-file-contents (expand-file-name "problem.json" cph-test-dir))
                (buffer-string)))
        (resp (cph-http-request body))
-       (src (expand-file-name "4A.cpp" cph-test-dir))
+       (src (expand-file-name "CF4-A/Theatre Square.cpp" cph-test-dir))
        (prob-file (cph--problem-file src)))
+  (assert-t "solution folder auto-created"
+            (file-directory-p (expand-file-name "CF4-A" cph-test-dir)))
   (assert-t "HTTP response ok" (string-match-p "\"status\":\"ok\"" resp))
   (assert-t "solution file created" (file-exists-p src))
   (assert-t "prob file created" (file-exists-p prob-file))

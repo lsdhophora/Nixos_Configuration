@@ -330,6 +330,75 @@ Codeforces: contest code plus problem letter, for example 1234A."
       (concat (match-string 1 url) (match-string 2 url)))
      (t (cph--slugify (cph--get "name" problem))))))
 
+(defun cph--contest-parts (url)
+  "Return (CONTEST-ID . INDEX) parsed from a Codeforces problem URL.
+For https://codeforces.com/contest/677/problem/A this is the pair
+of strings (\"677\" . \"A\"); gym links follow the same rule.
+Return nil when URL has no contest-shaped path."
+  (cond
+   ((string-match
+     "/\\(?:contest\\|gym\\)/\\([0-9]+\\)/problem/\\([A-Za-z0-9]+\\)" url)
+    (cons (match-string 1 url) (match-string 2 url)))
+   ((string-match "/problemset/problem/\\([0-9]+\\)/\\([A-Za-z0-9]+\\)" url)
+    (cons (match-string 1 url) (match-string 2 url)))
+   (t nil)))
+
+(defun cph--div-token (group)
+  "Compact division tag of contest GROUP, or nil.
+Examples: Codeforces Round 355 (Div. 2) -> D2;
+EPIC ... (Div. 1 + Div. 2) -> D1+2;
+Codeforces Beta Round 4 (Div. 2 Only) -> D2.
+nil when GROUP names no division (gym, mirrors)."
+  (when (and group (string-match "Div\\.[^)]*" group))
+    (let ((s (match-string 0 group)))
+      (setq s (replace-regexp-in-string "[^0-9+]" "" s))
+      (and (not (string-empty-p s)) (concat "D" s)))))
+
+(defun cph--problem-id (url group)
+  "Problem identifier used as the solution folder name.
+Format: CF<contest>[-D<div>]-<index>, for example CF677-D2-A.
+The -D<div> part is omitted when GROUP names no division."
+  (let ((parts (cph--contest-parts url)))
+    (when parts
+      (let ((contest (car parts))
+            (index (cdr parts))
+            (div (cph--div-token group)))
+        (format "CF%s%s-%s"
+                contest (if div (concat "-" div) "") index)))))
+
+(defun cph--title-stem (problem)
+  "Problem title without the leading index.
+A. Vanya and Fence -> Vanya and Fence (the index letter already
+lives in the folder id)."
+  (replace-regexp-in-string
+   "^[A-Za-z][0-9]*\\.[ \t]*" ""
+   (string-trim (or (cph--get "name" problem) ""))))
+
+(defun cph--file-stem (title)
+  "Make TITLE safe as one file name component."
+  (let ((s (replace-regexp-in-string "[/\\\\]" "-" title)))
+    (setq s (replace-regexp-in-string "[\000-\037\177]" "" s))
+    (setq s (string-trim s))
+    (replace-regexp-in-string "[. ]+\\'" "" s)))
+
+(defun cph--solution-path (problem lang)
+  "Absolute path of the new solution file for PROBLEM.
+Layout: <solution-dir>/CF<contest>[-D<div>]-<index>/<Title>.<lang>,
+for example .../CF677-D2-A/Vanya and Fence.cpp.  The directory is
+created on demand by the caller.  Problems without a contest-shaped
+URL fall back to the flat name <short>.<lang>."
+  (let* ((base (cph--solution-dir))
+         (url (or (cph--get "url" problem) ""))
+         (id (cph--problem-id url (cph--get "group" problem))))
+    (if id
+        (let* ((title (cph--file-stem (cph--title-stem problem)))
+               (stem (if (string-empty-p title)
+                         (cph--short-name problem)
+                       title))
+               (dir (expand-file-name id base)))
+          (expand-file-name (concat stem "." lang) dir))
+      (expand-file-name (concat (cph--short-name problem) "." lang)
+                        base))))
 (defun cph--language-for-src (src)
   "Return the language key for SRC from its extension."
   (let ((ext (file-name-extension src)))
@@ -359,15 +428,13 @@ file extension, then cpp."
 
 (defun cph--problem-file (src)
   "Return the .prob metadata path for the solution file SRC.
-Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
-  (let* ((base (file-name-nondirectory src))
-         (dir (file-name-directory src))
-         (save (if (string-empty-p cph-save-location)
-                   (expand-file-name ".cph" dir)
-                 cph-save-location)))
-    (expand-file-name
-     (format ".%s_%s.prob" base (md5 (expand-file-name src)))
-     save)))
+Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob next to SRC.  Each
+solution lives in its own folder, so its metadata stays in that
+folder's .cph directory regardless of `cph-save-location'."
+  (expand-file-name
+   (format ".%s_%s.prob" (file-name-nondirectory src)
+           (md5 (expand-file-name src)))
+   (expand-file-name ".cph" (file-name-directory src))))
 
 (defun cph--save-problem (src problem)
   "Persist PROBLEM to the .prob file next to SRC."
@@ -389,16 +456,16 @@ Mirrors CPH: .cph/.<basename>_<md5-of-path>.prob"
   "Handle a problem JSON alist from the companion server."
   (let* ((lang (cph--choose-language))
          (name (cph--get "name" problem))
-         (dir (cph--solution-dir))
-         (src (expand-file-name (concat (cph--short-name problem) "." lang)
-                                dir)))
+         (src (cph--solution-path problem lang)))
     (setq problem (cph--put problem "tests"
                             (mapcar (lambda (tc)
                                       (cons (cons "id" (cph--new-id)) tc))
                                     (cph--get "tests" problem))))
     (setq problem (cph--put problem "srcPath" src))
     (let ((created (not (file-exists-p src))))
-      (when created (cph--write-template src))
+      (when created
+        (make-directory (file-name-directory src) t)
+        (cph--write-template src))
       (cph--save-problem src problem)
       (find-file src)
       (when created (cph--goto-placeholder))

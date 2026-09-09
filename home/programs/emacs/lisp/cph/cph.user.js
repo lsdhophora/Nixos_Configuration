@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CPH Companion for Emacs (Codeforces)
 // @namespace    https://github.com/FeiHsueh
-// @version      1.1.0
+// @version      1.2.0
 // @description  Send a Codeforces problem to the Emacs CPH server (127.0.0.1:27121). Minimal clone of the VSCode CPH companion.
 // @author       FeiHsueh
 // @match        https://codeforces.com/*
@@ -23,6 +23,17 @@
  * the Violentmonkey menu.  The script extracts the problem (the same
  * JSON schema as competitive-companion) and POSTs it to the Emacs CPH
  * server.  The default port 27121 matches the VSCode CPH plugin.
+ *
+ * Sample parsing notes (modern Codeforces DOM):
+ *   - every problem title starts with the index, e.g. "A. Vanya and
+ *     Fence", "D1. Mocha and Diana (Easy Version)";
+ *   - sample lines inside <pre> are separated by <br> tags, NOT by
+ *     raw newlines (textContent would join "3 7" and "4 5 14" into
+ *     "3 74 5 14");
+ *   - all sample tests live in ONE div.sample-test; input/output pre
+ *     blocks alternate inside it.  Older pages used one div per test.
+ *   The parser handles both layouts by pairing every .input pre with
+ *   the .output pre at the same position.
  *
  * GM_xmlhttpRequest bypasses CORS, so the HTTPS page can reach the
  * local HTTP server.
@@ -48,9 +59,15 @@
 
   /* -------------------------------------------------------------- helpers */
 
-  // The <pre> content of sample tests usually starts with a newline.
-  function normPre(s) {
-    return s.replace(/^\r?\n/, "");
+  // Extract sample text from a <pre>.  Modern Codeforces separates
+  // lines with <br> tags instead of raw newlines, so textContent alone
+  // would glue consecutive lines together.  Normalize <br> to "\n" on
+  // a deep clone (the page is never mutated).  The <pre> content of
+  // older pages starts with a stray newline; drop that one.
+  function preToText(pre) {
+    const clone = pre.cloneNode(true);
+    clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+    return clone.textContent.replace(/^\r?\n/, "");
   }
 
   function parseTimeLimit(text) {
@@ -80,15 +97,20 @@
     const timeLimit = parseTimeLimit(timeEl ? timeEl.textContent : "");
     const memoryLimit = parseMemoryLimit(memEl ? memEl.textContent : "");
 
+    // Pair every sample input with its output by position.  This works
+    // for both DOM layouts: one .sample-test per example (older pages)
+    // and one .sample-test holding all examples (modern pages).
     const tests = [];
-    statement.querySelectorAll(".sample-test").forEach((st) => {
-      const inPre = st.querySelector(".input pre");
-      const outPre = st.querySelector(".output pre");
+    const inPres = Array.from(
+      statement.querySelectorAll(".sample-test .input pre")
+    );
+    const outPres = Array.from(
+      statement.querySelectorAll(".sample-test .output pre")
+    );
+    inPres.forEach((inPre, i) => {
+      const outPre = outPres[i];
       if (inPre && outPre) {
-        tests.push({
-          input: normPre(inPre.textContent),
-          output: normPre(outPre.textContent),
-        });
+        tests.push({ input: preToText(inPre), output: preToText(outPre) });
       }
     });
 

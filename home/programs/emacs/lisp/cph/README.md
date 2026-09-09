@@ -84,6 +84,31 @@ The userscript uses `GM_xmlhttpRequest`, which bypasses CORS, so the
 HTTPS page can reach the local HTTP server.  The `@connect
 127.0.0.1` / `@connect localhost` grants are in the header.
 
+Sample parsing matches the modern Codeforces DOM:
+
+* sample lines inside `<pre>` are separated by `<br>` tags, not raw
+  newlines (they are converted, so `3 7` + `4 5 14` stays two lines);
+* all examples live in ONE `div.sample-test`; input/output `<pre>`
+  blocks alternate inside it.  Inputs and outputs are paired by
+  position, which also works for older pages that used one
+  `div.sample-test` per example.
+
+## Solution layout
+
+Each fetch creates a folder named after the problem id and writes
+the file named after the title, index stripped, for example
+`CF677-D2-A/Vanya and Fence.cpp`.
+
+The folder id is CF + contest id + division + problem index, for
+example CF677-D2-A.  Rounds whose name carries no division (gym,
+ICPC-style mirrors) drop that part: CF102501-A.  The file name is the
+title without the leading index (`A. Vanya and Fence` -> `Vanya and
+Fence`); the index letter already lives in the folder id.  Problems
+whose URL has no contest shape fall back to `<short>.cpp`.  Metadata
+lives in a `.cph` directory inside the problem folder
+(`.<basename>_<md5>.prob`), so a problem can be re-run after Emacs
+restarts.
+
 ## Configuration (cph.el)
 
 | Variable | Default | Meaning |
@@ -96,10 +121,9 @@ HTTPS page can reach the local HTTP server.  The `@connect
 | `cph-timeout` | 3000 | per-test timeout in ms |
 | `cph-keep-binaries` | nil | keep compiled binaries |
 
-Solution files are named like the CF short code (contest code plus
-letter, for example `1234A.cpp`).  Metadata lives in a `.cph`
-directory next to the source (`.<basename>_<md5>.prob`), so a problem
-can be re-run after Emacs restarts.
+Solution naming and layout are described in the Solution layout
+section above; per-problem `.prob` metadata keeps problems runnable
+after an Emacs restart.
 
 ## Comparison semantics
 

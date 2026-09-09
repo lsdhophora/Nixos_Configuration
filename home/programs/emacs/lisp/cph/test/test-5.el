@@ -22,6 +22,72 @@
                    "a_weird_name_"))
 (assert-t "no name slug" (string= (cph--short-name nil) "problem"))
 
+;; --- unit: solution naming (CF<contest>[-D<div>]-<index>/<Title>.<lang>) ---
+(assert-t "title stem A."
+          (string= (cph--title-stem '(("name" . "A. Vanya and Fence")))
+                   "Vanya and Fence"))
+(assert-t "title stem D1"
+          (string= (cph--title-stem '(("name" . "D1. Mocha and Diana (Easy Version)")))
+                   "Mocha and Diana (Easy Version)"))
+(assert-t "title stem A1"
+          (string= (cph--title-stem '(("name" . "A1. Balanced Shuffle (Easy)")))
+                   "Balanced Shuffle (Easy)"))
+(assert-t "title stem without index"
+          (string= (cph--title-stem '(("name" . "Plain Title")))
+                   "Plain Title"))
+(assert-t "div token D2"
+          (string= (cph--div-token "Codeforces Round 355 (Div. 2)") "D2"))
+(assert-t "div token D1"
+          (string= (cph--div-token "Codeforces Round 873 (Div. 1)") "D1"))
+(assert-t "div token D3"
+          (string= (cph--div-token "Codeforces Round 826 (Div. 3)") "D3"))
+(assert-t "div token D1+2"
+          (string= (cph--div-token "EPIC Institute of Technology Round Summer 2024 (Div. 1 + Div. 2)")
+                   "D1+2"))
+(assert-t "div token Beta Only"
+          (string= (cph--div-token "Codeforces Beta Round 4 (Div. 2 Only)") "D2"))
+(assert-t "div token Rated for"
+          (string= (cph--div-token "Educational Codeforces Round 171 (Rated for Div. 2)")
+                   "D2"))
+(assert-t "div token none"
+          (null (cph--div-token "2019-2020 ICPC Southwestern European Regional Programming Contest (SWERC 2019-20)")))
+(assert-t "problem id Div2"
+          (string= (cph--problem-id "https://codeforces.com/contest/677/problem/A"
+                                    "Codeforces Round 355 (Div. 2)")
+                   "CF677-D2-A"))
+(assert-t "problem id problemset"
+          (string= (cph--problem-id "https://codeforces.com/problemset/problem/4/A" "Codeforces")
+                   "CF4-A"))
+(assert-t "problem id gym"
+          (string= (cph--problem-id "https://codeforces.com/gym/102501/problem/A" "SWERC 2019-20")
+                   "CF102501-A"))
+(assert-t "problem id version index"
+          (string= (cph--problem-id "https://codeforces.com/contest/1559/problem/D2"
+                                    "Codeforces Round 738 (Div. 2)")
+                   "CF1559-D2-D2"))
+(assert-t "file stem keeps spaces"
+          (string= (cph--file-stem "Vanya and Fence") "Vanya and Fence"))
+(assert-t "file stem sanitizes separators"
+          (string= (cph--file-stem "A. X / Y\\ Z!")
+                   "A. X - Y- Z!"))
+(assert-t "file stem trims trailing dots"
+          (string= (cph--file-stem "Weird. ") "Weird"))
+(let* ((problem '(("name" . "A. Vanya and Fence")
+                  ("url" . "https://codeforces.com/contest/677/problem/A")
+                  ("group" . "Codeforces Round 355 (Div. 2)")))
+       (path (cph--solution-path problem "cpp")))
+  (assert-t "solution path file"
+            (string= (file-name-nondirectory path) "Vanya and Fence.cpp"))
+  (assert-t "solution path folder"
+            (string= (file-name-directory path)
+                     (file-name-as-directory
+                      (expand-file-name "CF677-D2-A" (cph--solution-dir))))))
+(assert-t "fallback path without contest url"
+          (string= (file-name-nondirectory
+                    (cph--solution-path '(("name" . "X")
+                                          ("url" . "https://example.com/x")) "cpp"))
+                   "x.cpp"))
+
 ;; --- unit: language selection ---
 (assert-t "default language is cpp" (string= (cph--choose-language) "cpp"))
 (let ((cph-default-language "rs"))
