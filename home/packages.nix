@@ -1,4 +1,10 @@
-{ pkgs, ... }: {
+{
+  pkgs,
+  inputs,
+  repoLib,
+  ...
+}:
+{
   home.packages = with pkgs; [
     tree
     ffmpeg
@@ -23,5 +29,11 @@
     rustfmt
     rust-analyzer
     mermaid-ascii
+    # LibreOffice, Qt/KF6 variant, from the UNSTABLE channel: the pinned
+    # nixos-26.05 revision has no Hydra build for LibreOffice (local
+    # from-source compile), while nixos-unstable is continuously cached.
+    # On Plasma 6 the Qt backend follows the Breeze theme and uses native
+    # KDE dialogs; the plain GTK build looks inconsistent on KDE.
+    (repoLib.unstablePkgs inputs pkgs).libreoffice-qt
   ];
 }
