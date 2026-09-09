@@ -28,6 +28,9 @@
     cargo
     rustfmt
     rust-analyzer
+    # TypeScript/JavaScript runtime with built-in formatter, linter,
+    # and language server (`deno lsp`, `deno fmt`, `deno check`).
+    deno
     mermaid-ascii
     # LibreOffice, Qt/KF6 variant, from the UNSTABLE channel: the pinned
     # nixos-26.05 revision has no Hydra build for LibreOffice (local
