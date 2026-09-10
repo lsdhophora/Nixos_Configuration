@@ -1,0 +1,26 @@
+--- kp-orig/kdecoration/breezedecoration.cpp	2026-09-10 14:58:25.979539552 +0800
++++ rp-pat/kdecoration/breezedecoration.cpp	2026-09-10 15:06:47.135025044 +0800
+@@ -326,8 +326,14 @@
+ 
+     connect(m_overrideOutlineFromButtonAnimation, &QVariantAnimation::valueChanged, this, [this](const QVariant &value) {
+         m_overrideOutlineAnimationProgress = value.toReal();
+-        if (m_overrideOutlineFromButtonAnimation->state() == QAbstractAnimation::Running)
++        if (m_overrideOutlineFromButtonAnimation->state() == QAbstractAnimation::Running) {
+             updateShadow(false, true, true);
++            // paint() strokes the top of the outline over the titlebar, so the
++            // decoration must repaint too when the override colour changes.
++            // updateShadow() only refreshes the shadow and would leave the top
++            // of the outline at the button colour after the button unhover.
++            update();
++        }
+     });
+ 
+     // use DBus connection to update on Klassy configuration change
+@@ -493,6 +499,7 @@
+ 
+     } else {
+         updateShadow(false, true, true);
++        update();
+     }
+ }
+ 

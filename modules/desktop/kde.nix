@@ -233,16 +233,39 @@ in
     )
     # Remove Klassy .desktop to prevent KService from indexing it,
     # which causes it to appear on the Most Used page.
+    #
+    # Pin the source to v6.7.1. nixpkgs-unstable still ships 6.5.3, whose
+    # corner handling predates the kwin 6.7 changes: 6.5.3 only reports the
+    # bottom radii to kwin via setBorderRadius() and lets the decoration
+    # paint the top corners itself, while 6.7 (upstream 4ab8465) reports
+    # every radius so kwin clips the window corners itself.
+    #
+    # The thin window outline lives in the decoration shadow, i.e. behind the
+    # window. Its arc is therefore hidden at the rounded top corners, which
+    # leaves a gap next to a full-height button highlight. The local patch
+    # strokes the top edge and the two top corners of the outline over the
+    # titlebar with the same rect, pen width and corner radius as the shadow,
+    # so the line joins the button highlight around the corner and keeps one
+    # colour all around.
     (final: prev: {
       klassy =
         applyPatches
           [
             ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
             ./../../patches/klassy/remove-empty-corners-tooltip.patch
-            ./../../patches/klassy/fix-button-edge-gap.patch
+            ./../../patches/klassy/set-desktop-file-name.patch
+            ./../../patches/klassy/paint-outline-in-decoration.patch
+            ./../../patches/klassy/repaint-decoration-on-outline-override.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {
+              version = "6.7.1";
+              src = final.fetchFromGitHub {
+                owner = "paulmcauley";
+                repo = "klassy";
+                tag = "v6.7.1";
+                hash = "sha256-5sB8vBjxJ+7/YkJDC7GvOKt35wJCGnJLOQAYH6+qmoU=";
+              };
               postInstall = (oldAttrs.postInstall or "") + ''
                 rm -f "$out/share/applications/kcm_klassydecoration.desktop"
               '';

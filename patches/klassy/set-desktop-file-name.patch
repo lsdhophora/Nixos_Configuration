@@ -1,0 +1,11 @@
+diff -ruN klassy-orig/kstyle/config/main.cpp klassy-pat/kstyle/config/main.cpp
+--- klassy-orig/kstyle/config/main.cpp	2026-09-10 10:40:03.651257319 +0800
++++ klassy-pat/kstyle/config/main.cpp	2026-09-10 10:40:03.658888533 +0800
+@@ -40,6 +40,7 @@
+     KLocalizedString::setApplicationDomain("klassy_style_config");
+     QApplication app(argc, argv);
+     app.setApplicationName(QStringLiteral("klassy-settings"));
++    app.setDesktopFileName(QStringLiteral("klassy-settings"));
+     app.setApplicationVersion(Breeze::klassyLongVersion());
+ 
+     QCommandLineParser parser;

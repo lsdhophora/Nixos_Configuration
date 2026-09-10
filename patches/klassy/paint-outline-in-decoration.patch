@@ -1,0 +1,75 @@
+--- kp-orig/kdecoration/breezedecoration.cpp	2026-09-10 14:58:25.979539552 +0800
++++ kp-pat/kdecoration/breezedecoration.cpp	2026-09-10 14:58:30.884233855 +0800
+@@ -1338,6 +1338,72 @@
+     if (!hideTitleBar()) {
+         calculateTitleBarShape();
+         paintTitleBar(painter, repaintRegion);
++
++        // Stroke the top of the thin window outline over the titlebar.
++        //
++        // createShadowObject() composes the outline into the decoration shadow,
++        // i.e. behind the window.  At the rounded top corners the opaque
++        // titlebar hides the inner part of the outline arc, so a full-height
++        // button highlight (close/maximise/minimise) ends against the
++        // background anti-aliasing with no line over it.  Stroking the top of
++        // the outline here, on top, keeps the line and the button backgrounds
++        // joined around the corners.  The stroke uses the same rect, pen width
++        // and corner radius as the shadow, so the half drawn here lines up with
++        // the half the shadow draws outside the window and both have the same
++        // colour.  Only the top edge and the two top corners are stroked; the
++        // shadow still draws the straight sides and the bottom.
++        if (!c->isShaded() && m_windowOutline.isValid() && !isMaximized() && !isTopEdge() && !isLeftEdge() && !isRightEdge()) {
++            qreal outlinePenWidth;
++            if (KWindowSystem::isPlatformX11()) {
++                outlinePenWidth = m_internalSettings->windowOutlineThickness() * m_systemScaleFactorX11;
++                if (m_internalSettings->windowOutlineSnapToWholePixel()) {
++                    outlinePenWidth = std::round(outlinePenWidth);
++                }
++            } else {
++                outlinePenWidth = m_internalSettings->windowOutlineThickness();
++                if (m_internalSettings->windowOutlineSnapToWholePixel()) {
++                    outlinePenWidth = KDecoration3::snapToPixelGrid(outlinePenWidth, c->nextScale());
++                }
++            }
++            const qreal outlineOverlap = m_internalSettings->windowOutlineOverlap() ? 0.5 : 0;
++            const qreal halfOutlinePenWidth = outlinePenWidth / 2;
++            const qreal outlineAdjustment = halfOutlinePenWidth - outlineOverlap;
++            const qreal cornerRadius = (m_internalSettings->windowCornerRadius() < 0.4)
++                ? m_scaledCornerRadius
++                : m_scaledCornerRadius + halfOutlinePenWidth;
++            const QRectF outlineRect = m_titleRect.adjusted(-outlineAdjustment, -outlineAdjustment, outlineAdjustment, outlineAdjustment);
++
++            QPainterPath topOutlinePath;
++            if (cornerRadius > 0) {
++                topOutlinePath.moveTo(outlineRect.left(), outlineRect.top() + cornerRadius);
++                topOutlinePath.arcTo(QRectF(outlineRect.left(), outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 180, -90);
++                topOutlinePath.lineTo(outlineRect.right() - cornerRadius, outlineRect.top());
++                topOutlinePath.arcTo(QRectF(outlineRect.right() - 2 * cornerRadius, outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 90, -90);
++            } else {
++                topOutlinePath.moveTo(outlineRect.left(), outlineRect.top());
++                topOutlinePath.lineTo(outlineRect.right(), outlineRect.top());
++            }
++
++            painter->save();
++            painter->setClipPath(m_titleBarPath);
++            painter->setRenderHint(QPainter::Antialiasing);
++            painter->setBrush(Qt::NoBrush);
++            // Replace the titlebar pixels instead of blending with them: the
++            // titlebar is translucent, so a SourceOver stroke would composite
++            // the translucent line with the translucent titlebar and make the
++            // top of the outline look heavier than the part the shadow draws
++            // over the backdrop.
++            painter->setCompositionMode(QPainter::CompositionMode_Source);
++            QPen outlinePen(m_windowOutline);
++            outlinePen.setWidthF(outlinePenWidth + outlineOverlap);
++            outlinePen.setCapStyle(Qt::FlatCap);
++            if (m_internalSettings->windowCornerRadius() < 0.4) {
++                outlinePen.setJoinStyle(Qt::MiterJoin);
++            }
++            painter->setPen(outlinePen);
++            painter->drawPath(topOutlinePath);
++            painter->restore();
++        }
+     }
+ 
+     if (hasBorders() && !s->isAlphaChannelSupported()) {
