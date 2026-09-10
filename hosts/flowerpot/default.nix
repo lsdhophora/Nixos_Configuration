@@ -35,6 +35,7 @@
 
     # ---- Desktop ----
     ../../modules/desktop/kde.nix
+    ../../modules/desktop/home-config-prune.nix
   ];
 
   # ---- X11 support (required for Plasma X11 session) ----

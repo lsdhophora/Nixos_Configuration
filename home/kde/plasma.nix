@@ -6,9 +6,10 @@
   #   1. removes plasma-org.kde.plasma.desktop-appletsrc (prevents unbounded growth)
   #   2. rebuilds the panel/widgets from the declarations below with
   #      qdbus evaluateScript
-  # Therefore this file regenerates on every start and does not need
-  # persistence. It was removed from the files list in
-  # persistence-kde.nix (same directory).
+  # Therefore this file regenerates on every start. The persistent .config
+  # directory keeps the file between sessions, and both the boot prune
+  # (modules/desktop/home-config-prune.nix) and the autostart script remove
+  # it again.
   #
   # UI changes (unpin, drag widgets) are overwritten on the next start.
   # To change pins, edit this file + `home-manager switch --flake .#FeiHsueh`.
@@ -102,6 +103,9 @@
     # is granted through the plasma/allow_configure_when_locked Kiosk action;
     # denying it makes the action (and every menu item bound to it, e.g. the
     # Task Manager's "Configure...") invisible for locked applets.
+    # The boot prune deletes this file at every boot, so Plasma cannot feed
+    # the view state of the last session back (see
+    # modules/desktop/home-config-prune.nix).
     configFile."plasmashellrc" = {
       "KDE Action Restrictions"."plasma/allow_configure_when_locked" = false;
     };
@@ -110,8 +114,8 @@
     # "Open Terminal Here", KRunner, the desktop context menu, ...) read these
     # keys from ~/.config/kdeglobals (what System Settings -> Default
     # Applications writes).  plasma-manager writes config files in place (no
-    # atomic rename), so this works even though kdeglobals is a single-file
-    # bind mount from /persist.
+    # atomic rename), so the declared keys survive while KDE writes its own
+    # keys to the same file.
     configFile."kdeglobals" = {
       General.TerminalApplication = "wezterm";
       General.TerminalService = "org.wezfurlong.wezterm.desktop";

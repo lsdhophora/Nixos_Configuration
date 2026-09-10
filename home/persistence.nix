@@ -2,6 +2,9 @@
 # General home persistence (impermanence).
 # /home is tmpfs; only these paths are bind-mounted from /persist/home/FeiHsueh.
 # KDE-specific entries live in ./kde/persistence-kde.nix (merged into the same key).
+# That file persists the whole .config directory, so no path below .config
+# belongs here. The paths below .config that survive a reboot are the list
+# in modules/desktop/home-config-prune.nix.
 {
   home.persistence."/persist" = {
     directories = [
@@ -9,8 +12,6 @@
       ".ssh"
       ".gnupg"
       ".pki"
-      # sops age keys (needed to decrypt secrets at boot)
-      ".config/sops"
 
       # ---- Nix state ----
       ".local/state/nix"
@@ -46,48 +47,13 @@
       "Public"
       "Templates"
 
-      # ---- Firefox data (under .config) ----
-      ".config/.mozilla"
-      ".config/mozilla"
-
       # ---- LibreWolf profile (migrated from Firefox) ----
       ".librewolf"
-
-      # ---- Nix config repo ----
-      ".config/nixos"
 
       # ---- pi agent runtime state (config itself is declarative via home/dev/pi-agent) ----
       ".pi/agent/sessions"
       ".pi/agent/npm"
       ".pi/agent/voice-input-models"
-
-      # ---- Non-KDE app config (.config) ----
-      # Element keeps its key backup (IndexedDB) and session here; must persist
-      # across reboots or the Matrix account needs re-login and re-verification.
-      ".config/Element"
-      ".config/dconf"
-      ".config/direnv"
-      ".config/emacs"
-      ".config/environment.d"
-      ".config/fcitx"
-      ".config/fcitx5"
-      ".config/fontconfig"
-      ".config/git"
-      ".config/gtk-3.0"
-      ".config/gtk-4.0"
-      ".config/keepassxc"
-      ".config/wezterm"
-      ".config/mpv"
-      ".config/tmux"
-      ".config/systemd"
-      ".config/nix"
-      ".config/nnn"
-      ".config/lazygit"
-      ".config/gh"
-      ".config/xsettingsd"
-      ".config/libaccounts-glib"
-      ".config/clangd"
-      ".config/go"
     ];
     files = [
 
