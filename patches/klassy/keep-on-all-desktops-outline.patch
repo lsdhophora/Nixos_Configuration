@@ -1,3 +1,43 @@
+
+--- a/kdecoration/breezebutton.cpp
++++ b/kdecoration/breezebutton.cpp
+@@ -654,15 +654,19 @@
+     if (!m_d || !m_d->internalSettings()->colorizeWindowOutlineWithButton() || isStandAlone())
+         return;
+ 
+-    // The two menu buttons do not change the window outline.  The pointer
+-    // must be able to move from another button to a menu button and back
+-    // without the outline keeping a colour.
+-    const bool menuButton = type() == KDecoration3::DecorationButtonType::Menu
+-        || type() == KDecoration3::DecorationButtonType::ApplicationMenu;
++    // The two menu buttons and the two buttons that colour the outline while
++    // checked do not change the window outline.  The pointer must be able to
++    // move from another button to one of them and back without the outline
++    // keeping a colour.
++    const auto ignoresOutlineOverride = [](KDecoration3::DecorationButtonType buttonType) {
++        return buttonType == KDecoration3::DecorationButtonType::Menu || buttonType == KDecoration3::DecorationButtonType::ApplicationMenu
++            || buttonType == KDecoration3::DecorationButtonType::KeepAbove || buttonType == KDecoration3::DecorationButtonType::OnAllDesktops;
++    };
++    const bool ignoredButton = ignoresOutlineOverride(type());
+ 
+     QColor color = QColor();
+     if (on) {
+-        if (menuButton)
++        if (ignoredButton)
+             return;
+ 
+         m_buttonPalette =
+@@ -686,9 +690,7 @@
+         for (KDecoration3::DecorationButton *decButton : decButtons) {
+             Button *button = static_cast<Button *>(decButton);
+ 
+-            if (button != this && (button->isHovered() || button->isPressed())
+-                && button->type() != KDecoration3::DecorationButtonType::Menu
+-                && button->type() != KDecoration3::DecorationButtonType::ApplicationMenu) {
++            if (button != this && (button->isHovered() || button->isPressed()) && !ignoresOutlineOverride(button->type())) {
+                 return;
+             }
+         }
 --- a/kdecoration/breezedecoration.cpp
 +++ b/kdecoration/breezedecoration.cpp
 @@ -397,6 +397,11 @@
@@ -12,7 +52,44 @@
      connect(c, &KDecoration3::DecoratedWindow::keepBelowChanged, this, &Decoration::recalculateBorders); // in case EnumHideTitleBar::KeptBehind
  
      connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::updateAnimationState);
-@@ -1856,7 +1861,7 @@
+@@ -1381,11 +1386,18 @@
+             const QRectF outlineRect = m_titleRect.adjusted(-outlineAdjustment, -outlineAdjustment, outlineAdjustment, outlineAdjustment);
+ 
+             QPainterPath topOutlinePath;
++            QPainterPath topRightOutlinePath;
+             if (cornerRadius > 0) {
++                const QRectF topRightCornerRect(outlineRect.right() - 2 * cornerRadius, outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius);
+                 topOutlinePath.moveTo(outlineRect.left(), outlineRect.top() + cornerRadius);
+                 topOutlinePath.arcTo(QRectF(outlineRect.left(), outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 180, -90);
+                 topOutlinePath.lineTo(outlineRect.right() - cornerRadius, outlineRect.top());
+-                topOutlinePath.arcTo(QRectF(outlineRect.right() - 2 * cornerRadius, outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 90, -90);
++                // stop on the diagonal of the top-right corner, so that corner
++                // keeps one half in each colour
++                topOutlinePath.arcTo(topRightCornerRect, 90, -45);
++                // arcMoveTo() first: arcTo() on an empty path draws a line from (0,0)
++                topRightOutlinePath.arcMoveTo(topRightCornerRect, 45);
++                topRightOutlinePath.arcTo(topRightCornerRect, 45, -45);
+             } else {
+                 topOutlinePath.moveTo(outlineRect.left(), outlineRect.top());
+                 topOutlinePath.lineTo(outlineRect.right(), outlineRect.top());
+@@ -1409,6 +1421,16 @@
+             }
+             painter->setPen(outlinePen);
+             painter->drawPath(topOutlinePath);
++
++            // Draw the other half of the top-right corner in the
++            // on-all-desktops colour, so the corner keeps one half in each
++            // colour, exactly as the shadow draws it.
++            if (m_windowOutlineSecondary.isValid() && !topRightOutlinePath.isEmpty()) {
++                outlinePen.setColor(m_windowOutlineSecondary);
++                painter->setPen(outlinePen);
++                painter->drawPath(topRightOutlinePath);
++            }
++
+             painter->restore();
+         }
+     }
+@@ -1856,7 +1878,7 @@
           || (m_animation->state() != QAbstractAnimation::Running
               && ((active && m_internalSettings->windowOutlineStyle(true) == InternalSettings::EnumWindowOutlineStyle::WindowOutlineNone)
                   || (!active && m_internalSettings->windowOutlineStyle(false) == InternalSettings::EnumWindowOutlineStyle::WindowOutlineNone))))
@@ -21,7 +98,7 @@
  
      if (active && m_internalSettings->shadowSize(true) == InternalSettings::EnumShadowSize::ShadowNone && windowOutlineNone && !isWindowOutlineOverride) {
          return nullptr;
-@@ -1981,27 +1986,28 @@
+@@ -1981,27 +2003,28 @@
                  outlineSides |= SideRight;
              }
  
@@ -40,10 +117,10 @@
 +            if (!isBottomEdge() && !(hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
 +                if (!isLeftEdge()) {
 +                    outlineCorners |= CornerBottomLeft;
-                 }
++                }
 +                if (!isRightEdge()) {
 +                    outlineCorners |= CornerBottomRight;
-+                }
+                 }
 +            }
  
 -                if (!isTopEdge() && !(hideTitleBar() && hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
@@ -56,17 +133,17 @@
 +            if (!isTopEdge() && !(hideTitleBar() && hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
 +                if (!isLeftEdge()) {
 +                    outlineCorners |= CornerTopLeft;
-+                }
+                 }
 +                if (!isRightEdge()) {
 +                    outlineCorners |= CornerTopRight;
-                 }
++                }
 +            }
  
 +            if (!c->isShaded()) {
                  outlinePath = GeometryTools::roundedPath(outlineRect, outlineCorners, cornerRadius, outlineSides, outlinePenWidth);
  
              } else {
-@@ -2009,6 +2015,56 @@
+@@ -2009,6 +2032,69 @@
              }
  
              painter.drawPath(outlinePath);
@@ -75,11 +152,14 @@
 +            // right and bottom sides and the bottom-right corner with the
 +            // on-all-desktops colour.  This stroke lies over the primary
 +            // keep-in-front colour.  The secondary outline follows the same
-+            // rounded rectangle as the primary ring.  Each end stops at a
-+            // rounded corner, so no end runs past a corner.
++            // rounded rectangle as the primary ring.  It starts and ends on the
++            // diagonal of a top corner, so the top-right and bottom-left corners
++            // keep one half in each colour.
 +            if (m_windowOutlineSecondary.isValid() && !c->isShaded()) {
 +                QPen secondaryPen = p;
 +                secondaryPen.setColor(m_windowOutlineSecondary);
++                // a flat cap cuts the arc at the diagonal, not at a square
++                secondaryPen.setCapStyle(Qt::FlatCap);
 +                painter.setPen(secondaryPen);
 +
 +                const bool drawBottomSide = !isBottomEdge();
@@ -87,12 +167,19 @@
 +
 +                QPainterPath secondaryOutlinePath;
 +                if (drawBottomSide) {
-+                    // The left end starts at the bottom-left corner arc when
-+                    // that corner is rounded.  Other cases inset it by the pen
-+                    // width, so the end stays inside the ring.
-+                    const qreal bottomLeftEnd =
-+                        (outlineCorners & CornerBottomLeft) ? outlineRect.left() + cornerRadius : outlineRect.left() + outlinePenWidth;
-+                    secondaryOutlinePath.moveTo(bottomLeftEnd, outlineRect.bottom());
++                    // The bottom-left corner splits on its diagonal, when that
++                    // corner is rounded.  Other cases start at the corner or are
++                    // inset by the pen width, so the end stays inside the ring.
++                    const QRectF bottomLeftCornerRect(outlineRect.bottomLeft() - QPointF(0, 2 * cornerRadius),
++                                                      QSizeF(2 * cornerRadius, 2 * cornerRadius));
++                    if ((outlineCorners & CornerBottomLeft) && cornerRadius > 0) {
++                        // arcMoveTo() first: arcTo() on an empty path draws a line from (0,0)
++                        secondaryOutlinePath.arcMoveTo(bottomLeftCornerRect, 225);
++                        secondaryOutlinePath.arcTo(bottomLeftCornerRect, 225, 45);
++                    } else {
++                        const qreal bottomLeftEnd = !isLeftEdge() ? outlineRect.left() : outlineRect.left() + outlinePenWidth;
++                        secondaryOutlinePath.moveTo(bottomLeftEnd, outlineRect.bottom());
++                    }
 +
 +                    if ((outlineCorners & CornerBottomRight) && cornerRadius > 0) {
 +                        secondaryOutlinePath.lineTo(outlineRect.right() - cornerRadius, outlineRect.bottom());
@@ -109,13 +196,16 @@
 +                }
 +
 +                if (drawRightSide) {
-+                    // The top end stops at the top-right corner arc when that
-+                    // corner is rounded.  It stops at the top edge when the top
-+                    // side is drawn.  Other cases inset it by the pen width.
-+                    const qreal rightTopEnd = (outlineCorners & CornerTopRight)
-+                        ? outlineRect.top() + cornerRadius
-+                        : (isTopEdge() ? outlineRect.top() + outlinePenWidth : outlineRect.top());
-+                    secondaryOutlinePath.lineTo(outlineRect.right(), rightTopEnd);
++                    // The top-right corner splits on its diagonal too, when that
++                    // corner is rounded.  The end stops at the top edge when the
++                    // top side is drawn, and is inset by the pen width otherwise.
++                    if ((outlineCorners & CornerTopRight) && cornerRadius > 0) {
++                        secondaryOutlinePath.lineTo(outlineRect.right(), outlineRect.top() + cornerRadius);
++                        const QRectF topRightCornerRect(outlineRect.topRight() - QPointF(2 * cornerRadius, 0), QSizeF(2 * cornerRadius, 2 * cornerRadius));
++                        secondaryOutlinePath.arcTo(topRightCornerRect, 0, 45);
++                    } else {
++                        secondaryOutlinePath.lineTo(outlineRect.right(), isTopEdge() ? outlineRect.top() + outlinePenWidth : outlineRect.top());
++                    }
 +                }
 +
 +                painter.drawPath(secondaryOutlinePath);
@@ -123,7 +213,7 @@
          }
      }
      painter.end();
-@@ -2044,50 +2100,74 @@
+@@ -2044,50 +2130,74 @@
  {
      auto c = window();
  
@@ -182,6 +272,9 @@
 -                    m_windowOutline = keepAboveBackgroundPress;
 -                }
 +                m_windowOutlineSecondary = QColor();
++            }
++            if (m_windowOutlineSecondary.isValid() && !m_windowOutline.isValid()) {
++                m_windowOutline = m_windowOutlineSecondary;
              }
 -        } else if (m_animation->state() == QAbstractAnimation::Running) { // get blended colour if animated
 -            // deal with animation cases where there is an invalid colour (WindowOutlineNone)
@@ -190,9 +283,6 @@
 -                    m_windowOutline = ColorTools::alphaMix(windowOutlineActiveFinal, m_opacity);
 -                } else if (windowOutlineInactiveFinal.isValid() && !windowOutlineActiveFinal.isValid()) {
 -                    m_windowOutline = ColorTools::alphaMix(windowOutlineInactiveFinal, (1.0 - m_opacity));
-+            if (m_windowOutlineSecondary.isValid() && !m_windowOutline.isValid()) {
-+                m_windowOutline = m_windowOutlineSecondary;
-+            }
 +        } else {
 +            m_windowOutlineSecondary = QColor();
 +            if (m_animation->state() == QAbstractAnimation::Running) { // get blended colour if animated
