@@ -28,7 +28,6 @@
 
     # ---- Programs ----
     ./programs/emacs
-    ./programs/herdr.nix
     ./programs/librewolf.nix
     ./programs/mpv.nix
     ./programs/tmux.nix
