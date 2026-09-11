@@ -257,6 +257,7 @@ in
             ./../../patches/klassy/paint-outline-in-decoration.patch
             ./../../patches/klassy/repaint-decoration-on-outline-override.patch
             ./../../patches/klassy/ignore-menu-buttons-outline-override.patch
+            ./../../patches/klassy/keep-on-all-desktops-outline.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {

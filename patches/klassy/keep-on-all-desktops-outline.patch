@@ -1,0 +1,241 @@
+--- a/kdecoration/breezedecoration.cpp
++++ b/kdecoration/breezedecoration.cpp
+@@ -397,6 +397,11 @@
+             updateShadow(false, true, false);
+         }
+     });
++    connect(c, &KDecoration3::DecoratedWindow::onAllDesktopsChanged, this, [this]() {
++        if (m_internalSettings->colorizeWindowOutlineWithButton()) {
++            updateShadow(false, true, false);
++        }
++    });
+     connect(c, &KDecoration3::DecoratedWindow::keepBelowChanged, this, &Decoration::recalculateBorders); // in case EnumHideTitleBar::KeptBehind
+ 
+     connect(c, &KDecoration3::DecoratedWindow::activeChanged, this, &Decoration::updateAnimationState);
+@@ -1856,7 +1861,7 @@
+          || (m_animation->state() != QAbstractAnimation::Running
+              && ((active && m_internalSettings->windowOutlineStyle(true) == InternalSettings::EnumWindowOutlineStyle::WindowOutlineNone)
+                  || (!active && m_internalSettings->windowOutlineStyle(false) == InternalSettings::EnumWindowOutlineStyle::WindowOutlineNone))))
+-        && (!(c->isKeepAbove() && m_internalSettings->colorizeWindowOutlineWithButton()));
++        && (!(m_internalSettings->colorizeWindowOutlineWithButton() && (c->isKeepAbove() || c->isOnAllDesktops())));
+ 
+     if (active && m_internalSettings->shadowSize(true) == InternalSettings::EnumShadowSize::ShadowNone && windowOutlineNone && !isWindowOutlineOverride) {
+         return nullptr;
+@@ -1981,27 +1986,28 @@
+                 outlineSides |= SideRight;
+             }
+ 
+-            if (!c->isShaded()) {
+-                Corners outlineCorners;
++            // The thin outline and the secondary outline use the same corners.
++            Corners outlineCorners;
+ 
+-                if (!isBottomEdge() && !(hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
+-                    if (!isLeftEdge()) {
+-                        outlineCorners |= CornerBottomLeft;
+-                    }
+-                    if (!isRightEdge()) {
+-                        outlineCorners |= CornerBottomRight;
+-                    }
++            if (!isBottomEdge() && !(hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
++                if (!isLeftEdge()) {
++                    outlineCorners |= CornerBottomLeft;
+                 }
++                if (!isRightEdge()) {
++                    outlineCorners |= CornerBottomRight;
++                }
++            }
+ 
+-                if (!isTopEdge() && !(hideTitleBar() && hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
+-                    if (!isLeftEdge()) {
+-                        outlineCorners |= CornerTopLeft;
+-                    }
+-                    if (!isRightEdge()) {
+-                        outlineCorners |= CornerTopRight;
+-                    }
++            if (!isTopEdge() && !(hideTitleBar() && hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders())) {
++                if (!isLeftEdge()) {
++                    outlineCorners |= CornerTopLeft;
++                }
++                if (!isRightEdge()) {
++                    outlineCorners |= CornerTopRight;
+                 }
++            }
+ 
++            if (!c->isShaded()) {
+                 outlinePath = GeometryTools::roundedPath(outlineRect, outlineCorners, cornerRadius, outlineSides, outlinePenWidth);
+ 
+             } else {
+@@ -2009,6 +2015,56 @@
+             }
+ 
+             painter.drawPath(outlinePath);
++
++            // Two checked buttons split the ring in two colours.  Restroke the
++            // right and bottom sides and the bottom-right corner with the
++            // on-all-desktops colour.  This stroke lies over the primary
++            // keep-in-front colour.  The secondary outline follows the same
++            // rounded rectangle as the primary ring.  Each end stops at a
++            // rounded corner, so no end runs past a corner.
++            if (m_windowOutlineSecondary.isValid() && !c->isShaded()) {
++                QPen secondaryPen = p;
++                secondaryPen.setColor(m_windowOutlineSecondary);
++                painter.setPen(secondaryPen);
++
++                const bool drawBottomSide = !isBottomEdge();
++                const bool drawRightSide = !isRightEdge();
++
++                QPainterPath secondaryOutlinePath;
++                if (drawBottomSide) {
++                    // The left end starts at the bottom-left corner arc when
++                    // that corner is rounded.  Other cases inset it by the pen
++                    // width, so the end stays inside the ring.
++                    const qreal bottomLeftEnd =
++                        (outlineCorners & CornerBottomLeft) ? outlineRect.left() + cornerRadius : outlineRect.left() + outlinePenWidth;
++                    secondaryOutlinePath.moveTo(bottomLeftEnd, outlineRect.bottom());
++
++                    if ((outlineCorners & CornerBottomRight) && cornerRadius > 0) {
++                        secondaryOutlinePath.lineTo(outlineRect.right() - cornerRadius, outlineRect.bottom());
++                        const QRectF bottomRightCornerRect(outlineRect.bottomRight() - QPointF(2 * cornerRadius, 2 * cornerRadius),
++                                                           QSizeF(2 * cornerRadius, 2 * cornerRadius));
++                        secondaryOutlinePath.arcTo(bottomRightCornerRect, 270, 90);
++                    } else if (drawRightSide) {
++                        secondaryOutlinePath.lineTo(outlineRect.right(), outlineRect.bottom());
++                    } else {
++                        secondaryOutlinePath.lineTo(outlineRect.right() - outlinePenWidth, outlineRect.bottom());
++                    }
++                } else if (drawRightSide) {
++                    secondaryOutlinePath.moveTo(outlineRect.right(), outlineRect.bottom() - outlinePenWidth);
++                }
++
++                if (drawRightSide) {
++                    // The top end stops at the top-right corner arc when that
++                    // corner is rounded.  It stops at the top edge when the top
++                    // side is drawn.  Other cases inset it by the pen width.
++                    const qreal rightTopEnd = (outlineCorners & CornerTopRight)
++                        ? outlineRect.top() + cornerRadius
++                        : (isTopEdge() ? outlineRect.top() + outlinePenWidth : outlineRect.top());
++                    secondaryOutlinePath.lineTo(outlineRect.right(), rightTopEnd);
++                }
++
++                painter.drawPath(secondaryOutlinePath);
++            }
+         }
+     }
+     painter.end();
+@@ -2044,50 +2100,74 @@
+ {
+     auto c = window();
+ 
++    // Palette colour that keeps the outline highlighted while a checkable
++    // decoration button (KeepAbove / OnAllDesktops) is checked.
++    auto checkedHighlightColor = [this](DecorationButtonType type) -> QColor {
++        QColor color = m_decorationColors->buttonPalette(type)->active()->outlinePress;
++        if (!color.isValid()) {
++            color = m_decorationColors->buttonPalette(type)->active()->backgroundPress;
++        }
++        if (color.isValid() && color.alphaF() <= 0.6) {
++            color.setAlphaF(std::min(1.0, color.alphaF() * 2.5));
++        }
++        return color;
++    };
++
+     if (m_windowOutlineOverride.isValid()) {
++        // A hovered/pressed button overrides the whole ring, including any
++        // checked-button colour, so both halves get the single override colour.
+         m_windowOutline = overriddenOutlineColorAnimateIn();
++        if (m_windowOutlineSecondary.isValid())
++            m_windowOutlineSecondary = m_windowOutline;
+     } else { // normal case, not an override
+ 
+         QColor windowOutlineActiveFinal = m_decorationColors->active()->windowOutline;
+         QColor windowOutlineInactiveFinal = m_decorationColors->inactive()->windowOutline;
+ 
+-        if (m_internalSettings->colorizeWindowOutlineWithButton() && c->isKeepAbove()) { // set a window outline if window keep in front button is checked
+-            QColor keepAboveOutlinePress = m_decorationColors->buttonPalette(DecorationButtonType::KeepAbove)->active()->outlinePress;
+-            if (keepAboveOutlinePress.isValid()) {
+-                qreal alpha = keepAboveOutlinePress.alphaF();
+-                if (alpha <= 0.6) {
+-                    keepAboveOutlinePress.setAlphaF(std::min(1.0, alpha * 2.5));
+-                }
+-                m_windowOutline = keepAboveOutlinePress;
++        // set a window outline if the keep-in-front or on-all-desktops button is
++        // checked.  KeepAbove is the primary colour; when both are checked the
++        // OnAllDesktops colour is drawn over the bottom and right sides instead
++        // (see createShadowObject), splitting the ring diagonally.
++        const bool colorizeWindowOutline = m_internalSettings->colorizeWindowOutlineWithButton();
++        const bool keepAboveChecked = colorizeWindowOutline && c->isKeepAbove();
++        const bool onAllDesktopsChecked = colorizeWindowOutline && c->isOnAllDesktops();
++
++        if (keepAboveChecked || onAllDesktopsChecked) {
++            m_windowOutline =
++                checkedHighlightColor(keepAboveChecked ? DecorationButtonType::KeepAbove : DecorationButtonType::OnAllDesktops);
++            if (keepAboveChecked && onAllDesktopsChecked) {
++                m_windowOutlineSecondary = checkedHighlightColor(DecorationButtonType::OnAllDesktops);
+             } else {
+-                QColor keepAboveBackgroundPress = m_decorationColors->buttonPalette(DecorationButtonType::KeepAbove)->active()->backgroundPress;
+-                if (keepAboveBackgroundPress.isValid()) {
+-                    qreal alpha = keepAboveBackgroundPress.alphaF();
+-                    if (alpha <= 0.6) {
+-                        keepAboveBackgroundPress.setAlphaF(std::min(1.0, alpha * 2.5));
+-                    }
+-                    m_windowOutline = keepAboveBackgroundPress;
+-                }
++                m_windowOutlineSecondary = QColor();
+             }
+-        } else if (m_animation->state() == QAbstractAnimation::Running) { // get blended colour if animated
+-            // deal with animation cases where there is an invalid colour (WindowOutlineNone)
+-            if (!(windowOutlineActiveFinal.isValid() && windowOutlineInactiveFinal.isValid())) {
+-                if (!windowOutlineInactiveFinal.isValid() && windowOutlineActiveFinal.isValid()) {
+-                    m_windowOutline = ColorTools::alphaMix(windowOutlineActiveFinal, m_opacity);
+-                } else if (windowOutlineInactiveFinal.isValid() && !windowOutlineActiveFinal.isValid()) {
+-                    m_windowOutline = ColorTools::alphaMix(windowOutlineInactiveFinal, (1.0 - m_opacity));
++            if (m_windowOutlineSecondary.isValid() && !m_windowOutline.isValid()) {
++                m_windowOutline = m_windowOutlineSecondary;
++            }
++        } else {
++            m_windowOutlineSecondary = QColor();
++            if (m_animation->state() == QAbstractAnimation::Running) { // get blended colour if animated
++                // deal with animation cases where there is an invalid colour (WindowOutlineNone)
++                if (!(windowOutlineActiveFinal.isValid() && windowOutlineInactiveFinal.isValid())) {
++                    if (!windowOutlineInactiveFinal.isValid() && windowOutlineActiveFinal.isValid()) {
++                        m_windowOutline = ColorTools::alphaMix(windowOutlineActiveFinal, m_opacity);
++                    } else if (windowOutlineInactiveFinal.isValid() && !windowOutlineActiveFinal.isValid()) {
++                        m_windowOutline = ColorTools::alphaMix(windowOutlineInactiveFinal, (1.0 - m_opacity));
++                    }
++                } else { // standard animated case with both valid colours
++                    m_windowOutline = KColorUtils::mix(windowOutlineInactiveFinal, windowOutlineActiveFinal, m_opacity);
+                 }
+-            } else { // standard animated case with both valid colours
+-                m_windowOutline = KColorUtils::mix(windowOutlineInactiveFinal, windowOutlineActiveFinal, m_opacity);
++            } else { // normal non-animated final colour
++                m_windowOutline = c->isActive() ? windowOutlineActiveFinal : windowOutlineInactiveFinal;
+             }
+-        } else { // normal non-animated final colour
+-            m_windowOutline = c->isActive() ? windowOutlineActiveFinal : windowOutlineInactiveFinal;
+         }
+     }
+ 
+     // deal with override colours ("Colourize with highlighted button's colour")
+-    if (m_animateOutOverriddenWindowOutline)
++    if (m_animateOutOverriddenWindowOutline) {
+         m_windowOutline = overriddenOutlineColorAnimateOut(m_windowOutline);
++        if (m_windowOutlineSecondary.isValid())
++            m_windowOutlineSecondary = overriddenOutlineColorAnimateOut(m_windowOutlineSecondary);
++    }
+ 
+     // the existing thin window outline colour is stored in-case it is overridden in the future and needed by an animation
+     if (!m_windowOutlineOverride.isValid()) { // non-override
+
+--- a/kdecoration/breezedecoration.h
++++ b/kdecoration/breezedecoration.h
+@@ -316,6 +316,9 @@
+ 
+     //*the actual thin window outline colour to output
+     QColor m_windowOutline = QColor();
++    //*second thin window outline colour, drawn over the bottom and right sides when
++    // both the keep-in-front and on-all-desktops buttons are checked
++    QColor m_windowOutlineSecondary = QColor();
+     //*colour to override thin window outline with, set from decoration button
+     QColor m_windowOutlineOverride = QColor();
+     //*buffered existing thin window outline colours in case the above override colour is set (needed for animations)
