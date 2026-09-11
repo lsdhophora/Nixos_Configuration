@@ -13,6 +13,7 @@
     # ---- Misc ----
     ./misc/avatar.nix
     ./misc/cli.nix
+    ./misc/herdr.nix
     ./misc/clangd.nix
     ./misc/gui.nix
     ./packages.nix
@@ -27,6 +28,7 @@
 
     # ---- Programs ----
     ./programs/emacs
+    ./programs/herdr.nix
     ./programs/librewolf.nix
     ./programs/mpv.nix
     ./programs/tmux.nix

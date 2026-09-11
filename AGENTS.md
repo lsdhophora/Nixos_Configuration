@@ -68,6 +68,7 @@ Before you commit, check:
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
 - home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
+- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`); config declared in `home/programs/herdr.nix` with the self-update check off (updates come from nix)
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
 - Home persistence: `~/.config` is persisted as one directory, never file by file (see `home/kde/persistence-kde.nix`). KConfig saves a file with a temporary file and `rename(2)`, and a rename onto a single-file bind mount fails with EBUSY; the write is then lost without an error, so the KDE GUI cannot save. Persist the parent directory whenever an application must write the file. The list in `modules/desktop/home-config-prune.nix` is exactly the set of `.config` paths that the old per-file bind mounts persisted; `home-config-prune.service` deletes every other path below `.config`, at boot only (`restartIfChanged = false`), before the Home Manager activation. A rebuild therefore never deletes a runtime file mid-session, and Home Manager re-creates its own entries right after the prune.
