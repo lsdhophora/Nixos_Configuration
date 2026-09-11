@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 let
   system = "x86_64-linux";
   # Repo helper lib (see ../lib). Passed to modules and overlays as `repoLib`.
@@ -48,6 +48,14 @@ in
             inputs.plasma-manager.homeModules.plasma-manager
           ];
         };
+
+        # Always re-run the Home Manager activation on switch. With
+        # RemainAfterExit the oneshot stays `active (exited)` after its
+        # first run, and switch-to-configuration skips restarting it, so
+        # home changes are not applied until the next boot. Upstream fix
+        # PR #5780 removes this line; the pinned home-manager input still
+        # has it, so drop it here.
+        systemd.services."home-manager-FeiHsueh".serviceConfig.RemainAfterExit = lib.mkForce false;
       }
     ];
   };
