@@ -23,8 +23,11 @@
 # switch`: a mid-session prune would delete runtime files such as
 # plasma-org.kde.plasma.desktop-appletsrc, and the plasma-manager desktop
 # script (run once) would not re-create them before the next boot, so the
-# panel would fall back to the Plasma default. `restartIfChanged` is
-# therefore false, and a change to the list takes effect on the next boot.
+# panel would fall back to the Plasma default. Two guards enforce
+# boot-only execution: `restartIfChanged = false` keeps a switch from
+# restarting the unit when only its list changes, and the ExecCondition
+# below refuses to delete anything once the machine has been up for ten
+# minutes, whatever triggered the start.
 let
   user = "FeiHsueh";
   home = config.users.users.${user}.home;
@@ -138,6 +141,15 @@ let
   # Build one shell case pattern from the list, for example
   # 'KDE'|'kde.org'|'kwinrc'.
   keepPattern = lib.concatMapStringsSep "|" lib.escapeShellArg keep;
+
+  # Only delete within ten minutes of boot. A non-zero exit from
+  # ExecCondition skips the service without failing it. Pure bash
+  # builtins: the service PATH has no gawk.
+  bootGuard = pkgs.writeShellScript "home-config-prune-guard" ''
+    set -eu
+    read -r uptime _ < /proc/uptime
+    [ "''${uptime%%.*}" -lt 600 ]
+  '';
 in
 {
   systemd.services.home-config-prune = {
@@ -148,6 +160,7 @@ in
     unitConfig.RequiresMountsFor = "${home}/.config";
     serviceConfig = {
       Type = "oneshot";
+      ExecCondition = bootGuard;
       ExecStart = pkgs.writeShellScript "home-config-prune" ''
         set -eu
         if [ ! -d ${home}/.config ]; then
