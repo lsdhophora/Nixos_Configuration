@@ -52,7 +52,7 @@ in
     {
       ".pi/agent/settings.json" = {
         text = builtins.toJSON {
-          defaultProvider = "deepseek";
+          defaultProvider = "opencode-go";
           defaultModel = "deepseek-v4-flash";
           theme = "breeze-light";
           packages = [
