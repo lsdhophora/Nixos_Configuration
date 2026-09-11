@@ -1,0 +1,18 @@
+--- a/src/client/mod.rs
++++ b/src/client/mod.rs
+@@ -1521,6 +1521,15 @@
+         match event {
+             #[cfg(unix)]
+             ClientLoopEvent::StdinInput(data) => {
++                // A termination signal (SIGHUP from a host terminal that closed
++                // its window) can arrive while a stdin read is in flight. That
++                // read then returns the bytes the host terminal wrote during
++                // shutdown: WezTerm writes LF and EOT to the pane when it closes
++                // a window. Forwarding them types a newline or EOF into the
++                // focused pane, so drop input once the quit flag is set.
++                if should_quit.load(Ordering::Acquire) {
++                    continue;
++                }
+                 let data = if let Some(attach_escape) = &mut state.attach_escape {
+                     match attach_escape.filter_input(
+                         data,

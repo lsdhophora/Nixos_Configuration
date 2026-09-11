@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   # Declarative herdr configuration. Herdr writes this file during
   # onboarding and on channel changes, so it may diverge between Home
@@ -22,4 +22,12 @@
       auto_switch = false
     '';
   };
+
+  # Remove any pending release notes left over from a previous update
+  # check. Herdr restores "update ready" from this file at startup when
+  # its version is newer than the installed one, even with the checks
+  # above disabled, so keep it deleted.
+  home.activation.herdrClearPendingReleaseNotes = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    rm -f "$HOME/.config/herdr/release-notes.json"
+  '';
 }

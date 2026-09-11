@@ -1,0 +1,43 @@
+--- a/src/client/mod.rs
++++ b/src/client/mod.rs
+@@ -1251,6 +1251,16 @@
+     let (cols, rows, cell_width_px, cell_height_px, exact_cell_size) =
+         initial_terminal_geometry(kitty_graphics_enabled);
+ 
++    // Enter raw mode before the handshake. The handshake can take long enough
++    // for the user to press a key while it is in flight. While the host tty is
++    // still in canonical mode, the line discipline converts Enter to LF. That
++    // leaked LF reaches the focused pane as an extra newline, because agents
++    // such as pi map LF to shift+enter while the Kitty keyboard protocol is
++    // active. Restore raw mode on each early exit below, because
++    // process::exit does not run destructors. The later ratatui::init() call
++    // is a no-op here, because crossterm keeps the first saved mode.
++    crossterm::terminal::enable_raw_mode()?;
++
+     // Perform handshake while the stream is still in blocking mode.
+     let negotiated_encoding = match do_handshake(
+         &mut stream,
+@@ -1264,6 +1274,7 @@
+     ) {
+         Ok(encoding) => encoding,
+         Err(err) => {
++            let _ = crossterm::terminal::disable_raw_mode();
+             eprintln!("herdr: {err}");
+             std::process::exit(1);
+         }
+@@ -1275,6 +1286,7 @@
+             takeover,
+         };
+         if let Err(err) = write_to_server(&mut stream, &attach) {
++            let _ = crossterm::terminal::disable_raw_mode();
+             eprintln!("herdr: failed to request terminal attach: {err}");
+             std::process::exit(1);
+         }
+@@ -1289,6 +1301,7 @@
+         setup_terminal(mouse_capture)
+     }
+     .map_err(|err| {
++        let _ = crossterm::terminal::disable_raw_mode();
+         eprintln!("herdr: failed to set up terminal: {err}");
+         err
+     })?;
