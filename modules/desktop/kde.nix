@@ -256,6 +256,7 @@ in
             ./../../patches/klassy/set-desktop-file-name.patch
             ./../../patches/klassy/paint-outline-in-decoration.patch
             ./../../patches/klassy/repaint-decoration-on-outline-override.patch
+            ./../../patches/klassy/ignore-menu-buttons-outline-override.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {

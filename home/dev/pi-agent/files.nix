@@ -30,11 +30,9 @@ in
       targetPrefix = ".pi/agent/extensions/";
       sourcePrefix = "${base}/extensions/";
       paths = [
-        "deepseek-balance.ts"
         "exa-gate.ts"
         "exa-pi.ts"
         "exa-prefix.ts"
-        "no-cost-footer.ts"
         "plan-mode/index.ts"
         "plan-mode/utils.ts"
         "plan-mode/README.md"

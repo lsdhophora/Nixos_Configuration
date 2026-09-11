@@ -1,0 +1,31 @@
+--- a/kdecoration/breezebutton.cpp
++++ b/kdecoration/breezebutton.cpp
+@@ -654,8 +654,17 @@
+     if (!m_d || !m_d->internalSettings()->colorizeWindowOutlineWithButton() || isStandAlone())
+         return;
+ 
++    // The two menu buttons do not change the window outline.  The pointer
++    // must be able to move from another button to a menu button and back
++    // without the outline keeping a colour.
++    const bool menuButton = type() == KDecoration3::DecorationButtonType::Menu
++        || type() == KDecoration3::DecorationButtonType::ApplicationMenu;
++
+     QColor color = QColor();
+     if (on) {
++        if (menuButton)
++            return;
++
+         m_buttonPalette =
+             m_d->decorationColors()->buttonPalette(static_cast<DecorationButtonType>(type())); // this is here in-case caching type on m_buttonPalette changes
+         if (!m_buttonPalette) {
+@@ -677,7 +686,9 @@
+         for (KDecoration3::DecorationButton *decButton : decButtons) {
+             Button *button = static_cast<Button *>(decButton);
+ 
+-            if (button != this && (button->isHovered() || button->isPressed())) {
++            if (button != this && (button->isHovered() || button->isPressed())
++                && button->type() != KDecoration3::DecorationButtonType::Menu
++                && button->type() != KDecoration3::DecorationButtonType::ApplicationMenu) {
+                 return;
+             }
+         }

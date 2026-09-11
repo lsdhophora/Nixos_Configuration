@@ -9,35 +9,36 @@
 # ~/.config is one directory mount from /persist (see
 # home/kde/persistence-kde.nix). A directory mount is necessary, because
 # KConfig saves a file with a temporary file and rename(2), and a rename
-# onto a single-file mount point fails with EBUSY. This module restores the
-# old behavior for the rest of ~/.config: the list below holds the paths
-# that survive until the next prune (boot or rebuild), and the service
-# removes every other path.
+# onto a single-file mount point fails with EBUSY. Before this module the
+# persisted .config entries were separate bind mounts and everything else
+# lived on the tmpfs home directory; this service reproduces that split for
+# the rest of ~/.config. The list below is the set of paths that survived a
+# reboot then, and the service removes every other path.
 #
-# The service runs at boot (multi-user.target) and on every rebuild that
-# changes the unit (switch-to-configuration restarts it). It must therefore
-# never remove a path that Home Manager installs itself: Home Manager only
-# re-creates its links when its own activation runs, so a pruned
-# Home-Manager-owned entry would stay missing until the next boot (this is
-# how ~/.config/zsh, and with it every new zsh, was lost). Everything Home
-# Manager puts below .config is added to the keep list automatically;
-# keepInConfig only carries the user data that Home Manager does not own.
-# The service runs before the Home Manager activation, so Home Manager
-# recreates the files that it owns from the current generation.
+# The service runs once at boot, before the Home Manager activation
+# (`before = home-manager-<user>.service`). That is exactly what the tmpfs
+# did: a path that is not in the list is absent after boot, and is
+# re-created by the Home Manager activation (its own files) or by the
+# application that owns it. It must not run again on `nixos-rebuild
+# switch`: a mid-session prune would delete runtime files such as
+# plasma-org.kde.plasma.desktop-appletsrc, and the plasma-manager desktop
+# script (run once) would not re-create them before the next boot, so the
+# panel would fall back to the Plasma default. `restartIfChanged` is
+# therefore false, and a change to the list takes effect on the next boot.
 let
   user = "FeiHsueh";
   home = config.users.users.${user}.home;
 
-  keepInConfig = [
+  # The paths below .config that survive a reboot. This is exactly the set
+  # that home/kde/persistence-kde.nix and the old per-file .config entries
+  # in home/persistence.nix used to bind-mount. Everything else is
+  # ephemeral, as it was on the tmpfs home. Home Manager-owned entries are
+  # deliberately not added: the boot prune runs before the activation, so
+  # the activation re-creates them.
+  keep = [
     # ---- Directories ----
-    # Most of these are Home Manager-owned, but they cannot be dropped from
-    # this list: only entries that Home Manager installs through home.file /
-    # xdg.configFile appear in the automatic set below, while the rest (dconf,
-    # git, mpv, tmux, wezterm, autostart, ...) are written by Home Manager's
-    # activation and are invisible to it at evaluation time.
     ".mozilla"
     "KDE"
-    "autostart"
     "clangd"
     "dconf"
     "direnv"
@@ -70,7 +71,6 @@ let
     "tmux"
     "wezterm"
     "xsettingsd"
-    "zsh"
 
     # ---- Files ----
     "QtProject.conf"
@@ -134,26 +134,6 @@ let
     "xdg-terminals.list"
   ];
 
-  # Top-level entries below .config that Home Manager itself installs. The
-  # prune must keep all of them, otherwise it deletes them on a rebuild where
-  # the Home Manager activation does not run afterwards.
-  hmConfigEntries = lib.unique (
-    # home.file entries whose path is below .config
-    (map (parts: lib.elemAt parts 1) (
-      map (lib.splitString "/") (
-        builtins.filter (path: lib.hasPrefix ".config/" path) (
-          lib.attrNames config.home-manager.users.${user}.home.file
-        )
-      )
-    ))
-    # xdg.configFile entries are relative to .config already
-    ++ (map (parts: lib.elemAt parts 0) (
-      map (lib.splitString "/") (lib.attrNames config.home-manager.users.${user}.xdg.configFile)
-    ))
-  );
-
-  keep = keepInConfig ++ hmConfigEntries;
-
   # Build one shell case pattern from the list, for example
   # 'KDE'|'kde.org'|'kwinrc'.
   keepPattern = lib.concatMapStringsSep "|" lib.escapeShellArg keep;
@@ -163,6 +143,7 @@ in
     description = "Delete the ephemeral entries in the persistent ~/.config";
     wantedBy = [ "multi-user.target" ];
     before = [ "home-manager-${user}.service" ];
+    restartIfChanged = false;
     unitConfig.RequiresMountsFor = "${home}/.config";
     serviceConfig = {
       Type = "oneshot";

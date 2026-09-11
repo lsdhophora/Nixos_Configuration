@@ -84,6 +84,14 @@
   # downloads from landing there.
   home.file.".librewolf/default/extensions/{aecec67f-0d10-4fa7-b7c7-609a2db280cf}.xpi" = {
     source = "${pkgs.violentmonkey-declarative}/share/mozilla/extensions/{aecec67f-0d10-4fa7-b7c7-609a2db280cf}.xpi";
+    # LibreWolf replaces the store symlink with a plain file in the profile.
+    # home-manager.backupFileExtension = "bak" then wants to move that file
+    # to <name>.xpi.bak before linking; once a .bak exists the boot
+    # activation aborts with "would be clobbered by backing up". That abort
+    # also skips ~/.zshenv and the plasma-manager autostart scripts, so the
+    # zsh configuration and the panel fall back to their defaults. Force the
+    # link so the activation overwrites the file without a backup.
+    force = true;
   };
 
   # Native messaging hosts (Plasma browser integration + keepassxc).
