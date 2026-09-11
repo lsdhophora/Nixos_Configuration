@@ -51,6 +51,7 @@ let
     "gh"
     "git"
     "go"
+    "herdr"
     "gtk-3.0"
     "gtk-4.0"
     "kdedefaults"
