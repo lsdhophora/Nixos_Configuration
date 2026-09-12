@@ -73,13 +73,3 @@ Switch the repository to the GNU commit message format.
 * AGENTS.md (Commands): Document the new commit command.
 * docs/code-style.md (Commit Messages): Replace the old format.
 ```
-
-## Review Checklist
-
-Before you commit, check:
-
-1. No dead code or dead parameters.
-2. No duplicated literals (use lib constants).
-3. Data-driven generation where tables exist.
-4. `dry-build` passes.
-5. The two required skills were applied when their triggers matched.

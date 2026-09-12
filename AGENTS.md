@@ -24,8 +24,6 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
    GNU-format message
 4. Push (if success)
 
-The AI stages, commits, and pushes only when the user asks it to.
-
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
 Exception: declarative Plasma/KDE config (`home/kde/*.nix`, e.g. `plasma.nix` panels) must be followed by a full OS rebuild (`run0 nixos-rebuild switch --flake .#flowerpot`) to take effect; `home-manager switch` alone does not apply it. The regenerated panel layout is only applied at the next Plasma session start.
@@ -34,33 +32,20 @@ System changes (hosts, kernel, services, etc.) still require `nixos-rebuild swit
 
 ## Tests
 
-Run `just check-fast` before every commit. It runs nixfmt, deadnix,
-english-comments, statix, sops-integrity, sops-keys, invariants, and
-lib-tests. See `docs/testing.md` and `flake-modules/checks.nix` for
-the check list and definitions.
-
-Run `just check` (`nix flake check`) for full verification. It also
-builds the system toplevel and the home activation package.
-
-VM boot tests are deferred (they need a KVM-capable host). See
-`docs/testing.md` for the record and the re-enable recipe.
+Run `just check-fast` before every commit and `just check` for full
+verification. See `docs/testing.md` for the check list and
+`flake-modules/checks.nix` for the definitions.
 
 ## Code Style
 
-Follow the rules in `docs/code-style.md`:
-- STE writing standard
-- Required skills: `equational-reasoning`, `hoare-logic`
-- Nix/TypeScript style rules and commit message format
+Follow `docs/code-style.md`.
 
 ## Definition of Done
 
-Before you commit, check:
-
-1. `just check-fast` passes.
-2. The change touches only the intended files.
-3. `docs/code-style.md` rules hold (STE, GNU commit format).
-4. AGENTS.md stays current. Update it in the same commit when a
-   command, convention, or directory layout changes.
+Before you commit: `just check-fast` passes, the change touches only the
+intended files, `docs/code-style.md` holds, and AGENTS.md is current —
+update it in the same commit when a command, convention, or directory
+layout changes.
 
 ## Notes
 
@@ -68,11 +53,12 @@ Before you commit, check:
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
 - home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
-- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`; config declared in `home/misc/herdr.nix` with the update checks off (updates come from nix). The overlay applies two client patches. `patches/herdr/raw-mode-before-handshake.patch` enters raw mode before the handshake: during the handshake the tty stays canonical, so the line discipline turns a pressed Enter into LF, and that LF reaches the focused pane as an extra newline. `patches/herdr/drop-input-after-hangup.patch` drops input after the quit flag is set: on SIGHUP the resumed stdin read returns the LF and EOT bytes that WezTerm writes when it closes a pane, and the client used to forward them into the focused pane. Drop each patch when upstream fixes it
+- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`; config in `home/misc/herdr.nix` with the update checks off
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
-- Home persistence: `~/.config` is persisted as one directory, never file by file (see `home/kde/persistence-kde.nix`). KConfig saves a file with a temporary file and `rename(2)`, and a rename onto a single-file bind mount fails with EBUSY; the write is then lost without an error, so the KDE GUI cannot save. Persist the parent directory whenever an application must write the file. The list in `modules/desktop/home-config-prune.nix` is exactly the set of `.config` paths that the old per-file bind mounts persisted; `home-config-prune.service` deletes every other path below `.config`, at boot only (`restartIfChanged = false`), before the Home Manager activation. A rebuild therefore never deletes a runtime file mid-session, and Home Manager re-creates its own entries right after the prune.
-- Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`): `plasma-org.kde.plasma.desktop-appletsrc` is regenerated on every Plasma startup, and the boot prune deletes `plasmashellrc` and the appletsrc file. Change them by editing the module, not via UI — an OS rebuild is required for them to take effect, and they apply at the next Plasma session start. The rebuild scripts live in `~/.local/share/plasma-manager`, and zsh's `dotDir` bootstraps through `~/.zshenv`; neither is persisted, so both depend on the Home Manager activation that runs at boot.
+- Home persistence: `~/.config` is persisted as one directory, never file by file. Never bind-mount a single file that an application rewrites with `rename(2)`: the write fails with EBUSY and is lost without an error. `home-config-prune.service` deletes every other path below `.config` at boot, before the Home Manager activation; see `modules/desktop/home-config-prune.nix`
+- Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`); change them in the module, not in the UI
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
+- pi `~/.pi/agent/settings.json` is runtime state: persisted in `home/persistence.nix`, and the keys in `piSettings.enforced` are restored on every activation.
 - Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`
