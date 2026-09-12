@@ -1,6 +1,12 @@
-{ pkgs, ... }:
+{
+  lib,
+  pkgs,
+  ...
+}:
 # LibreWolf (Firefox fork with signature checks disabled and unsigned addons
 # allowed), replacing Firefox.
+#
+# See docs/librewolf.md for the profile layout and the download/PDF handling.
 #
 # Migrated from home/programs/firefox.nix: profile settings, chrome CSS and
 # native messaging hosts are the same as for Firefox.  The profile directory
@@ -101,6 +107,18 @@
     pkgs.kdePackages.plasma-browser-integration
     pkgs.keepassxc
   ];
+
+  # handlers.json is runtime state (LibreWolf rewrites it in place with
+  # rename(2), and the profile dir is bind-mounted from /persist), so it
+  # cannot be declared via home.file.  Instead re-apply the PDF handler
+  # override at every Home Manager activation: application/pdf is set to
+  # "save to disk" (action 0) instead of "open in the built-in viewer"
+  # (action 3), so PDF links always save to the download folder instead
+  # of auto-opening.  pdfjs stays enabled, so the built-in reader still
+  # works for explicit previews (download panel eye icon, local files).
+  home.activation.librewolfPdfSave = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${pkgs.deno}/bin/deno run -q --no-check --no-config --allow-env --allow-read --allow-write ${./../../assets/firefox/patch-pdf-handler.ts}
+  '';
 
   # LibreWolf is the default browser: the per-user mimeapps.list is
   # persisted via persistence-kde.nix (edited there: firefox.desktop ->
