@@ -62,6 +62,11 @@
       ".pi/agent/models-store.json"
       ".pi/agent/voice-input.json"
       ".pi/agent/trust.json"
+
+      # pi-owned settings (model choice, thinking level, ...). The keys
+      # in piSettings.enforced are re-applied by
+      # home/dev/pi-agent/files.nix on every activation.
+      ".pi/agent/settings.json"
     ];
   };
 }
