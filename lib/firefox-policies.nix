@@ -34,6 +34,7 @@ in
     scripts = map (f: builtins.readFile f) [
       ./../assets/violentmonkey/bilibili-comments-avatar-beautify.js
       ./../assets/violentmonkey/font-weight-min-500.js
+      ./../assets/violentmonkey/pixiv-button-line-height.user.js
       ./../assets/violentmonkey/pixiv-downloader.user.js
       ./../assets/violentmonkey/pixiv-novel-copy.user.js
       ./../assets/violentmonkey/reddit-search-gradient-border-fix.user.js
