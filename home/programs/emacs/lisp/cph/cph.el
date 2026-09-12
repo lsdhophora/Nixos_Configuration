@@ -23,9 +23,6 @@
 ;;      .prob metadata, open the file and the judge buffer.
 ;;   2. Run: compile the solution once, run each sample, compare with
 ;;      CPH semantics, show PASS/FAIL and a line diff.
-;;   3. Debug: start a GUD lldb session on the testcase at point.
-;;      GUD is Emacs's own debugger interface; this needs Emacs 30
-;;      (built-in GUD lldb support) and lldb on PATH.
 ;;
 ;; There is no submit flow and no ONLINE_JUDGE handling.
 ;;
@@ -38,14 +35,9 @@
 ;; In the judge buffer (*cph-judge*):
 ;;   g    run all testcases
 ;;   p    run the testcase at point
-;;   d    debug the testcase at point (lldb through GUD)
 ;;   k    stop the running testcases
 ;;   s    open the solution file
 ;;   q    quit the window
-;;
-;; Debugging opens a GUD lldb session (not an ansi-term).  The usual
-;; GUD keys apply in the *gud-* buffer: C-c C-n next, C-c C-s step,
-;; C-c C-r continue, C-c C-b breakpoint, C-c C-p print expression.
 ;;
 ;; In a solution buffer (cph-mode):
 ;;   C-c C-r   run all testcases of the problem
@@ -106,7 +98,7 @@ cursor is placed there."
   :group 'cph)
 
 (defcustom cph-keep-binaries nil
-  "Keep compiled binaries after a test run (debugging aid)."
+  "Keep compiled binaries after a test run."
   :type 'boolean
   :group 'cph)
 
@@ -129,8 +121,6 @@ Compilers must be on PATH.")
   "The judge buffer, or nil.")
 (defvar cph--running-procs nil
   "Processes of currently running testcases.")
-(defvar cph--debug-process nil
-  "Process of the current GUD lldb debug session, or nil.")
 (defvar cph--id-counter 0
   "Counter for testcase ids.")
 
@@ -543,26 +533,16 @@ folder's .cph directory regardless of `cph-save-location'."
 ;; ---------------------------------------------------------------------------
 ;; Compilation and execution
 
-(defun cph--compile (src lang &optional debug)
-  "Compile SRC for LANG.  Return (COMMAND . CLEANUP) or nil on failure.
-When DEBUG is non-nil, drop the optimization flag and add debug info
-(-g).  Interpreted languages return nil when DEBUG is non-nil."
+(defun cph--compile (src lang)
+  "Compile SRC for LANG.  Return (COMMAND . CLEANUP) or nil on failure."
   (let ((entry (cdr (assoc lang cph-languages))))
     (if (not entry)
         (progn (cph--log "no compiler configured for %s" lang) nil)
       (let ((compiler (plist-get entry :compiler))
             (skip (plist-get entry :skip-compile)))
         (if skip
-            (if debug
-                (progn (cph--log "no debugger for %s" lang) nil)
-              (cons (list compiler src) #'ignore))
-          (let* ((args0 (plist-get entry :args))
-                 (args (if debug
-                           (append (cl-remove-if
-                                    (lambda (a) (string-match-p "^-O[0-9a-z]*$" a))
-                                    args0)
-                                   '("-g"))
-                         args0))
+            (cons (list compiler src) #'ignore)
+          (let* ((args (plist-get entry :args))
                  (bin (make-temp-name
                        (expand-file-name "cph-bin-" temporary-file-directory)))
                  (buf (generate-new-buffer " *cph-compile*"))
@@ -719,10 +699,6 @@ wrong output."
         (setcdr cell result)
       (push (cons id result) cph--results))))
 
-(defun cph--tc-number (tc)
-  "Return the 1-based display number of TC."
-  (1+ (cl-position tc (cph-problem-tests cph--problem))))
-
 (defun cph--result-label (res)
   "Return a status label for result plist RES."
   (pcase (and res (plist-get res :status))
@@ -799,7 +775,7 @@ wrong output."
                           "stopped")))
         (when cph--last-compile-error
           (insert (format "  Compile error:\n%s\n\n" cph--last-compile-error)))
-        (insert "  g run all | p run at point | d debug at point (GUD) | k stop | s source | q quit\n\n")
+        (insert "  g run all | p run at point | k stop | s source | q quit\n\n")
         (let ((num 0))
           (dolist (tc (cph-problem-tests cph--problem))
             (cl-incf num)
@@ -908,123 +884,6 @@ wrong output."
                         (cph--render-judge)))))
         (_ (cph--render-judge))))))
 
-;; ---------------------------------------------------------------------------
-;; Debugging (lldb through GUD, Emacs's own debugger interface)
-
-(defun cph--write-input-file (input)
-  "Write INPUT to a temp file and return the file name."
-  (let ((f (make-temp-file "cph-input-")))
-    (with-temp-file f (insert input))
-    f))
-
-(defun cph--lldb-session-cleanup (proc bin input-file)
-  "Delete the temp files of a finished GUD session.
-PROC is the lldb process; BIN and INPUT-FILE are the temp files.
-Keep BIN when `cph-keep-binaries' is non-nil."
-  (when (eq proc cph--debug-process)
-    (setq cph--debug-process nil))
-  (ignore-errors
-    (unless cph-keep-binaries (delete-file bin))
-    (delete-file input-file)))
-
-(defun cph--lldb-track-process (proc bin input-file)
-  "Clean up BIN and INPUT-FILE when the lldb process PROC exits.
-The sentinel that GUD installed keeps running; this one only adds
-the temp-file cleanup after it."
-  (if (not (process-live-p proc))
-      ;; The process died before we could arm the cleanup.
-      (cph--lldb-session-cleanup proc bin input-file)
-    (let ((old-sentinel (process-sentinel proc)))
-      (set-process-sentinel
-       proc
-       (lambda (p event)
-         (when old-sentinel (funcall old-sentinel p event))
-         (when (not (process-live-p p))
-           (cph--lldb-session-cleanup p bin input-file)))))))
-
-(defun cph--lldb-start (bin input-file)
-  "Start a GUD lldb session for BIN with INPUT-FILE on stdin.
-Return the lldb process.  The session breaks at main and launches
-the program, so the debugger stops at main, ready for stepping.
-On failure, delete the temp files and signal a user-error."
-  (require 'gud)
-  (unless (fboundp 'lldb)
-    (user-error "CPH lldb debugging needs Emacs 30 (built-in GUD lldb)"))
-  (unless (executable-find "lldb")
-    (user-error "lldb is not installed"))
-  (let (proc)
-    (condition-case err
-        (progn
-          (lldb (format "%s %s" (executable-find "lldb")
-                        (shell-quote-argument bin)))
-          (setq proc (get-buffer-process (current-buffer)))
-          (unless proc (error "GUD failed to start lldb"))
-          ;; These commands queue behind GUD's own lldb initialization,
-          ;; which installs the frame format used to track source lines.
-          (process-send-string proc "breakpoint set --name main\n")
-          (process-send-string
-           proc (format "settings set target.input-path %s\n"
-                        (shell-quote-argument input-file)))
-          (process-send-string proc "process launch\n"))
-      (error
-       (when (and proc (process-live-p proc))
-         (delete-process proc))
-       (unless cph-keep-binaries (ignore-errors (delete-file bin)))
-       (ignore-errors (delete-file input-file))
-       (user-error "lldb session failed to start: %s"
-                   (error-message-string err))))
-    (cph--lldb-track-process proc bin input-file)
-    proc))
-
-(defun cph--lldb-kill-session ()
-  "Stop the current CPH GUD debug session, if any."
-  (let ((proc (and (process-live-p cph--debug-process)
-                   cph--debug-process)))
-    (when proc
-      (let ((buf (process-buffer proc)))
-        (delete-process proc)
-        (when (and buf (buffer-live-p buf))
-          (kill-buffer buf))))))
-
-(defun cph-debug-testcase-at-point ()
-  "Debug the testcase at point with lldb inside GUD.
-Compile the solution with debug info and start a GUD lldb session on
-the binary.  The session breaks at main, redirects the testcase input
-from a temp file, and stops there, ready for your breakpoints and
-stepping.
-
-GUD is Emacs's own debugger interface, not a terminal: the source
-file opens with the current line marked, and the GUD keys (C-c C-n
-next, C-c C-s step, C-c C-r continue, C-c C-b set breakpoint, C-c C-p
-print expression) drive the session from the *gud-* buffer.  The
-binary and the input file are deleted when the session ends; set
-`cph-keep-binaries' to keep the binary."
-  (interactive)
-  (let* ((id (cph--tc-at-point))
-         (tc (and id (cl-find id (cph-problem-tests cph--problem)
-                              :key #'cph-test-id))))
-    (unless tc (user-error "No testcase at point"))
-    (save-some-buffers t)
-    (let* ((src (cph-problem-src-path cph--problem))
-           (lang (cph--language-for-src src)))
-      (setq cph--last-compile-error nil)
-      (pcase (cph--compile src lang t)
-        (`(,cmd . ,_cleanup)
-         (let ((bin (car cmd)))
-           ;; Replace any previous CPH debug session first; the lldb
-           ;; process owns the binary for its whole lifetime.
-           (cph--lldb-kill-session)
-           ;; Compute the testcase number here: the GUD session below
-           ;; switches the current buffer away from the judge buffer.
-           (let* ((num (cph--tc-number tc))
-                  (input-file
-                   (cph--write-input-file (cph-test-input tc)))
-                  (proc (cph--lldb-start bin input-file)))
-             (setq cph--debug-process proc)
-             (cph--log "lldb (GUD) debug session on %s, testcase %d, input %s"
-                       (file-name-nondirectory bin) num input-file))))
-        (_ (cph--render-judge))))))
-
 (defun cph-stop ()
   "Stop all running testcases."
   (interactive)
@@ -1047,7 +906,6 @@ binary and the input file are deleted when the session ends; set
   "g" #'cph-run-all-in-judge
   "p" #'cph-run-testcase-at-point
   "RET" #'cph-run-testcase-at-point
-  "d" #'cph-debug-testcase-at-point
   "k" #'cph-stop
   "s" #'cph-show-source
   "q" #'quit-window)

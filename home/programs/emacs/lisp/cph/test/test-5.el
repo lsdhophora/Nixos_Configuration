@@ -104,18 +104,6 @@
 (assert-t "extension lookup rs" (string= (cph--language-for-src "a.rs") "rs"))
 (assert-t "unknown extension nil" (null (cph--language-for-src "a.txt")))
 
-;; --- unit: debug compile (lldb) ---
-(let* ((src (expand-file-name "debug.cpp" cph-test-dir)))
-  (with-temp-file src (insert "int main(){return 0;}\n"))
-  (pcase (cph--compile src "cpp" t)
-    (`(,cmd . ,cleanup)
-     (assert-t "debug compile ok" (file-exists-p (car cmd)))
-     (funcall cleanup)
-     (assert-t "debug binary cleaned" (not (file-exists-p (car cmd)))))
-    (_ (assert-t "debug compile ok" nil))))
-(assert-t "no debugger for js"
-          (null (cph--compile (expand-file-name "a.js" cph-test-dir) "js" t)))
-
 ;; --- unit: .prob round trip ---
 (let* ((src (expand-file-name "roundtrip/X.cpp" cph-test-dir))
        (problem (prob '(("name" . "X")
