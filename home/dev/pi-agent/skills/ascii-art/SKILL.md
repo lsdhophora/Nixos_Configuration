@@ -1,85 +1,93 @@
 ---
 name: ascii-art
-description: 把图语言（Mermaid / DOT / PlantUML 等）和 Markdown 表格转成 ASCII/Unicode 文本图的技能。需要输出 ASCII 图时使用本技能，一律用 mermaid-ascii CLI 转换，禁止手工画图、手工对齐、手工算宽度。
+description: Converts diagram source (Mermaid / DOT / PlantUML and more) and Markdown tables into ASCII/Unicode text figures for files. Use this skill only when the ASCII figure must be written into a file (README, docs, config, and more). Do not use it for figures shown only in the conversation.
 ---
 
-# 图语言 → ASCII 技能（全靠 CLI 转换）
+# Diagram-to-ASCII Skill (CLI conversion only)
 
-## 核心规则
+## Scope
 
-1. **遇到图语言转 ASCII 的问题全靠 CLI**。用户给出图语言源码（Mermaid、DOT、PlantUML 等）或 Markdown 表格时，禁止手画盒子、禁止手工算宽度、禁止目视对齐。一律把源码交给 `mermaid-ascii` CLI 转换。
-2. 输出必须用代码块（```` ``` ````）包裹，代码块内不混入 Markdown 装饰（`**`、`_` 等）。
-3. CLI 输出即最终稿：**原样粘贴，不得手工改动**。若 `mermaid-ascii` 未在 PATH，提示用户先执行 `nixos-rebuild switch --flake /home/FeiHsueh/.config/nixos#flowerpot`，不要手工画。
-4. CLI 输出无需再跑任何对齐工具——布局由 elkjs 自动计算，CJK 与符号宽度由 CLI 内部处理（见「宽度模型」）。
+Use this skill **only when the ASCII figure goes into a file** - for example a figure for a README, a document, a config file, or a source comment. Every figure that lands on disk follows the CLI flow below.
 
-## 转换流程（必须按顺序）
+**Do not use this skill in the conversation**: an ASCII figure shown only in the chat reply does not require the CLI and does not follow the proofreading rules below.
 
-1. **拿图语言源码**：Mermaid（`graph`/`flowchart`、`sequenceDiagram`、`classDiagram`、`erDiagram`、`stateDiagram(-v2)`）直接可用；DOT / PlantUML / 自定义 DSL 先做机械语法翻译成 Mermaid（只换语法关键字，不改结构、不改语义）。
-2. **跑 CLI**：把源码喂给 `mermaid-ascii`（文件或 stdin）。
-3. **誊清**：把 stdout 原样粘贴进代码块（mermaid 模式的结尾空行可去掉）。
+## Core Rules
 
-## 工具命令
+1. **The CLI converts every figure that goes into a file**. When the user supplies diagram source (Mermaid, DOT, PlantUML, and more) or a Markdown table, never draw boxes by hand, never compute widths by hand, and never align by eye. Feed the source to the `mermaid-ascii` CLI instead.
+2. Wrap the output in a code block (```` ``` ````). Do not mix Markdown decoration (`**`, `_`, and more) into the block.
+3. The CLI output is the final draft: **paste it unchanged, do not edit by hand**. If `mermaid-ascii` is not in `PATH`, tell the user to run `nixos-rebuild switch --flake /home/FeiHsueh/.config/nixos#flowerpot` first. Do not draw by hand.
+4. The CLI output needs no further alignment tool: elkjs computes the layout, and the CLI handles CJK and symbol widths internally (see "Width Model").
 
-### mermaid-ascii（图语言 / 表格 → ASCII）
+## Conversion Flow (in order)
+
+1. **Get the diagram source**: Mermaid (`graph`/`flowchart`, `sequenceDiagram`, `classDiagram`, `erDiagram`, `stateDiagram(-v2)`) works as-is; translate DOT / PlantUML / custom DSL mechanically into Mermaid first (change only syntax keywords, keep structure and semantics).
+2. **Run the CLI**: feed the source to `mermaid-ascii` (file or stdin).
+3. **Transcribe**: paste stdout unchanged into the code block (the trailing blank line of the mermaid mode may be dropped).
+
+## Tool Commands
+
+### mermaid-ascii (diagram / table → ASCII)
 
 ```bash
-mermaid-ascii [选项] [FILE|-]      # Mermaid → ASCII 盒图（省略 FILE 或传 - 读 stdin）
-mermaid-ascii table [FILE|-]       # Markdown 表格 → ASCII 盒表
+mermaid-ascii [options] [FILE|-]      # Mermaid → ASCII box figure (omit FILE or pass - to read stdin)
+mermaid-ascii table [FILE|-]          # Markdown table → ASCII box table
 ```
 
-常用选项：
+Common options:
 
-- `-a, --ascii`：纯 ASCII 输出（不用 Unicode 框线）
-- `-m, --markdown`：从输入中提取所有 ` ```mermaid ` 代码块，逐一渲染
-- `-x N`：节点横向间距（默认 5）；`-y N`：纵向间距（默认 5）；`-b N`：盒内边距（默认 1）
-- `-c MODE`：颜色 none|auto|ansi16|ansi256|truecolor（默认 none；输出进代码块时保持 none，不要加颜色）
+- `-a, --ascii`: plain ASCII output (no Unicode box lines)
+- `-m, --markdown`: extract every ` ```mermaid ` block from the input and render each one
+- `-x N`: horizontal node spacing (default 5); `-y N`: vertical spacing (default 5); `-b N`: inner box padding (default 1)
+- `-c MODE`: color none|auto|ansi16|ansi256|truecolor (default none; keep none when the output goes into a code block, do not add color)
 
-## 宽度模型（CLI 已内置，无需手工处理）
+## Width Model (built into the CLI, no manual work)
 
-终端显示宽度按「格」计，与 `String#length` 不同：
+Terminal display width is counted in "cells", not `String#length`:
 
-| 字符类别 | 格数 | 示例 |
+| Character class | Cells | Examples |
 |---|---|---|
-| ASCII / 半角 | 1 | `A` `1` `%` `+` `<` `>` `~` |
-| CJK / 全角 | 2 | `中文` `（）` `：` `。` |
-| 符号区（编辑器字体全宽） | 2 | `→ ↔ ↓`（U+2190-21FF）、`► ◇ ▼ ★ ✓`（U+25A0-27BF）、`①②`（U+2460-24FF）、`—`（U+2014/15）、`… ‰ ∑ ∞ ⬤` |
-| 盒线 / 数学符号 | 1 | `┌ ─ ┐ │`（U+2500-257F）、`± × ÷ ≤ ≥ ≠ ≈ √` |
+| ASCII / half-width | 1 | `A` `1` `%` `+` `<` `>` `~` |
+| CJK / full-width | 2 | `中文` `（）` `：` `。` |
+| Symbol block (full width in editor fonts) | 2 | `→ ↔ ↓` (U+2190-21FF), `► ◇ ▼ ★ ✓` (U+25A0-27BF), `①②` (U+2460-24FF), `—` (U+2014/15), `… ‰ ∑ ∞ ⬤` |
+| Box lines / math symbols | 1 | `┌ ─ ┐ │` (U+2500-257F), `± × ÷ ≤ ≥ ≠ ≈ √` |
 
-> 说明：编辑器字体（Iosevka）把箭头/几何/符号区渲染为 2 格，而盒线与数学符号保持 1 格；CLI 按此模型计算列宽，保证 Iosevka / 终端下边框对齐。
+> Note: the editor font (Iosevka) renders the arrow/geometric/symbol block at 2 cells, while box lines and math symbols stay at 1 cell. The CLI computes column widths with this model so the borders align under Iosevka / terminals.
 
-## 样式规范（CLI 自动生成，禁止手工写）
+## Style Rules (generated by the CLI, never written by hand)
 
-- 流程图：Unicode 框线盒 `┌ ─ ┐ │ └ ┘` + 箭头 `▼` `▶` + 菱形判定 `◇`
-- 表格：ASCII `+ - |` 盒线，表头居中
-- 时序图：参与者盒 + 实线/虚线箭头
+- Flowchart: Unicode box lines `┌ ─ ┐ │ └ ┘` + arrows `▼` `▶` + diamond decision `◇`
+- Table: ASCII `+ - |` box lines, centered header
+- Sequence diagram: participant boxes + solid/dashed arrows
 
-### 禁止
+### Forbidden
 
-- 表情符号、全角空格、制表符缩进
-- 手工绘制盒子/箭头/表格线（哪怕看起来对齐了）——必须过 CLI
+- Emoji, full-width spaces, tab indentation
+- Hand-drawn boxes/arrows/table lines (even if they look aligned) - they must go through the CLI
 
-## 常见错误与对策
+## Common Errors and Fixes
 
-| 现象 | 原因 | 对策 |
+| Symptom | Cause | Fix |
 |---|---|---|
-| CLI 报 render failed | Mermaid 语法不被支持 | 先查语法；DOT/PlantUML 要先机械翻译成 `graph`；仍失败则如实告知用户，不手画 |
-| 输出带颜色转义码 | 开了颜色模式 | 去掉 `-c`（保持默认 none）重跑 |
-| 盒子太挤 / 箭头重叠 | 节点间距太小 | 加大 `-x`/`-y` 重跑 |
-| 图太大撑爆屏幕 | 节点太多 | 压缩 `-x`/`-y` 间距；或拆成多个子图 |
-| 含 →/▼/◇ 的行凸出边框 | 编辑器字体（Iosevka）把符号区按 2 格渲染 | 已内置：CLI 将符号区（U+2190-21FF、U+25A0-27BF 等）按 2 格计算；无需手工处理 |
+| CLI reports render failed | Mermaid syntax is not supported | Check the syntax first; mechanically translate DOT/PlantUML into `graph` first; if it still fails, report it honestly, do not draw by hand |
+| Output carries color escape codes | Color mode is on | Drop `-c` (keep the default none) and rerun |
+| Boxes too cramped / arrows overlap | Node spacing too small | Increase `-x`/`-y` and rerun |
+| Figure too large, blows up the screen | Too many nodes | Shrink `-x`/`-y` spacing; or split into several subfigures |
+| Lines with →/▼/◇ stick out of the border | Editor font (Iosevka) renders the symbol block at 2 cells | Built in: the CLI counts the symbol block (U+2190-21FF, U+25A0-27BF, and more) as 2 cells; no manual work |
 
-## 输出前检查清单
+## Pre-output Checklist
 
-- [ ] 图是否由 `mermaid-ascii` CLI 生成，未手工改动？
-- [ ] 粘贴的是 CLI stdout 原文（可去掉结尾空行）？
-- [ ] 代码块内无 Markdown 装饰、无全角空格、无表情符号、无颜色转义码？
-- [ ] `mermaid-ascii` 在 PATH 吗？（不在则提示 rebuild，不手画）
+- [ ] Was the figure generated by the `mermaid-ascii` CLI, untouched by hand?
+- [ ] Is the pasted text the raw CLI stdout (trailing blank line may be dropped)?
+- [ ] No Markdown decoration, no full-width spaces, no emoji, no color escape codes inside the code block?
+- [ ] Is `mermaid-ascii` in `PATH`? (If not, tell the user to rebuild, do not draw by hand)
 
-## 正确示例（CLI 实测输出）
+## Verified Examples (real CLI output)
 
-### Mermaid → ASCII 盒图
+The example figures keep CJK labels: they demonstrate the 2-cell width handling.
 
-源码：
+### Mermaid → ASCII box figure
+
+Source:
 
 ```
 graph TD
@@ -91,7 +99,7 @@ graph TD
   D -->|拒绝| F[拦截]
 ```
 
-CLI 输出（`mermaid-ascii -`，原样粘贴）：
+CLI output (`mermaid-ascii -`, pasted unchanged):
 
 ```
 ┌──────────┐               
@@ -131,9 +139,9 @@ CLI 输出（`mermaid-ascii -`，原样粘贴）：
 └──────────┘     └────────┘
 ```
 
-### Markdown 表格 → ASCII 盒表
+### Markdown table → ASCII box table
 
-源码：
+Source:
 
 ```
 | 项目 | 值 |
@@ -142,7 +150,7 @@ CLI 输出（`mermaid-ascii -`，原样粘贴）：
 | 地址 | 东京 |
 ```
 
-CLI 输出（`mermaid-ascii table -`，原样粘贴）：
+CLI output (`mermaid-ascii table -`, pasted unchanged):
 
 ```
 +------+-------+
@@ -152,9 +160,9 @@ CLI 输出（`mermaid-ascii table -`，原样粘贴）：
 +------+-------+
 ```
 
-### 纯 ASCII 模式（`-a`）
+### Plain ASCII mode (`-a`)
 
-源码：
+Source:
 
 ```
 graph LR
@@ -162,7 +170,7 @@ graph LR
   B --> C[输出]
 ```
 
-CLI 输出（`mermaid-ascii -a -`，原样粘贴）：
+CLI output (`mermaid-ascii -a -`, pasted unchanged):
 
 ```
 +------+     +------+     +------+
@@ -172,9 +180,9 @@ CLI 输出（`mermaid-ascii -a -`，原样粘贴）：
 +------+     +------+     +------+
 ```
 
-### DOT → Mermaid 机械翻译（`digraph` → `graph TD`）
+### DOT → Mermaid mechanical translation (`digraph` → `graph TD`)
 
-DOT 源码：
+DOT source:
 
 ```
 digraph flow {
@@ -184,7 +192,7 @@ digraph flow {
 }
 ```
 
-机械翻译成 Mermaid：
+Mechanical translation into Mermaid:
 
 ```
 graph TD
@@ -193,4 +201,4 @@ graph TD
   A --> C
 ```
 
-再跑 `mermaid-ascii -`。
+Then run `mermaid-ascii -`.
