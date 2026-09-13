@@ -14,7 +14,7 @@ nix flake update                                   # update inputs
 git push                                           # push
 ```
 
-The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the flake input revision (`inputs.home-manager.packages.${pkgs.system}.home-manager`).
+The `home-manager` CLI is installed via `home/misc/cli.nix`, pinned to the flake input revision (`inputs.home-manager.packages.${pkgs.system}.home-manager`), and never run manually with `nix run`.
 
 ## Workflow
 
@@ -53,7 +53,6 @@ layout changes.
 - Hardware config is auto-generated
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
-- home-manager CLI lives in `home/misc/cli.nix`, pinned to the flake input — never `nix run` it manually
 - Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`; config in `home/misc/herdr.nix` with the update checks off
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
