@@ -23,7 +23,12 @@ in
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = "${pkgs.bash}/bin/bash -c '${config.services.zerotierone.package}/bin/zerotier-cli join $(cat ${config.sops.secrets.zerotier-network-id.path})'";
+      Restart = "on-failure";
+      RestartSec = "5";
+      # Retry inside bash too: during a system switch both units restart at
+      # once, and zerotier-cli's local API is not up yet when the first join
+      # attempt runs ("join connection failed").
+      ExecStart = "${pkgs.bash}/bin/bash -c 'id=$(cat ${config.sops.secrets.zerotier-network-id.path}); for i in $(seq 30); do ${config.services.zerotierone.package}/bin/zerotier-cli join \"$id\" && break; sleep 2; done; ${config.services.zerotierone.package}/bin/zerotier-cli listnetworks'";
     };
   };
 
