@@ -84,6 +84,9 @@ The Exa tools are **no longer installed from upstream**. Upstream
 
 - Source: `~/.config/nixos/home/dev/pi-agent/extensions/exa-pi.ts`
   (symlinked into `~/.pi/agent/extensions/` via Home Manager `files.nix`)
+- Gate: `exa-gate.ts` enforces the prefix rule. Authorization is read from
+  the raw `input` text. Unauthorized calls are blocked with a reason. The
+  tools stay registered and active at all times.
 - The upstream git package was removed from `settings.json` packages; the
   orphaned checkout `~/.pi/agent/git/github.com/Fletcher-Alderton/exa-pi`
   can be deleted.
@@ -111,6 +114,9 @@ The extension reads the `exa` credential from pi auth storage. The type must be 
 ## Troubleshooting
 
 - Missing API key: add the `exa` entry to `~/.pi/agent/auth.json`, then reload pi.
+- `Tool exa_search not found` on an authorized turn: the running pi session
+  predates the extensions. Run `/reload` inside pi (or restart pi), then
+  re-submit the `{exa}` message.
 - Invalid auth entry: type must be `api_key`, key must be a non-empty string.
 - Invalid key or API errors: verify the key in the Exa dashboard, check quota and billing.
 - Proxy: export `HTTPS_PROXY` or `ALL_PROXY` before starting pi.

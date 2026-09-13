@@ -20,8 +20,8 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 
 1. Edit → `dry-build` pass
 2. Rebuild
-3. `git add -A`, then commit in Magit (`C-x g` → `c c`) with a
-   GNU-format message
+3. `git add -A`, ask the user, then commit on the command line
+   (`git commit`) with a GNU-format message
 4. Push (if success)
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
