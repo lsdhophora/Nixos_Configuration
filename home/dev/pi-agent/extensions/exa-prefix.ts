@@ -9,13 +9,4 @@ export default function (pi: ExtensionAPI) {
       ctx.ui.setEditorText(text);
     },
   });
-
-  pi.registerCommand("search", {
-    description: "Replace editor with {search} prefix for one-shot Exa web search",
-    handler: async (args, ctx) => {
-      const trimmed = args?.trim();
-      const text = trimmed ? `{search} ${trimmed}` : "{search} ";
-      ctx.ui.setEditorText(text);
-    },
-  });
 }

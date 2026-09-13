@@ -1,7 +1,7 @@
 /**
  * Exa Gate — hard constraint for the exa tools.
  *
- * Rule: exa tools require the {exa} or {search} prefix at the start of
+ * Rule: exa tools require the {exa} prefix at the start of
  * the user message. Authorization is one-shot per prompt and expires
  * at agent_end.
  *
@@ -19,7 +19,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const EXA_TOOLS = ["exa_search", "exa_get_contents", "exa_find_similar"];
-const PREFIX_RE = /^\{exa\}|^\{search\}/;
+const PREFIX_RE = /^\{exa\}/;
 
 export default function (pi: ExtensionAPI) {
   let exaAuthorized = false;
@@ -55,7 +55,7 @@ export default function (pi: ExtensionAPI) {
       return {
         block: true,
         reason:
-          "Exa web search needs the {exa} or {search} prefix at the start of your message.",
+          "Exa web search needs the {exa} prefix at the start of your message.",
       };
     }
   });

@@ -1,18 +1,18 @@
 ---
 name: exa-search
-description: Rules and usage for the Exa web search tools provided by the exa-pi extension. Load when the user requests web research or current sources, or when a message starts with the {search} or {exa} prefix.
+description: Rules and usage for the Exa web search tools provided by the exa-pi extension. Load when the user requests web research or current sources, or when a message starts with the {exa} prefix.
 ---
 
 # Exa Web Search
 
 ## Authorization Rule
 
-The `{search}` or `{exa}` prefix authorizes Exa for one round only.
+The `{exa}` prefix authorizes Exa for one round only.
 
 - The prefix must appear at the start of the user message.
 - A new prefix is required for each round that needs Exa.
 - Do not carry authorization across rounds.
-- If a message does not start with `{search}` or `{exa}`, do not use Exa, even if the topic is related.
+- If a message does not start with `{exa}`, do not use Exa, even if the topic is related.
 - When the user requests a web search, use Exa instead of curl.
 
 ## Mandatory Verification Before Use
@@ -24,7 +24,7 @@ Before you call any exa tool, you MUST verify the current user message with the 
 
 ```bash
 MSG='<paste the latest user message here>'
-if printf '%s' "$MSG" | grep -qE '^\{search\}|^\{exa\}'; then
+if printf '%s' "$MSG" | grep -qE '^\{exa\}'; then
   echo "EXA-AUTHORIZED"
 else
   echo "EXA-DENIED"
