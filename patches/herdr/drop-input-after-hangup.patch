@@ -1,7 +1,12 @@
+# The client main loop checked the quit flag only at the top of the loop. A
+# SIGHUP that arrives while a stdin read is pending sets the flag, but the
+# resumed read still returns the bytes the host terminal wrote during
+# shutdown (WezTerm writes LF and EOT when it closes a pane). The client
+# forwarded them and typed a newline or EOF into the focused pane.
 --- a/src/client/mod.rs
 +++ b/src/client/mod.rs
-@@ -1521,6 +1521,15 @@
-         match event {
+@@ -720,6 +720,15 @@
+             ClientLoopEvent::EndpointCatalog(reload) => pending_catalog = Some(reload),
              #[cfg(unix)]
              ClientLoopEvent::StdinInput(data) => {
 +                // A termination signal (SIGHUP from a host terminal that closed
@@ -13,6 +18,6 @@
 +                if should_quit.load(Ordering::Acquire) {
 +                    continue;
 +                }
-                 let data = if let Some(attach_escape) = &mut state.attach_escape {
-                     match attach_escape.filter_input(
-                         data,
+                 let image_bridge_active = endpoint_accepts_local_images(
+                     is_remote_client,
+                     write_stream.active_id(),

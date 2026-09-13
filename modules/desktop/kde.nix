@@ -14,7 +14,6 @@ let
   # applyPatches keeps the existing upstream patches.
   kdePatches = {
     plasma-desktop = [
-      ./../../patches/plasma-desktop/lookandfeelbox-highlight-border.patch
       ./../../patches/plasma-desktop/hide-virtual-keyboard-button.patch
       ./../../patches/plasma-desktop/suppress-unlock-failed-on-resume.patch
       ./../../patches/plasma-desktop/hide-fingerprint-smartcard-hints.patch

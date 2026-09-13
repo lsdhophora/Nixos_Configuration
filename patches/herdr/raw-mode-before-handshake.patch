@@ -1,39 +1,46 @@
+# The client enabled raw mode only after the handshake finished. While the
+# handshake is in flight, the host tty stays in canonical mode. The line
+# discipline then converts Enter to LF. The client reads that LF later and
+# forwards it to the focused pane. A pane application that enables the Kitty
+# keyboard protocol (pi) maps LF to shift+enter, so the composer gains an
+# extra newline.
+#
+# herdr 0.9.0 restructured the handshake into a closure with `?` error
+# propagation (and a federated branch that keeps running without a local
+# handshake), so raw mode is restored on the two hard-error paths instead of
+# around the process::exit calls of the older versions.
 --- a/src/client/mod.rs
 +++ b/src/client/mod.rs
-@@ -1251,6 +1251,16 @@
+@@ -214,6 +214,16 @@
      let (cols, rows, cell_width_px, cell_height_px, exact_cell_size) =
-         initial_terminal_geometry(kitty_graphics_enabled);
+         initial_terminal_geometry(pixel_geometry_enabled, kitty_graphics_enabled)?;
  
 +    // Enter raw mode before the handshake. The handshake can take long enough
 +    // for the user to press a key while it is in flight. While the host tty is
 +    // still in canonical mode, the line discipline converts Enter to LF. That
 +    // leaked LF reaches the focused pane as an extra newline, because agents
 +    // such as pi map LF to shift+enter while the Kitty keyboard protocol is
-+    // active. Restore raw mode on each early exit below, because
-+    // process::exit does not run destructors. The later ratatui::init() call
-+    // is a no-op here, because crossterm keeps the first saved mode.
++    // active. The later setup_terminal() call is a no-op for raw mode, because
++    // crossterm keeps the first saved mode; disable raw mode again on the
++    // error paths that bail before the terminal is set up.
 +    crossterm::terminal::enable_raw_mode()?;
 +
-     // Perform handshake while the stream is still in blocking mode.
-     let negotiated_encoding = match do_handshake(
-         &mut stream,
-@@ -1264,6 +1274,7 @@
-     ) {
-         Ok(encoding) => encoding,
-         Err(err) => {
-+            let _ = crossterm::terminal::disable_raw_mode();
-             eprintln!("herdr: {err}");
-             std::process::exit(1);
+     let shell_surface_size = loop_config
+         .shell_config
+         .as_ref()
+@@ -264,7 +274,10 @@
+             warn!(%error, "Local handshake failed; keeping saved machines available");
+             None
          }
-@@ -1275,6 +1286,7 @@
-             takeover,
-         };
-         if let Err(err) = write_to_server(&mut stream, &attach) {
+-        Err(error) => return Err(error),
++        Err(error) => {
 +            let _ = crossterm::terminal::disable_raw_mode();
-             eprintln!("herdr: failed to request terminal attach: {err}");
-             std::process::exit(1);
-         }
-@@ -1289,6 +1301,7 @@
++            return Err(error);
++        }
+     };
+ 
+     // The federated shell can show connection notices without any server snapshot.
+@@ -275,6 +288,7 @@
          setup_terminal(mouse_capture)
      }
      .map_err(|err| {

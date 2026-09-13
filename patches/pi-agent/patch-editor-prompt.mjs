@@ -4,6 +4,13 @@
 // The script fails loudly when a pattern does not match. A pi version bump
 // that changes the bundled code then breaks the build instead of silently
 // producing an unpatched editor.
+//
+// Patterns match the compiled dist (packages/tui/dist/components/editor.js),
+// whose emit uses 4-space indentation per level. Upstream used to emit a
+// `const horizontal = this.borderColor("─");` helper after `this.lastWidth`
+// in render(); it was removed in the 0.85.x layout, so the patterns below no
+// longer reference it (the dist carries the "─" line in only the two
+// border-color accessor returns).
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -57,7 +64,6 @@ const layoutFrom =
   "        const layoutWidth = Math.max(1, contentWidth - (paddingX ? 0 : 1));\n" +
   "        // Store for cursor navigation (must match wrapping width)\n" +
   "        this.lastWidth = layoutWidth;\n" +
-  "        const horizontal = this.borderColor(\"─\");\n" +
   "        // Layout the text\n" +
   "        const layoutLines = this.layoutText(layoutWidth);";
 
@@ -72,7 +78,6 @@ const layoutTo =
   "        const textLayoutWidth = layoutWidth - promptWidth;\n" +
   "        // Store for cursor navigation (must match wrapping width)\n" +
   "        this.lastWidth = textLayoutWidth;\n" +
-  "        const horizontal = this.borderColor(\"─\");\n" +
   "        // Layout the text\n" +
   "        const layoutLines = this.layoutText(textLayoutWidth);";
 
