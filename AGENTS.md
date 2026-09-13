@@ -19,10 +19,11 @@ The `home-manager` CLI is installed via `home/misc/cli.nix` and pinned to the fl
 ## Workflow
 
 1. Edit → `dry-build` pass
-2. Rebuild
-3. `git add -A`, ask the user, then commit on the command line
+2. Rebuild and switch
+3. Run `just check-fast` before the commit; fix every failure
+4. `git add -A`, ask the user, then commit on the command line
    (`git commit`) with a GNU-format message
-4. Push (if success)
+5. Push only if the rebuild, the checks, and the commit succeeded
 
 Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
 
