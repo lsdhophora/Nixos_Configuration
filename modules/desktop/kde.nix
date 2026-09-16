@@ -247,6 +247,11 @@ in
     # The local patch sets the corner radius to the offset adjustment and cuts
     # the ring with the window shape, so the outline keeps one width all around
     # and the top half matches the bottom half.
+    #
+    # The widget style draws the frame that highlights a text field with a
+    # cosmetic pen, i.e. one pixel wide, because a cosmetic pen does not follow
+    # the device pixel ratio. One pixel looks thin on a display without scaling.
+    # The local patch draws the highlight frame wider than the plain frame.
     (final: prev: {
       klassy =
         applyPatches
@@ -260,6 +265,9 @@ in
             ./../../patches/klassy/fix-window-outline-ring.patch
             # Applies after the ring patch: it paints the ring over the lit button corner.
             ./../../patches/klassy/highlight-follows-outline.patch
+            # Widget style, not the decoration: it draws the highlight frame of
+            # a line edit wider than the plain frame.
+            ./../../patches/klassy/widen-lineedit-highlight-frame.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {

@@ -1,0 +1,104 @@
+--- a/kstyle/breezemetrics.h
++++ b/kstyle/breezemetrics.h
+@@ -32,6 +32,9 @@
+ 
+ // line editors
+ static constexpr int LineEdit_FrameWidth = 6;
++// The frame that highlights a line edit on focus or hover is wider than the
++// plain frame, because one pixel looks thin on a display without scaling.
++static constexpr qreal LineEdit_HighlightFrameWidth = 2.0;
+ 
+ // menu items
+ static constexpr int Menu_FrameWidth = 0;
+--- a/kstyle/breezehelper.h
++++ b/kstyle/breezehelper.h
+@@ -211,7 +211,7 @@
+     void renderFocusLine(QPainter *, const QRectF &, const QColor &) const;
+ 
+     //* generic frame
+-    void renderFrame(QPainter *, const QRectF &, const QColor &color, const QColor &outline = QColor()) const;
++    void renderFrame(QPainter *, const QRectF &, const QColor &color, const QColor &outline = QColor(), qreal penWidth = PenWidth::Frame) const;
+ 
+     //* generic frame, with separators only on the side
+     void renderFrameWithSides(QPainter *, const QRectF &, const QColor &color, Qt::Edges edges, const QColor &outline = QColor()) const;
+--- a/kstyle/breezehelper.cpp
++++ b/kstyle/breezehelper.cpp
+@@ -527,7 +527,7 @@
+ }
+ 
+ //______________________________________________________________________________
+-void Helper::renderFrame(QPainter *painter, const QRectF &rect, const QColor &color, const QColor &outline) const
++void Helper::renderFrame(QPainter *painter, const QRectF &rect, const QColor &color, const QColor &outline, const qreal penWidth) const
+ {
+     painter->setRenderHint(QPainter::Antialiasing);
+ 
+@@ -536,9 +536,16 @@
+ 
+     // set pen
+     if (outline.isValid()) {
+-        painter->setPen(outline);
+-        frameRect = strokedRect(frameRect);
+-        radius = frameRadiusForNewPenWidth(radius, PenWidth::Frame);
++        // A pen with width zero is cosmetic. It keeps the plain frame one
++        // pixel wide on every screen, because it does not follow the device
++        // pixel ratio. A wider highlight frame needs a real pen width.
++        QPen pen(outline);
++        if (penWidth > PenWidth::Frame) {
++            pen.setWidthF(penWidth);
++        }
++        painter->setPen(pen);
++        frameRect = strokedRect(frameRect, penWidth);
++        radius = frameRadiusForNewPenWidth(radius, penWidth);
+ 
+     } else {
+         painter->setPen(Qt::NoPen);
+--- a/kstyle/breezestyle.cpp
++++ b/kstyle/breezestyle.cpp
+@@ -4296,21 +4296,20 @@
+                                        ? _helper->neutralText(palette)
+                                        : _helper->frameOutlineColor(palette, mouseOver, hasFocus, opacity, mode));
+ 
+-                auto outlineRect = rect.adjusted(0, 0, -1, -1);
+-                if (value & Qt::LeftEdge) {
+-                    outlineRect = outlineRect.adjusted(1, 0, 0, 0);
+-                }
+-                if (value & Qt::TopEdge) {
+-                    outlineRect = outlineRect.adjusted(0, 1, 0, 0);
+-                }
+-                if (value & Qt::RightEdge) {
+-                    outlineRect = outlineRect.adjusted(0, 0, -1, 0);
+-                }
+-                if (value & Qt::BottomEdge) {
+-                    outlineRect = outlineRect.adjusted(0, 0, 0, -1);
+-                }
+-
+-                painter->setPen(outline);
++                // Draw the highlight frame wider than the plain frame. The
++                // extra width grows inwards, so that the outer edge of the
++                // frame stays clear of the plain border, which is drawn
++                // below.
++                const qreal borderInset = (Metrics::LineEdit_HighlightFrameWidth - PenWidth::Frame) / 2;
++                QRectF outlineRect(rect);
++                outlineRect.setLeft(rect.left() + borderInset + ((value & Qt::LeftEdge) ? 1 : 0));
++                outlineRect.setTop(rect.top() + borderInset + ((value & Qt::TopEdge) ? 1 : 0));
++                outlineRect.setRight(rect.right() - 1 - borderInset - ((value & Qt::RightEdge) ? 1 : 0));
++                outlineRect.setBottom(rect.bottom() - 1 - borderInset - ((value & Qt::BottomEdge) ? 1 : 0));
++
++                QPen highlightPen(outline);
++                highlightPen.setWidthF(Metrics::LineEdit_HighlightFrameWidth);
++                painter->setPen(highlightPen);
+                 painter->setBrush(Qt::NoBrush);
+                 painter->drawRect(outlineRect);
+             }
+@@ -4366,7 +4365,10 @@
+         const auto &background = palette.color(QPalette::Base);
+         const auto outline(hasHighlightNeutral(widget, option, mouseOver, hasFocus) ? _helper->neutralText(palette).lighter(mouseOver || hasFocus ? 150 : 100)
+                                                                                     : _helper->frameOutlineColor(palette, mouseOver, hasFocus, opacity, mode));
+-        _helper->renderFrame(painter, rect, background, outline);
++        // Draw the highlight frame wider than the plain frame. The plain
++        // frame keeps one pixel, like every other frame of the style.
++        const qreal penWidth = (mouseOver || hasFocus) ? Metrics::LineEdit_HighlightFrameWidth : PenWidth::Frame;
++        _helper->renderFrame(painter, rect, background, outline, penWidth);
+     }
+ 
+     return true;
