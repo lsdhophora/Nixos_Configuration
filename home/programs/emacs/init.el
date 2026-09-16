@@ -21,7 +21,7 @@
 (setq use-file-dialog nil)
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message nil)
-(load-theme 'modus-operandi)
+(load-theme 'modus-vivendi)
 
 (defun on-after-init ()
   (unless (display-graphic-p (selected-frame))

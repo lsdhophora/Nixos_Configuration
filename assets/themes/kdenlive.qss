@@ -1,10 +1,10 @@
 QToolTip {
-    background-color: #ffffff;
-    color: #232627;
-    border: 1px solid #b3b3b3;
+    background-color: #292c30;
+    color: #fcfcfc;
+    border: 1px solid #555555;
     padding: 6px 10px;
 }
 
 QToolTip QLabel {
-    color: #232627;
+    color: #fcfcfc;
 }

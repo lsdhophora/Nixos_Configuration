@@ -60,14 +60,14 @@ in
     mkRepoLinks
     ;
 
-  # Breeze Light palette (official KDE Breeze.colors, light variant).
-  # Used by tmux and mpv. The desktop keeps one theme (light).
-  breezeLight = {
-    bg = "#ffffff";
-    fg = "#232627";
+  # Breeze Dark palette (official KDE BreezeDark.colors).
+  # Used by tmux and mpv. The desktop keeps one theme (dark).
+  breezeDark = {
+    bg = "#202326";
+    fg = "#fcfcfc";
     accent = "#3daee9";
-    inactive = "#7f8c8d";
-    alt = "#eff0f1";
+    inactive = "#a1a9b1";
+    alt = "#292c30";
     red = "#da4453";
     orange = "#f67400";
     green = "#27ae60";

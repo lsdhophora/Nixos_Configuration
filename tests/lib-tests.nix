@@ -76,8 +76,8 @@ in
     };
   };
 
-  testBreezeLightAccent = {
-    expr = repoLib.breezeLight.accent;
+  testBreezeDarkAccent = {
+    expr = repoLib.breezeDark.accent;
     expected = "#3daee9";
   };
 
