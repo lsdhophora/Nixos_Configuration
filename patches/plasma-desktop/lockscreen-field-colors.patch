@@ -1,18 +1,15 @@
-diff --git a/desktoppackage/contents/lockscreen/MainBlock.qml b/desktoppackage/contents/lockscreen/MainBlock.qml
-index 7113d81..769e05d 100644
 --- a/desktoppackage/contents/lockscreen/MainBlock.qml
 +++ b/desktoppackage/contents/lockscreen/MainBlock.qml
-@@ -63,6 +63,15 @@ SessionManagementScreen {
+@@ -63,6 +63,14 @@ SessionManagementScreen {
              text: PasswordSync.password
  
              placeholderText: i18ndc("plasma_shell_org.kde.plasma.desktop", "@info:placeholder in text field", "Password")
-+            // The lock screen's Complementary palette renders the placeholder
-+            // and field text near-white and flips them to white after resume,
-+            // both invisible on the light lock background. Pin the placeholder
-+            // and echo pure black, and force the View color set so the embedded
-+            // show-password button icon is also themed dark.
-+            placeholderTextColor: "#000000"
-+            color: "#000000"
++            // The lock screen sets the Complementary color set, whose text
++            // colors are near-white (and flip to white after resume) on the
++            // light lock background. Force the View color set instead, so the
++            // echo, the placeholder and the embedded show-password button all
++            // follow the same palette as the field background. Do not pin the
++            // colors: they must stay readable in both light and dark themes.
 +            Kirigami.Theme.inherit: false
 +            Kirigami.Theme.colorSet: Kirigami.Theme.View
              focus: true
