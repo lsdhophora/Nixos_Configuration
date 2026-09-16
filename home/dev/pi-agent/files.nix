@@ -45,7 +45,7 @@ in
 
   config = {
     piSettings.enforced = {
-      theme = "breeze-light";
+      theme = "breeze-dark";
       packages = [
         "npm:@mistgc/pi-voice-input"
         "npm:pi-lsp"
@@ -71,7 +71,7 @@ in
       (repoLib.mkRepoLinks config {
         targetPrefix = ".pi/agent/themes/";
         sourcePrefix = "${base}/themes/";
-        paths = [ "breeze-light.json" ];
+        paths = [ "breeze-dark.json" ];
       })
       (repoLib.mkRepoLinks config {
         targetPrefix = ".pi/agent/extensions/";
