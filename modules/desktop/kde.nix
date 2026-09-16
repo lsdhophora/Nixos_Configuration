@@ -240,12 +240,13 @@ in
     # every radius so kwin clips the window corners itself.
     #
     # The thin window outline lives in the decoration shadow, i.e. behind the
-    # window. Its arc is therefore hidden at the rounded top corners, which
-    # leaves a gap next to a full-height button highlight. The local patch
-    # strokes the top edge and the two top corners of the outline over the
-    # titlebar with the same rect, pen width and corner radius as the shadow,
-    # so the line joins the button highlight around the corner and keeps one
-    # colour all around.
+    # window. The ring must be an offset curve of the window shape, and its
+    # inner part must not stay in the shadow texture: the opaque window content
+    # hides that part, but the translucent titlebar lets it show through as an
+    # extra light line along the top edge and the upper half of the side edges.
+    # The local patch sets the corner radius to the offset adjustment and cuts
+    # the ring with the window shape, so the outline keeps one width all around
+    # and the top half matches the bottom half.
     (final: prev: {
       klassy =
         applyPatches
@@ -253,10 +254,10 @@ in
             ./../../patches/klassy/draw-titlebar-separator-in-tools-area.patch
             ./../../patches/klassy/remove-empty-corners-tooltip.patch
             ./../../patches/klassy/set-desktop-file-name.patch
-            ./../../patches/klassy/paint-outline-in-decoration.patch
-            ./../../patches/klassy/repaint-decoration-on-outline-override.patch
             ./../../patches/klassy/ignore-menu-buttons-outline-override.patch
             ./../../patches/klassy/keep-on-all-desktops-outline.patch
+            # Applies last: it patches the ring code of the two patches above.
+            ./../../patches/klassy/fix-window-outline-ring.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {

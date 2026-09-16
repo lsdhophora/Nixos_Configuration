@@ -1,0 +1,37 @@
+--- a/kdecoration/breezedecoration.cpp
++++ b/kdecoration/breezedecoration.cpp
+@@ -1897,7 +1897,7 @@
+             if (m_internalSettings->windowCornerRadius() < 0.4)
+                 cornerRadius = m_scaledCornerRadius; // give a square corner for when corner radius is 0
+             else
+-                cornerRadius = m_scaledCornerRadius + halfOutlinePenWidth; // else round corner slightly more to account for pen width
++                cornerRadius = m_scaledCornerRadius + outlineAdjustment; // keep the ring the same width around the corner
+ 
+             Sides outlineSides;
+             if (!isTopEdge()) {
+@@ -2008,6 +2008,25 @@
+         }
+     }
+ 
++    // Remove the part of the ring that lies inside the window.  The opaque
++    // window content hides that part, but the titlebar is translucent and lets
++    // it show through as an extra light line along the top edge and the upper
++    // half of the side edges.  Cut it with the window shape, so the ring keeps
++    // the same width all around and the top matches the bottom.
++    QPainterPath windowShape;
++    if (hasNoBorders() && !m_internalSettings->roundAllCornersWhenNoBorders() && !c->isShaded()) {
++        if (hideTitleBar())
++            windowShape.addRect(innerRect);
++        else
++            windowShape = GeometryTools::roundedPath(innerRect, CornersTop, m_scaledCornerRadius);
++    } else {
++        windowShape.addRoundedRect(innerRect, m_scaledCornerRadius, m_scaledCornerRadius);
++    }
++    painter.setCompositionMode(QPainter::CompositionMode_DestinationOut);
++    painter.setPen(Qt::NoPen);
++    painter.setBrush(Qt::black);
++    painter.drawPath(windowShape);
++
+     painter.end();
+ 
+     auto ret = std::make_shared<KDecoration3::DecorationShadow>();
