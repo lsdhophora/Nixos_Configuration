@@ -9,7 +9,7 @@
   # home-manager).
   imports = [
     ./plasma.nix
-    ./kwin-myopic-defocus.nix
+    # ./kwin-myopic-defocus.nix # disabled: the myopic defocus effect is off
     ./disable-hot-corners.nix
     ./keyboard-backlight.nix
     ./lid-wake.nix

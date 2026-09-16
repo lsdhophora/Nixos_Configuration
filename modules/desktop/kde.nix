@@ -86,7 +86,7 @@ in
   environment.systemPackages = [
     pkgs.klassy # overridden in overlay below to remove Type=Application from .desktop
     pkgs.kwin-renumber-desktops # auto-renumbers virtual desktops from 1
-    pkgs.kwin-myopic-defocus # myopic chromatic defocus (G/B blur) eye-care effect
+    # pkgs.kwin-myopic-defocus # disabled: myopic chromatic defocus effect
   ];
 
   environment.plasma6.excludePackages = with pkgs.kdePackages; [
@@ -277,24 +277,26 @@ in
     # Builds against the same unstable kdePackages (kwin 6.7.x) the desktop
     # uses, so the plugin ABI matches the running compositor.  Source is
     # vendored in packages/kwin-myopic-defocus/src (tests excluded).
-    (final: prev: {
-      kwin-myopic-defocus = import ../../packages/kwin-myopic-defocus {
-        inherit (prev.kdePackages)
-          qtbase
-          kglobalaccel
-          kwindowsystem
-          kconfig
-          kconfigwidgets
-          kcoreaddons
-          ki18n
-          kcmutils
-          kwin
-          extra-cmake-modules
-          ;
-        inherit (unstablePkgs) lib stdenv cmake;
-        epoxy = unstablePkgs.libepoxy;
-      };
-    })
+    # Disabled. Uncomment this overlay and the package entry above to
+    # enable the effect again.
+    # (final: prev: {
+    #   kwin-myopic-defocus = import ../../packages/kwin-myopic-defocus {
+    #     inherit (prev.kdePackages)
+    #       qtbase
+    #       kglobalaccel
+    #       kwindowsystem
+    #       kconfig
+    #       kconfigwidgets
+    #       kcoreaddons
+    #       ki18n
+    #       kcmutils
+    #       kwin
+    #       extra-cmake-modules
+    #       ;
+    #     inherit (unstablePkgs) lib stdenv cmake;
+    #     epoxy = unstablePkgs.libepoxy;
+    #   };
+    # })
   ];
 
   i18n.inputMethod = {
