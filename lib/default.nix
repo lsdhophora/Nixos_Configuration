@@ -73,33 +73,33 @@ in
     green = "#27ae60";
   };
 
-  # Terminal palette (16 colors + fg/bg + selection): Breeze Light.
-  # Exact values from the official KDE Breeze Light Konsole color scheme
-  # (phabricator D22243, data/color-schemes/BreezeLight.colorscheme),
-  # mapped to xterm color0-15 naming. Used by wezterm (ansi/brights).
-  # Background is #EFF0F1 (light grey, not pure white); Color0 is
-  # #232627 (dark grey, same as the foreground). Selection colors come
-  # from the official BreezeLight.colors.
+  # Terminal palette (16 colors + fg/bg + selection): Breeze Dark.
+  # Values from the WezTerm built-in "Breeze" scheme, the dark KDE Breeze
+  # terminal palette. Read them with
+  # wezterm.color.get_builtin_schemes()["Breeze"]. Mapped to xterm
+  # color0-15 naming. Used by wezterm (ansi/brights).
+  # Color0 is the background and Color7 the foreground. Color12 is the
+  # Breeze accent (#3daee9).
   weztermPalette = {
-    foreground = "#232627";
-    background = "#eff0f1";
-    color0 = "#232627";
-    color1 = "#c0392b";
-    color2 = "#55aa00";
+    foreground = "#eff0f1";
+    background = "#31363b";
+    color0 = "#31363b";
+    color1 = "#ed1515";
+    color2 = "#11d116";
     color3 = "#f67400";
-    color4 = "#0055ff";
-    color5 = "#8e44ad";
-    color6 = "#16a085";
-    color7 = "#fcfcfc";
+    color4 = "#1d99f3";
+    color5 = "#9b59b6";
+    color6 = "#1abc9c";
+    color7 = "#eff0f1";
     color8 = "#7f8c8d";
-    color9 = "#ed1515";
-    color10 = "#11d116";
+    color9 = "#c0392b";
+    color10 = "#1cdc9a";
     color11 = "#fdbc4b";
-    color12 = "#1d99f3";
-    color13 = "#9b59b6";
-    color14 = "#1abc9c";
-    color15 = "#ffffff";
-    selection_foreground = "#ffffff";
-    selection_background = "#3daee9";
+    color12 = "#3daee9";
+    color13 = "#8e44ad";
+    color14 = "#16a085";
+    color15 = "#fcfcfc";
+    selection_foreground = "#31363b";
+    selection_background = "#eff0f1";
   };
 }

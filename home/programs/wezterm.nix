@@ -1,11 +1,9 @@
 { repoLib, lib, ... }:
 let
   palette = repoLib.weztermPalette;
-  # Shared Breeze Light palette (tmux, mpv).
-  breeze = repoLib.breezeLight;
   # One tab color pair.
   tabColor = bg_color: fg_color: { inherit bg_color fg_color; };
-  # Breeze Light [colors] section, derived from the repoLib palette.
+  # Breeze Dark [colors] section, derived from the repoLib palette.
   colors = {
     foreground = palette.foreground;
     background = palette.background;
@@ -34,17 +32,18 @@ let
       palette.color14
       palette.color15
     ];
-    # Light tab bar. WezTerm defaults to a dark bar when the scheme
-    # does not set these colors.
+    # Dark tab bar. The bar matches the terminal background, the active
+    # tab uses the Breeze accent, and the hover state uses the light grey
+    # of Color8.
     tab_bar = {
-      background = breeze.alt;
-      active_tab = tabColor breeze.accent "#ffffff";
-      inactive_tab = tabColor breeze.alt breeze.fg;
-      inactive_tab_hover = tabColor breeze.bg breeze.fg;
-      inactive_tab_edge = breeze.alt;
-      inactive_tab_edge_hover = breeze.bg;
-      new_tab = tabColor breeze.alt breeze.fg;
-      new_tab_hover = tabColor breeze.bg breeze.fg;
+      background = palette.background;
+      active_tab = tabColor palette.color12 "#ffffff";
+      inactive_tab = tabColor palette.background palette.foreground;
+      inactive_tab_hover = tabColor palette.color8 palette.background;
+      inactive_tab_edge = palette.background;
+      inactive_tab_edge_hover = palette.color8;
+      new_tab = tabColor palette.background palette.foreground;
+      new_tab_hover = tabColor palette.color8 palette.background;
     };
   };
 in
@@ -54,12 +53,12 @@ in
     # Enables wezterm ssh / imgcat in the shell (sources wezterm.sh).
     enableZshIntegration = true;
 
-    # Custom colors: ~/.config/wezterm/colors/Breeze Light.toml,
+    # Custom colors: ~/.config/wezterm/colors/Breeze Dark.toml,
     # selected by settings.color_scheme.
-    colorSchemes."Breeze Light" = colors;
+    colorSchemes."Breeze Dark" = colors;
 
     settings = {
-      color_scheme = "Breeze Light";
+      color_scheme = "Breeze Dark";
       # Retro tab bar: cell-based rendering, no fancy button shapes.
       use_fancy_tab_bar = false;
       font_size = 14.0;

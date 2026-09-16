@@ -83,6 +83,6 @@ in
 
   testWeztermPaletteBackground = {
     expr = repoLib.weztermPalette.background;
-    expected = "#eff0f1";
+    expected = "#31363b";
   };
 }
