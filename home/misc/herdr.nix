@@ -18,8 +18,17 @@
       manifest_check = false
 
       [theme]
-      name = "one-light"
+      name = "one-dark"
       auto_switch = false
+
+      # "dots" shows the compact color marks; "symbols" shows one glyph
+      # for each agent state.
+      [ui]
+      status_indicators = "symbols"
+
+      # Send background notifications to the system notification service.
+      [ui.toast]
+      delivery = "system"
     '';
   };
 
