@@ -256,8 +256,10 @@ in
             ./../../patches/klassy/set-desktop-file-name.patch
             ./../../patches/klassy/ignore-menu-buttons-outline-override.patch
             ./../../patches/klassy/keep-on-all-desktops-outline.patch
-            # Applies last: it patches the ring code of the two patches above.
+            # Applies after the colour patches: it patches the ring geometry.
             ./../../patches/klassy/fix-window-outline-ring.patch
+            # Applies after the ring patch: it paints the ring over the lit button corner.
+            ./../../patches/klassy/highlight-follows-outline.patch
           ]
           (
             unstablePkgs.klassy.overrideAttrs (oldAttrs: {

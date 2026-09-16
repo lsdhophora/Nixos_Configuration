@@ -1,0 +1,86 @@
+--- a/kdecoration/breezedecoration.cpp
++++ b/kdecoration/breezedecoration.cpp
+@@ -1343,6 +1343,83 @@
+     if (!hideTitleBar()) {
+         calculateTitleBarShape();
+         paintTitleBar(painter, repaintRegion);
++
++        // Cover the window edge of the two top corners with the outline colour.
++        // kwin clips the window corners itself, so the edge of the corner is a
++        // partly covered pixel, and over the ring that pixel is a darker ring
++        // colour.  Paint the inner part of the ring over the corner while a
++        // button lights the outline, and fade it with the outline override
++        // animation, so the corner does not change before the rest of the
++        // highlight.  Only the corner areas that a lit button covers are
++        // painted, so a plain corner keeps the window edge of the titlebar.
++        if (!c->isShaded() && m_windowOutline.isValid() && m_overrideOutlineAnimationProgress > 0
++            && !isMaximized() && !isTopEdge() && !isLeftEdge() && !isRightEdge()) {
++            qreal outlinePenWidth;
++            if (KWindowSystem::isPlatformX11()) {
++                outlinePenWidth = m_internalSettings->windowOutlineThickness() * m_systemScaleFactorX11;
++                if (m_internalSettings->windowOutlineSnapToWholePixel()) {
++                    outlinePenWidth = std::round(outlinePenWidth);
++                }
++            } else {
++                outlinePenWidth = m_internalSettings->windowOutlineThickness();
++                if (m_internalSettings->windowOutlineSnapToWholePixel()) {
++                    outlinePenWidth = KDecoration3::snapToPixelGrid(outlinePenWidth, c->nextScale());
++                }
++            }
++            const qreal outlineOverlap = m_internalSettings->windowOutlineOverlap() ? 0.5 : 0;
++            const qreal halfOutlinePenWidth = outlinePenWidth / 2;
++            const qreal outlineAdjustment = halfOutlinePenWidth - outlineOverlap;
++            const qreal cornerRadius = (m_internalSettings->windowCornerRadius() < 0.4)
++                ? m_scaledCornerRadius
++                : m_scaledCornerRadius + outlineAdjustment;
++            const QRectF outlineRect = m_titleRect.adjusted(-outlineAdjustment, -outlineAdjustment, outlineAdjustment, outlineAdjustment);
++
++            QPainterPath topOutlinePath;
++            if (cornerRadius > 0) {
++                topOutlinePath.moveTo(outlineRect.left(), outlineRect.top() + cornerRadius);
++                topOutlinePath.arcTo(QRectF(outlineRect.left(), outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 180, -90);
++                topOutlinePath.lineTo(outlineRect.right() - cornerRadius, outlineRect.top());
++                topOutlinePath.arcTo(QRectF(outlineRect.right() - 2 * cornerRadius, outlineRect.top(), 2 * cornerRadius, 2 * cornerRadius), 90, -90);
++            } else {
++                topOutlinePath.moveTo(outlineRect.left(), outlineRect.top());
++                topOutlinePath.lineTo(outlineRect.right(), outlineRect.top());
++            }
++
++            QPainterPath cornerArea;
++            const qreal cornerAreaSize = cornerRadius + 2;
++            cornerArea.addRect(QRectF(0, 0, cornerAreaSize, cornerAreaSize));
++            cornerArea.addRect(QRectF(m_titleRect.width() - cornerAreaSize, 0, cornerAreaSize, cornerAreaSize));
++
++            // Only cover the corner where a button draws its background, so a
++            // plain corner keeps the window edge of the titlebar.
++            QPainterPath buttonArea;
++            const auto buttons = m_leftButtons->buttons() + m_rightButtons->buttons();
++            for (KDecoration3::DecorationButton *b : buttons) {
++                if (b->isVisible() && (b->isHovered() || b->isPressed() || (b->isCheckable() && b->isChecked()))) {
++                    buttonArea.addRect(b->geometry());
++                }
++            }
++
++            painter->save();
++            // Fade the seal in and out with the outline override animation, so the
++            // sealed part of the corner does not appear before the button
++            // highlight and the ring do.
++            painter->setOpacity(m_overrideOutlineAnimationProgress);
++            painter->setClipPath(cornerArea, Qt::IntersectClip);
++            painter->setClipPath(buttonArea, Qt::IntersectClip);
++            painter->setRenderHint(QPainter::Antialiasing, false);
++            painter->setBrush(Qt::NoBrush);
++            painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
++            QPen outlinePen(m_windowOutline);
++            outlinePen.setWidthF(outlinePenWidth + outlineOverlap);
++            outlinePen.setCapStyle(Qt::FlatCap);
++            if (m_internalSettings->windowCornerRadius() < 0.4) {
++                outlinePen.setJoinStyle(Qt::MiterJoin);
++            }
++            painter->setPen(outlinePen);
++            painter->drawPath(topOutlinePath);
++            painter->restore();
++        }
+     }
+ 
+     if (hasBorders() && !s->isAlphaChannelSupported()) {
