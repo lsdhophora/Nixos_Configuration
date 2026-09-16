@@ -51,6 +51,8 @@ in
         "npm:pi-lsp"
         "npm:pi-subdir-context"
         "npm:pi-mermaid"
+        # The /goal extension with the most GitHub stars (Michaelliv/pi-goal).
+        "npm:pi-goal"
       ];
     };
 
