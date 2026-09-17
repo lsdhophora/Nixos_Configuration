@@ -39,6 +39,9 @@
         "ui.key.menuAccessKey" = 0;
         "browser.tabs.splitView.enabled" = false;
         "browser.tabs.groups.enabled" = false;
+        # Keep the window open when the last tab closes. The browser quits
+        # otherwise, because the window holds the last tab.
+        "browser.tabs.closeWindowWithLastTab" = false;
         # Hide the "Create a New Profile..." entry in the hamburger menu.
         "browser.profiles.enabled" = false;
         "identity.fxaccounts.enabled" = false;

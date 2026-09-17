@@ -10,6 +10,13 @@ the whole `~/.librewolf` directory through the bind mount from
 `/persist` (see `home/persistence.nix`). History, cookies, logins,
 and extension data survive reboots.
 
+## Tabs and windows
+
+Closing the last tab keeps the window open
+(`browser.tabs.closeWindowWithLastTab = false`), so LibreWolf does not
+quit when every tab is closed. The browser still exits when the window
+itself is closed.
+
 ## Downloads and PDF handling
 
 LibreWolf saves downloads to the Downloads folder
