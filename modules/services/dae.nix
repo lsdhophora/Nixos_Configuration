@@ -1,4 +1,16 @@
-{ config, ... }:
+{
+  config,
+  inputs,
+  pkgs,
+  repoLib,
+  ...
+}:
+
+let
+  # dae 2.0.0 from nixpkgs-unstable. The 1.0.0 in nixpkgs 26.05 lacks the
+  # sub(), node() and subnode() selectors of the DNS request routing.
+  dae = (repoLib.unstablePkgs inputs pkgs).dae;
+in
 
 {
   sops.secrets.dae-subscription = {
@@ -28,6 +40,17 @@
         routing {
           request {
             qtype(https) -> reject
+
+            # Resolve the host names of the subscription and of the nodes
+            # with alidns. The router of this network answers a stale
+            # address for p4.cnt.linuxlh.xin. dae dials the system address
+            # of a node when no rule matches, so a stale answer breaks
+            # every node of that family. Keep these rules close to the
+            # top: the selectors do not use the fallback.
+            sub(regex: '.*') -> alidns
+            subnode(regex: '.*') -> alidns
+            node(name_regex: '.+') -> alidns
+
             fallback: alidns
           }
           response {
@@ -65,6 +88,7 @@
 
   services.dae = {
     enable = true;
+    package = dae;
     configFile = config.sops.templates."dae-config".path;
   };
 }
