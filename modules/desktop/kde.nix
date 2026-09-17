@@ -48,6 +48,15 @@ let
     breeze-gtk = [
       ./../../patches/breeze-gtk/theme-fixes.patch
     ];
+    # QML text fields do not use the widget style. plasma-integration gives
+    # a pure QML application the Breeze QML style, so widen the focus frame
+    # of its text field background there. An application that links QtWidgets
+    # gets the desktop QML style instead, which already draws through the
+    # widget style. The Klassy overlay widens the frame of a Plasma component
+    # text field, which draws from the desktop theme.
+    qqc2-breeze-style = [
+      ./../../patches/qqc2-breeze-style/widen-textfield-highlight-frame.patch
+    ];
     # xdg-desktop-portal-kde is patched in the kio overlay below. Its file
     # dialog embeds KFileWidget, so it must link the patched kio.
   };

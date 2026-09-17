@@ -1,0 +1,14 @@
+--- a/style/impl/TextEditBackground.qml
++++ b/style/impl/TextEditBackground.qml
+@@ -25,7 +25,10 @@
+     border {
+         color: control.activeFocus || control.hovered ?
+             Kirigami.Theme.focusColor : Impl.Theme.buttonSeparatorColor()
+-        width: Impl.Units.smallBorder
++        // Match the Klassy widget style. It draws the focus frame one
++        // logical pixel wider than the plain border.
++        width: control.activeFocus || control.hovered ?
++            Impl.Units.mediumBorder : Impl.Units.smallBorder
+     }
+ 
+     FocusRect {
