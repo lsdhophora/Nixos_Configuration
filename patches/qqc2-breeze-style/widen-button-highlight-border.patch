@@ -1,0 +1,14 @@
+--- a/style/impl/ButtonBackground.qml
++++ b/style/impl/ButtonBackground.qml
+@@ -61,7 +61,10 @@
+                 return control.flat ? "transparent" : Impl.Theme.separatorColor()
+             }
+         }
+-        width: Impl.Units.smallBorder
++        // Match the Klassy widget style and the text fields: the frame that
++        // highlights the button is one logical pixel wider than the plain
++        // border.
++        width: highlightBorder ? Impl.Units.mediumBorder : Impl.Units.smallBorder
+     }
+ 
+     Behavior on color {
