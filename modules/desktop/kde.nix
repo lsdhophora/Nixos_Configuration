@@ -248,6 +248,13 @@ in
     # the ring with the window shape, so the outline keeps one width all around
     # and the top half matches the bottom half.
     #
+    # A Plasma QML text field draws its frame from the desktop theme, not
+    # from the widget style. Install a wider frame into the Klassy themes, so
+    # the lock screen password field matches a text field of a widget
+    # application. The file must stay inside the theme package directory: a
+    # partial theme directory in XDG_DATA_HOME hides the package, and KSvg
+    # then falls back to the default theme.
+    #
     # The widget style draws the frame that highlights a text field with a
     # cosmetic pen, i.e. one pixel wide, because a cosmetic pen does not follow
     # the device pixel ratio. One pixel looks thin on a display without scaling.
@@ -280,6 +287,10 @@ in
               };
               postInstall = (oldAttrs.postInstall or "") + ''
                 rm -f "$out/share/applications/kcm_klassydecoration.desktop"
+                for theme in klassy-dark klassy-light; do
+                  install -Dm644 ${./../../assets/plasma/lineedit.svg} \
+                    "$out/share/plasma/desktoptheme/$theme/widgets/lineedit.svg"
+                done
               '';
             })
           );
