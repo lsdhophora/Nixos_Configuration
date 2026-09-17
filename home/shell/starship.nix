@@ -36,9 +36,17 @@ in
       add_newline = false;
       inherit format;
 
-      # OS icon. The keys are the os_info type names.
+      # OS icon. The keys are the os_info type names. The icon carries no
+      # style and the format writes an unstyled space after it: WezTerm lets
+      # a square icon glyph overflow into the cell after it only when that
+      # cell holds a space with the same attributes, and a styled icon is
+      # squeezed into one cell instead, which renders it smaller and blurred.
+      # The space also leaves room for the width of the larger symbol font.
+      # See home/programs/wezterm.nix.
       os = {
         disabled = false;
+        style = "none";
+        format = "[$symbol]($style) ";
         symbols = {
           NixOS = "";
           Linux = "";
@@ -76,10 +84,16 @@ in
       git_metrics.disabled = false;
 
       # Detect a `nix shell` sub-shell through the /nix/store path entries.
+      # The two spaces belong to the symbol style on purpose: WezTerm lets a
+      # square icon overflow into a styled space with the same attributes,
+      # so the symbol renders at the size of the larger symbol font (like the
+      # os icon above) and the spaces keep it clear of the state. An unstyled
+      # space would make WezTerm squeeze the symbol into one cell instead,
+      # which shrinks it and blurs it.
       nix_shell = {
         heuristic = true;
         unknown_msg = "nix shell";
-        symbol = " ";
+        symbol = "  ";
       };
 
       direnv = {
