@@ -1,4 +1,5 @@
-;; test-4.el --- Judge integration: compile once, run all, compare, timeout
+;;; test-4.el --- CPH judge test -*- lexical-binding: t -*-
+;; Judge integration: compile once, run all, compare, and time out.
 ;; The scratch dir comes from CPH_TEST_DIR (see run-tests.sh).
 
 (defvar cph-test-repo

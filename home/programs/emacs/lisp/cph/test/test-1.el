@@ -1,4 +1,5 @@
-;; test-1.el --- Server accepts a problem POST end-to-end (self-contained)
+;;; test-1.el --- CPH server test -*- lexical-binding: t -*-
+;; Server accepts a problem POST end-to-end (self-contained).
 ;; The scratch dir comes from CPH_TEST_DIR (see run-tests.sh).
 
 (defvar cph-test-repo

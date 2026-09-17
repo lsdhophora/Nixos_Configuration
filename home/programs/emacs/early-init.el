@@ -1,3 +1,5 @@
+;;; early-init.el -- Early init -*- lexical-binding: t -*-
+
 ;; Loaded before package.el can initialize, so the ELPA package manager
 ;; never loads alongside straight-free (Nix-provided) packages.
 (setq package-enable-at-startup nil)

@@ -1,4 +1,5 @@
-;; test-5.el --- Filename rules and .prob round trip
+;;; test-5.el --- CPH filename test -*- lexical-binding: t -*-
+;; Filename rules and the .prob round trip.
 ;; The scratch dir comes from CPH_TEST_DIR (see run-tests.sh).
 
 (defvar cph-test-repo
