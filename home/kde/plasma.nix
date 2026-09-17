@@ -20,6 +20,10 @@
       {
         location = "bottom";
         height = 44;
+        # Keep the panel translucent at all times.  The default Adaptive mode
+        # switches to the opaque theme background when a window touches the
+        # panel.
+        opacity = "translucent";
         # Lock this panel (UserImmutable) right inside the layout script, after
         # the widgets above have been added and in the same evaluateScript run:
         # a separate later lockCorona() raced the layout script and could leave
