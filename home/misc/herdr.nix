@@ -26,9 +26,13 @@
       [ui]
       status_indicators = "symbols"
 
-      # Send background notifications to the system notification service.
+      # Send background notifications to the outer terminal, which asks the
+      # desktop notification service. WezTerm does that in-process over D-Bus,
+      # so the herdr PATH needs no notify-send. A notify-send from the nix
+      # store in that PATH made the nix_shell heuristic of Starship report
+      # "nix shell" in the prompt of every pane.
       [ui.toast]
-      delivery = "system"
+      delivery = "terminal"
     '';
   };
 
