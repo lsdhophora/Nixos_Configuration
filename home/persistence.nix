@@ -25,6 +25,7 @@
       ".local/share/localsend_app"
       ".local/share/org.localsend.localsend_app"
       ".local/share/Shortwave"
+      ".local/share/asr" # SenseVoice model files of the asr command
       ".local/share/emacs"
       ".local/share/fcitx5"
       ".local/share/gh"

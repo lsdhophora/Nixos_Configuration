@@ -17,5 +17,9 @@
     # channel has no herdr package, so overlays/herdr.nix takes it from
     # nixpkgs-unstable and patches the client raw-mode ordering.
     herdr
+    # Transcribe audio and video. The engine is sherpa-onnx from the binary
+    # cache, so no local build happens. The model files go to
+    # ~/.local/share/asr/models, which home/persistence.nix keeps.
+    asr
   ];
 }

@@ -86,6 +86,7 @@ in
           "skills/exa-search/SKILL.md"
           "skills/ascii-art/SKILL.md"
           "skills/nix/SKILL.md"
+          "skills/asr/SKILL.md"
         ];
       })
       (repoLib.mkRepoLinks config {
