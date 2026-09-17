@@ -1,8 +1,8 @@
-# Transcribe a media URL or a local file with sherpa-onnx and SenseVoice.
+# Transcribe a local audio or video file with sherpa-onnx and SenseVoice.
 #
 # sherpa-onnx comes from nixpkgs and hits the binary cache, so no local
 # build is needed and no pip environment is installed. The driver holds
-# the pipeline: yt-dlp, ffmpeg, silence cuts and recognition.
+# the pipeline: ffmpeg, silence cuts and recognition.
 #
 # The ONNX model files stay out of the store. The driver downloads them
 # on the first run to ~/.local/share/asr/models, which home/persistence.nix
@@ -15,7 +15,6 @@
   makeWrapper,
   cacert,
   sherpa-onnx,
-  yt-dlp,
   ffmpeg,
 }:
 
@@ -35,7 +34,6 @@ stdenv.mkDerivation {
       --prefix PATH : ${
         lib.makeBinPath [
           sherpa-onnx
-          yt-dlp
           ffmpeg
         ]
       }
@@ -43,7 +41,7 @@ stdenv.mkDerivation {
   '';
 
   meta = {
-    description = "Transcribe audio and video with sherpa-onnx and SenseVoice";
+    description = "Transcribe local audio and video with sherpa-onnx and SenseVoice";
     mainProgram = "asr";
     license = lib.licenses.mit;
   };

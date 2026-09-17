@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Transcribe a media URL or a local file with sherpa-onnx and SenseVoice.
+"""Transcribe a local audio or video file with sherpa-onnx and SenseVoice.
 
-The steps are: fetch the audio, convert it to 16 kHz mono, cut it at
-silence, and recognise each part with the SenseVoice model. One model
-covers zh, en, yue, ja and ko, so a mixed recording needs no extra setup.
+The steps are: convert the input to 16 kHz mono, cut it at silence, and
+recognise each part with the SenseVoice model. One model covers zh, en,
+yue, ja and ko, so a mixed recording needs no extra setup.
 """
 
 import argparse
@@ -134,22 +134,6 @@ def audio_format(path: Path) -> tuple[int, int]:
   return int(stream["sample_rate"]), int(stream["channels"])
 
 
-def fetch_media(source: str, workdir: Path) -> tuple[Path, dict]:
-  """Return the media file for a URL or a local path, with its metadata."""
-  if not source.startswith(("http://", "https://")):
-    return Path(source).resolve(), {}
-  run([
-    "yt-dlp", "--no-playlist", "--write-info-json", "-f", "bestaudio",
-    "-o", str(workdir / "src.%(ext)s"), source,
-  ])
-  info_file = next(workdir.glob("src.info.json"), None)
-  info = json.loads(info_file.read_text(encoding="utf-8")) if info_file else {}
-  media = [p for p in workdir.glob("src.*") if p.suffix != ".json"]
-  if not media:
-    raise SystemExit("yt-dlp produced no media file")
-  return media[0], info
-
-
 def to_wav(source: Path, dest: Path) -> None:
   """Write a 16 kHz mono wav file, unless the input is already one."""
   if source.suffix == ".wav":
@@ -266,7 +250,7 @@ def sentences(result: dict) -> list[tuple[float, str]]:
 def parse_args(argv: list[str]) -> argparse.Namespace:
   default_models = os.environ.get("ASR_MODELS") or str(Path.home() / ".local/share/asr/models")
   parser = argparse.ArgumentParser(prog="asr", description=__doc__)
-  parser.add_argument("source", nargs="?", help="media URL or local file")
+  parser.add_argument("source", nargs="?", help="local audio or video file")
   parser.add_argument("--models", default=default_models, help="directory of the model files")
   parser.add_argument("--out", default=".", help="directory for the transcript files")
   parser.add_argument("--name", default="", help="base name of the transcript files")
@@ -285,7 +269,11 @@ def main(argv: list[str]) -> int:
     ensure_models(models)
     return 0
   if not args.source:
-    raise SystemExit("give a media URL or a local file")
+    raise SystemExit("give a media file")
+  media = Path(args.source).expanduser().resolve()
+  if not media.is_file():
+    raise SystemExit(f"no such file: {media}")
+
   ensure_models(models)
 
   for tool in ("ffmpeg", "ffprobe", "sherpa-onnx-offline"):
@@ -294,7 +282,6 @@ def main(argv: list[str]) -> int:
 
   workdir = Path(tempfile.mkdtemp(prefix="asr-"))
   try:
-    media, info = fetch_media(args.source, workdir)
     print(f"media: {media.name}", file=sys.stderr)
     wav = workdir / "audio16k.wav"
     to_wav(media, wav)
@@ -305,7 +292,7 @@ def main(argv: list[str]) -> int:
 
     out_dir = Path(args.out).expanduser()
     out_dir.mkdir(parents=True, exist_ok=True)
-    name = args.name or Path(info.get("title") or media.stem).name
+    name = args.name or media.stem
 
     lines: list[dict] = []
     for index, (begin, end) in enumerate(parts, 1):
@@ -322,9 +309,6 @@ def main(argv: list[str]) -> int:
       "".join(f"[{stamp(line['beg'])}] {line['text']}\n" for line in lines), encoding="utf-8")
     (out_dir / f"{name}.jsonl").write_text(
       "".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines), encoding="utf-8")
-    if info:
-      (out_dir / f"{name}.info.json").write_text(
-        json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"wrote {out_dir / name}.txt and {out_dir / name}.jsonl", file=sys.stderr)
   finally:
     if args.keep_temp:

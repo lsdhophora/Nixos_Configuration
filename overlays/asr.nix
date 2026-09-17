@@ -11,7 +11,6 @@ final: prev: {
       makeWrapper
       cacert
       sherpa-onnx
-      yt-dlp
       ffmpeg
       ;
   };
