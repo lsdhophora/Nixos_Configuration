@@ -11,6 +11,25 @@ let
   jq = lib.getExe pkgs.jq;
   settingsPath = "${config.home.homeDirectory}/.pi/agent/settings.json";
 
+  # The herdr pi integration file comes from the herdr binary itself.
+  # Herdr writes the file with `herdr integration install pi`, and this
+  # derivation copies it out. The result always matches the installed
+  # herdr version, so the file cannot drift.
+  herdrPiIntegration =
+    pkgs.runCommand "herdr-pi-integration"
+      {
+        nativeBuildInputs = [ pkgs.herdr ];
+      }
+      ''
+        export HOME=$TMPDIR
+        export XDG_CONFIG_HOME=$TMPDIR/.config
+        export XDG_STATE_HOME=$TMPDIR/.state
+        mkdir -p "$HOME/.pi/agent/extensions"
+        herdr integration install pi
+        mkdir -p $out
+        cp "$HOME/.pi/agent/extensions/herdr-agent-state.ts" $out/
+      '';
+
   # Merge the Nix-managed keys into a file that the application owns.
   # This is the form home-manager uses in its own programs.zed-editor
   # module: the static (Nix) side wins, and every other key stays as the
@@ -67,7 +86,6 @@ in
           "skills/exa-search/SKILL.md"
           "skills/ascii-art/SKILL.md"
           "skills/nix/SKILL.md"
-          "skills/herdr/SKILL.md"
         ];
       })
       (repoLib.mkRepoLinks config {
@@ -97,6 +115,14 @@ in
         sourcePrefix = "${base}/agents/";
         paths = [ "worker.md" ];
       })
+      # Herdr learns the pi agent state (working, blocked, idle) only from
+      # the integration file. Herdr generates both that file and the skill
+      # file, so take them from the installed herdr package. The copies
+      # cannot drift from the running binary that way.
+      {
+        ".pi/agent/extensions/herdr-agent-state.ts".source = "${herdrPiIntegration}/herdr-agent-state.ts";
+        ".pi/agent/skills/herdr/SKILL.md".source = "${pkgs.herdr}/share/herdr/skills/herdr/SKILL.md";
+      }
     ];
 
     # ~/.pi/agent/settings.json is runtime state. pi rewrites it whenever
