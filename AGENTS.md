@@ -55,7 +55,7 @@ layout changes.
 - Hardware config is auto-generated
 - Package attr path may differ from pname (e.g. `transmission_4-gtk`)
 - Home Manager: git uses `settings` not `config`
-- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`; config in `home/misc/herdr.nix` with the update checks off
+- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched and wrapped by `overlays/herdr.nix`; the wrap puts `notify-send` on PATH for `ui.toast.delivery = "system"`. Config in `home/misc/herdr.nix` with the update checks off
 - Herdr agent states and skill: `home/dev/pi-agent/files.nix` generates the pi integration file with `herdr integration install pi` and links the skill from the herdr package, so both match the installed herdr.
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
