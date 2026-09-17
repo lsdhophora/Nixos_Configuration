@@ -87,6 +87,20 @@ in
           "Noto Sans Mono CJK SC",
         })
       '';
+      # U+FE0F (VS16) turns its base code point into an emoji. The pi TUI
+      # counts VS16 as one cell and gives such a sequence two cells.
+      # WezTerm counts the base code point only and gives it one cell, so
+      # the cell that pi never paints shows the dark terminal background
+      # as a block. Give VS16 the width of one cell; text without VS16
+      # does not change.
+      cell_widths = [
+        {
+          # U+FE0F
+          first = 65039;
+          last = 65039;
+          width = 1;
+        }
+      ];
       hide_tab_bar_if_only_one_tab = false;
       window_close_confirmation = "NeverPrompt";
 
