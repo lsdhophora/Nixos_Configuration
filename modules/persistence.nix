@@ -68,6 +68,17 @@
       "/var/lib/udisks2"
       "/var/lib/power-profiles-daemon"
       "/var/lib/tlp"
+      # Plasma Login Manager greeter config. The Login Screen KCM copies the
+      # Plasma settings of the current user to this directory. The greeter
+      # reads these files at the next start. The root file system is tmpfs,
+      # so the copy is lost without this entry. The owner must be the
+      # plasmalogin user, or the greeter cannot write its config.
+      {
+        directory = "/var/lib/plasmalogin/.config";
+        user = "plasmalogin";
+        group = "plasmalogin";
+        mode = "0750";
+      }
       "/var/log/journal"
     ];
     files = [ "/etc/machine-id" ];

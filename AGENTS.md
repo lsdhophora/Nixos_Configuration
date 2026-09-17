@@ -60,6 +60,7 @@ layout changes.
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
 - Home persistence: `~/.config` is persisted as one directory, never file by file. Never bind-mount a single file that an application rewrites with `rename(2)`: the write fails with EBUSY and is lost without an error. `home-config-prune.service` deletes every other path below `.config` at boot, before the Home Manager activation; see `modules/desktop/home-config-prune.nix`
 - Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`); change them in the module, not in the UI
+- Plasma Login Manager: the greeter home is `/var/lib/plasmalogin` on tmpfs. `modules/persistence.nix` persists `/var/lib/plasmalogin/.config`, because the Login Screen KCM writes the Plasma settings of the user there. The sync result must survive a reboot.
 - Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
 - LibreWolf PDF handler: `handlers.json` is runtime state; an activation script re-applies "save to disk" on every switch (see `docs/librewolf.md`)
