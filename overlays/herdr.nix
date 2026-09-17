@@ -23,23 +23,37 @@
 # The shim below adds --app-name=herdr, so the desktop shows the herdr name.
 # Herdr passes its own arguments after the shim arguments. A later app-name
 # option from herdr would therefore win.
+#
+# The patch and the wrapper live in separate derivations. A change to either
+# file under patches/herdr/ or to the shim rebuilds `herdr-patched` with
+# cargo and zig, which takes a full build of the package. `herdr` itself is
+# only a symlinkJoin on top of that, so a change to the wrapper alone costs
+# nothing. Keep the wrapper out of `herdr-patched`.
 { inputs, repoLib }:
 final: prev:
 let
   notifySend = final.writeShellScriptBin "notify-send" ''
     exec ${final.libnotify}/bin/notify-send --app-name=herdr "$@"
   '';
-in
-{
-  herdr = (repoLib.unstablePkgs inputs prev).herdr.overrideAttrs (old: {
+
+  herdr-patched = (repoLib.unstablePkgs inputs prev).herdr.overrideAttrs (old: {
+    # Do not set pname or version: the base derivation must stay identical to
+    # the one without a wrapper, or the store already has it built.
     patches = (old.patches or [ ]) ++ [
       ../patches/herdr/raw-mode-before-handshake.patch
       ../patches/herdr/drop-input-after-hangup.patch
     ];
-    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.makeWrapper ];
-    postFixup = (old.postFixup or "") + ''
+  });
+in
+{
+  herdr = final.symlinkJoin {
+    name = "herdr-${herdr-patched.version}";
+    paths = [ herdr-patched ];
+    nativeBuildInputs = [ final.makeWrapper ];
+    postBuild = ''
       wrapProgram $out/bin/herdr \
         --prefix PATH : ${final.lib.makeBinPath [ notifySend ]}
     '';
-  });
+    meta = herdr-patched.meta;
+  };
 }
