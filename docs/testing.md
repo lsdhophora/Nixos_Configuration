@@ -11,7 +11,7 @@ checks. See `flake-modules/checks.nix` for the definitions.
 | `statix` | static | No Nix anti-patterns |
 | `sops-integrity` | static | Every value in secrets/secrets.yaml is SOPS-encrypted |
 | `sops-keys` | static | Every `sops.secrets.<key>` reference exists in the yaml |
-| `invariants` | eval | Key services and host facts hold (zram, pipewire, hostname, user, git, zsh) |
+| `invariants` | eval | Key services and host facts hold (zram, pipewire, hostname, user, git, zsh, starship) |
 | `lib-tests` | eval | Unit tests for the helpers in lib/default.nix (lib.debug.runTests) |
 | `system` | build | The full system toplevel builds (includes nested home-manager) |
 | `home` | build | The standalone home activation package builds |

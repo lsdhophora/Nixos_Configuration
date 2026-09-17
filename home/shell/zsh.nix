@@ -1,9 +1,4 @@
 { config, ... }:
-let
-  # zsh prompt format. The label shows as a bracket tag when not empty.
-  prompt =
-    label: if label == "" then "%F{green}%B$%b%f " else "%F{green}%B[${label}]%b %F{green}%B$%b%f ";
-in
 {
   home.sessionVariables = {
     PI_SKIP_VERSION_CHECK = "1";
@@ -40,14 +35,7 @@ in
         fi
       }
 
-      if [[ $IN_NIX_SHELL == "nix3" ]]; then
-        PROMPT='${prompt "nix shell"}'
-      elif [[ -n $IN_NIX_SHELL ]]; then
-        PROMPT='${prompt "nix-shell"}'
-      else
-        PROMPT='${prompt ""}'
-      fi
-      RPROMPT=""
+      # The prompt comes from Starship (home/shell/starship.nix).
 
       # Set the terminal title to the current directory
       precmd() { print -Pn "\e]0;%~\a" }

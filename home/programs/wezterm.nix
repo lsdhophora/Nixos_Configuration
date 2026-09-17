@@ -62,7 +62,16 @@ in
       # Retro tab bar: cell-based rendering, no fancy button shapes.
       use_fancy_tab_bar = false;
       font_size = 14.0;
-      # Iosevka has no CJK glyphs; fall back to Noto Sans Mono CJK SC.
+      # Iosevka has no CJK glyphs and no icon glyphs. The fallback list
+      # adds Noto Sans Mono CJK SC for the CJK text and the built-in
+      # Symbols Nerd Font Mono of WezTerm for the icons of the shell
+      # prompt (see home/shell/starship.nix). The symbols font has a
+      # square cell, so WezTerm applies no width limit to its icons and
+      # lets an icon overflow into the space after it. The prompt always
+      # writes a space after an icon. The scale of 0.85 makes the icon a
+      # little larger than the cap height of the text. The Iosevka Nerd
+      # Font variant is smaller, and WezTerm squeezes it to 1.25 cells,
+      # so it cannot show a large icon.
       # NWID=1: Iosevka maps ambiguous-width symbols (dash, arrows,
       # ellipsis, check marks, and so on) to 2-cell WWID glyphs by
       # default, but WezTerm lays them out in 1 cell, so their ink
@@ -74,6 +83,7 @@ in
       font = lib.generators.mkLuaInline ''
         wezterm.font_with_fallback({
           { family = "Iosevka", harfbuzz_features = { "NWID=1" } },
+          { family = "Symbols Nerd Font Mono", scale = 0.85 },
           "Noto Sans Mono CJK SC",
         })
       '';

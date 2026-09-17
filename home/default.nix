@@ -41,6 +41,7 @@
     ./dev/texlive.nix
 
     # ---- Shell ----
+    ./shell/starship.nix
     ./shell/zsh.nix
   ];
 

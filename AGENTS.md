@@ -65,4 +65,5 @@ layout changes.
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
 - LibreWolf PDF handler: `handlers.json` is runtime state; an activation script re-applies "save to disk" on every switch (see `docs/librewolf.md`)
 - pi `~/.pi/agent/settings.json` is runtime state: persisted in `home/persistence.nix`, and the keys in `piSettings.enforced` are restored on every activation.
+- Shell prompt: Starship with a two-line format (`home/shell/starship.nix`). The icons come from the built-in `Symbols Nerd Font Mono` of WezTerm, scaled to 0.85 in `home/programs/wezterm.nix`.
 - Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`

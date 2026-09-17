@@ -162,6 +162,7 @@
           assert cfg.users.users.FeiHsueh.isNormalUser;
           assert homeCfg.programs.git.enable;
           assert homeCfg.programs.zsh.enable;
+          assert homeCfg.programs.starship.enable;
           assert homeCfg.programs.wezterm.enable;
           assert homeCfg.programs.wezterm.settings.hide_tab_bar_if_only_one_tab == false;
           pkgs.runCommand "check-invariants" { } "echo 'invariants: OK' > $out";
