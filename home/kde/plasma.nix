@@ -1,4 +1,76 @@
-{ ... }:
+{
+  config,
+  pkgs,
+  ...
+}:
+let
+  # The layout script of plasma-manager and its "already run" marker.  The
+  # names come from the panel module of plasma-manager: desktop script
+  # "panels" with priority 2.
+  panelScript = "${config.xdg.dataHome}/plasma-manager/scripts/2_desktop_script_panels.sh";
+  panelMarker = "${config.xdg.dataHome}/plasma-manager/last_run_desktop_script_panels";
+
+  # Repair the panel when the layout script loses the startup race.
+  #
+  # The layout script runs about one second after plasmashell starts.
+  # Plasmashell cannot find the org.kde.panel plugin at that moment, so the
+  # layout script stops at its first addWidget() call and no panel exists.
+  # A second layout run in the same plasmashell process fails as well,
+  # because plasmashell keeps the failed plugin lookup.  Restart
+  # plasmashell and run the layout script again.
+  #
+  # plasma-manager runs this script after the layout script, because its
+  # priority is higher.
+  ensurePanel = ''
+    set -u
+    qdbus="${pkgs.kdePackages.qttools}/bin/qdbus"
+    systemctl="${pkgs.systemd}/bin/systemctl"
+    rm="${pkgs.coreutils}/bin/rm"
+    sleep="${pkgs.coreutils}/bin/sleep"
+
+    # Print the number of panels.  Print nothing when plasmashell does not
+    # answer.
+    panel_count() {
+      "$qdbus" org.kde.plasmashell /PlasmaShell \
+        org.kde.PlasmaShell.evaluateScript 'print("" + panels().length)' 2>/dev/null
+    }
+
+    count="$(panel_count)"
+    if [ -z "$count" ]; then
+      echo "plasma-ensure-panel: plasmashell does not answer" >&2
+      exit 0
+    fi
+    if [ "$count" != "0" ]; then
+      exit 0
+    fi
+
+    echo "plasma-ensure-panel: no panel, restart plasmashell" >&2
+    "$rm" -f "${panelMarker}"
+    "$systemctl" --user restart plasma-plasmashell.service
+
+    # Wait until the restarted plasmashell answers on the session bus.
+    i=0
+    while [ "$i" -lt 60 ]; do
+      if "$qdbus" org.kde.plasmashell /PlasmaShell >/dev/null 2>&1; then
+        break
+      fi
+      "$sleep" 1
+      i=$((i + 1))
+    done
+
+    # Give the restarted plasmashell time for the containment plugins,
+    # then build the panel.
+    "$sleep" 5
+    "${panelScript}"
+
+    count="$(panel_count)"
+    if [ -n "$count" ] && [ "$count" != "0" ]; then
+      exit 0
+    fi
+    echo "plasma-ensure-panel: the panel is still absent" >&2
+    exit 1
+  '';
+in
 {
   # Declarative Plasma panel / Task Manager config (plasma-manager).
   #
@@ -101,6 +173,15 @@
         ];
       }
     ];
+
+    # Fallback for the layout script of the panel above.  The script runs
+    # at every session start (runAlways) and after the layout script
+    # (priority 3).
+    startup.startupScript."ensure-panel" = {
+      priority = 3;
+      runAlways = true;
+      text = ensurePanel;
+    };
 
     # Hide per-widget "Configure..." menu entries while the panel is locked.
     # The generic applet configure action stays visible when locked because it
