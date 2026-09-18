@@ -111,9 +111,16 @@ in
 
   # Restart dae when the rendered config changes. The unit loads the file
   # through LoadCredential, and systemd tracks the path, not its content.
-  # The template's store file (.file) holds the static text, so a config
-  # change moves it and the trigger fires. This uses the native
-  # restartTriggers path instead of sops restartUnits, which still goes
-  # through the activation script that NixOS 26.11 removes.
-  systemd.services.dae.restartTriggers = [ config.sops.templates."dae-config".file ];
+  #
+  # Two triggers, because a change has two shapes:
+  # - the template text: its store file (.file) moves.
+  # - the encrypted sops file: the subscription key changed, so the template
+  #   text (and its store path) stays the same, but sopsFileHash changes.
+  #
+  # This uses the native restartTriggers path instead of sops restartUnits,
+  # which still goes through the activation script that NixOS 26.11 removes.
+  systemd.services.dae.restartTriggers = [
+    config.sops.templates."dae-config".file
+    config.sops.secrets.dae-subscription.sopsFileHash
+  ];
 }
