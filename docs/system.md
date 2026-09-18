@@ -25,6 +25,25 @@ system, and dae alone writes about 0.5 MB an hour.
 
 `hosts/flowerpot/hardware-configuration.nix` is auto-generated.
 
+## Hibernation
+
+`boot.resumeDevice` (`modules/boot.nix`) names the partition that holds
+`/persist/swapfile`. The systemd initrd turns it into `resume=` on the
+kernel command line, and `resume_offset` in `boot.kernelParams` supplies
+the page offset of the file. A swap file needs both; without them a
+hibernate cycle writes the image and then cold boots, losing the session.
+
+The offset belongs to the file, so it must not change: do not give the
+`swapDevices` entry in `modules/persistence.nix` a `size`, because a size
+makes NixOS truncate and rebuild the file. To recompute the offset, read
+the first `physical_offset` of `filefrag -v /persist/swapfile`.
+
+## Boot
+
+`boot.loader.grub.configurationLimit` (`modules/boot.nix`) keeps the last
+10 system generations in the boot menu. Without it every generation stays
+there; the menu held 69 entries.
+
 ## Packages
 
 A package attribute path may differ from its `pname` (for example
