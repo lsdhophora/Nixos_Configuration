@@ -12,6 +12,16 @@
       verbose = false;
       kernelModules = [ "amdgpu" ];
     };
+    # Resume from the swap file. The systemd initrd turns this into
+    # resume=<device> on the kernel command line (systemd/initrd.nix),
+    # and the page offset of the file comes from resume_offset below. The
+    # file is /persist/swapfile, which lives on this partition.
+    #
+    # Keep the offset in step with the file. Do not give the swapDevices
+    # entry in modules/persistence.nix a size: a size makes NixOS truncate
+    # and rebuild the file, and a rebuilt file has a new offset. Read the
+    # first physical_offset of `filefrag -v /persist/swapfile`.
+    resumeDevice = "/dev/disk/by-uuid/f008a750-0a3e-4fcc-a18e-ca7d6e3daa75";
     kernelParams = [
       "quiet"
       "splash"
@@ -25,6 +35,9 @@
       # OLED: the OEM brightness curve has a broken point near the top.
       # 100% then maps to about 0 nits (dimmer than 95%). Disable the curve.
       "amdgpu.dcdebugmask=0x40000"
+      # Offset of /persist/swapfile in 4096-byte pages. With the 4096-byte
+      # block size of the ext4 partition this is the filefrag value.
+      "resume_offset=3860480"
     ];
 
     extraModprobeConfig = ''
