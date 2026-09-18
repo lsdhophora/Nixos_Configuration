@@ -43,19 +43,18 @@
         # Hide the "Create a New Profile..." entry in the hamburger menu.
         "browser.profiles.enabled" = false;
         "identity.fxaccounts.enabled" = false;
-        # LibreWolf default is to always ask where to save (useDownloadDir=false,
-        # see upstream librewolf.cfg DOWNLOADS section).  Override so that
-        # programmatic downloads (GM_download saveAs:false from userscripts like
-        # Pixiv Downloader) land silently in the default download folder and
-        # create per-artwork subfolders; the browser has no showDirectoryPicker
-        # API, so this is the only way to avoid a save dialog per file.
+        # LibreWolf asks where to save by default (useDownloadDir=false, see
+        # the upstream librewolf.cfg DOWNLOADS section). Override it, so a
+        # programmatic download (GM_download saveAs:false from the userscripts)
+        # lands silently in the download folder and gets its per-artwork
+        # subfolder. The browser has no showDirectoryPicker API, so this is the
+        # only way to avoid a save dialog per file.
         "browser.download.useDownloadDir" = true;
         "browser.startup.homepage" = "about:home";
-        # Restore the previous session (open tabs/windows) on startup.
-        # The profile dir (~/.librewolf) is bind-mounted from /persist, so
-        # sessionstore data survives reboots; sessionstore backups are also
-        # written every 15 s, so an unclean poweroff loses at most that
-        # window (crash recovery restores the last backup).
+        # Restore the previous session on startup. The profile dir
+        # (~/.librewolf) is bind-mounted from /persist, so the session data
+        # survives reboots; sessionstore backups are written every 15 s, so an
+        # unclean poweroff loses at most that window.
         "browser.startup.page" = 3;
         "browser.sessionstore.resume_from_crash" = true;
         # New tab page state: no top sites, no sponsored content, no wallpaper.
@@ -68,13 +67,12 @@
         # Allow sideloaded addons (the patched Violentmonkey xpi in the
         # profile extensions dir) to enable themselves automatically.
         "extensions.autoDisableScopes" = 0;
-        # Keep content-process console output off the stdout pipe: with
-        # devtools.console.stdout.content on, every page console message is
-        # forwarded to the parent process over IPC.  The TypeScript Playground
-        # (Monaco + in-browser TS compiler) floods the console while booting,
-        # saturating the pipe and starving the page main thread, so the
-        # playground froze with the "this page is slowing down" warning and
-        # never loaded (https://www.typescriptlang.org/play).
+        # Keep the content-process console off the stdout pipe: with
+        # devtools.console.stdout.content on, every page console message goes
+        # to the parent over IPC. The TypeScript Playground (Monaco plus an
+        # in-browser compiler) floods the console while booting, saturates the
+        # pipe and starves the main thread, so the page froze with "this page
+        # is slowing down" and never loaded.
         "devtools.console.stdout.content" = false;
       };
       # CSS files live in assets/, like the GTK themes.
@@ -83,40 +81,31 @@
     };
   };
 
-  # The patched Violentmonkey (unsigned; LibreWolf is built with
-  # requireSigning = false, so profile-scope unsigned addons load fine).
-  # Delivered as a plain file in the profile extensions dir instead of
-  # extensions.packages: the HM buildEnv would make the whole extensions dir
-  # a read-only store symlink, which also blocks policy force-install
-  # downloads from landing there.
+  # The patched Violentmonkey (unsigned; LibreWolf sets requireSigning = false,
+  # so profile-scope unsigned addons load). Ship it as a plain file in the
+  # profile extensions dir, not via extensions.packages: the HM buildEnv would
+  # turn the dir into a read-only store symlink and block policy downloads.
   home.file.".librewolf/default/extensions/{aecec67f-0d10-4fa7-b7c7-609a2db280cf}.xpi" = {
     source = "${pkgs.violentmonkey-declarative}/share/mozilla/extensions/{aecec67f-0d10-4fa7-b7c7-609a2db280cf}.xpi";
-    # LibreWolf replaces the store symlink with a plain file in the profile.
-    # home-manager.backupFileExtension = "bak" then wants to move that file
-    # to <name>.xpi.bak before linking; once a .bak exists the boot
-    # activation aborts with "would be clobbered by backing up". That abort
-    # also skips ~/.zshenv and the plasma-manager autostart scripts, so the
-    # zsh configuration and the panel fall back to their defaults. Force the
-    # link so the activation overwrites the file without a backup.
+    # LibreWolf replaces the store symlink with a plain file, and the default
+    # backup would abort the boot activation ("would be clobbered by backing
+    # up"). That abort also skips ~/.zshenv and the panel autostart scripts.
+    # Force the link, so the activation overwrites the file without a backup.
     force = true;
   };
 
   # Native messaging hosts (Plasma browser integration + keepassxc).
-  # firefoxpwa is dropped entirely: the pixiv PWA launcher never opened, so
-  # no firefoxpwa native messaging host is needed either.
+  # firefoxpwa is dropped entirely; its PWA launcher never opened.
   mozilla.librewolfNativeMessagingHosts = [
     pkgs.kdePackages.plasma-browser-integration
     pkgs.keepassxc
   ];
 
   # handlers.json is runtime state (LibreWolf rewrites it in place with
-  # rename(2), and the profile dir is bind-mounted from /persist), so it
-  # cannot be declared via home.file.  Instead re-apply the PDF handler
-  # override at every Home Manager activation: application/pdf is set to
-  # "save to disk" (action 0) instead of "open in the built-in viewer"
-  # (action 3), so PDF links always save to the download folder instead
-  # of auto-opening.  pdfjs stays enabled, so the built-in reader still
-  # works for explicit previews (download panel eye icon, local files).
+  # rename(2), and the profile dir is bind-mounted from /persist), so home.file
+  # cannot manage it. Re-apply the PDF handler at every Home Manager
+  # activation: application/pdf saves to disk (action 0) instead of opening in
+  # the built-in viewer (action 3). pdfjs stays enabled for explicit previews.
   home.activation.librewolfPdfSave = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${pkgs.deno}/bin/deno run -q --no-check --no-config --allow-env --allow-read --allow-write ${./../../assets/firefox/patch-pdf-handler.ts}
   '';

@@ -12,15 +12,12 @@ let
 
   # Repair the panel when the layout script loses the startup race.
   #
-  # The layout script runs about one second after plasmashell starts.
-  # Plasmashell cannot find the org.kde.panel plugin at that moment, so the
-  # layout script stops at its first addWidget() call and no panel exists.
-  # A second layout run in the same plasmashell process fails as well,
-  # because plasmashell keeps the failed plugin lookup.  Restart
-  # plasmashell and run the layout script again.
-  #
-  # plasma-manager runs this script after the layout script, because its
-  # priority is higher.
+  # The layout script runs about one second after plasmashell starts, when
+  # plasmashell cannot find the org.kde.panel plugin yet. The script then stops
+  # at its first addWidget() call and no panel exists; a second run in the same
+  # process fails too, because plasmashell keeps the failed plugin lookup.
+  # Restart plasmashell and run the layout script again. plasma-manager runs
+  # this script after the layout script, because its priority is higher.
   ensurePanel = ''
     set -u
     qdbus="${pkgs.kdePackages.qttools}/bin/qdbus"
@@ -74,17 +71,13 @@ in
 {
   # Declarative Plasma panel / Task Manager config (plasma-manager).
   #
-  # Mechanism: on every Plasma session start, the autostart script:
-  #   1. removes plasma-org.kde.plasma.desktop-appletsrc (prevents unbounded growth)
-  #   2. rebuilds the panel/widgets from the declarations below with
-  #      qdbus evaluateScript
-  # Therefore this file regenerates on every start. The persistent .config
-  # directory keeps the file between sessions, and both the boot prune
-  # (modules/desktop/home-config-prune.nix) and the autostart script remove
-  # it again.
-  #
-  # UI changes (unpin, drag widgets) are overwritten on the next start.
-  # To change pins, edit this file + `home-manager switch --flake .#FeiHsueh`.
+  # On every Plasma session start the autostart script removes
+  # plasma-org.kde.plasma.desktop-appletsrc and rebuilds the panel and widgets
+  # from the declarations below with qdbus evaluateScript. The file therefore
+  # regenerates on every start; the boot prune
+  # (modules/desktop/home-config-prune.nix) removes it again. UI changes
+  # (unpin, drag widgets) are lost on the next start, so edit this file and run
+  # `home-manager switch --flake .#FeiHsueh`.
   programs.plasma = {
     enable = true;
 
@@ -96,13 +89,11 @@ in
         # switches to the opaque theme background when a window touches the
         # panel.
         opacity = "translucent";
-        # Lock this panel (UserImmutable) right inside the layout script, after
-        # the widgets above have been added and in the same evaluateScript run:
-        # a separate later lockCorona() raced the layout script and could leave
-        # the panel unbuilt.  lockCorona() additionally raises the corona-level
-        # immutability -- Applet::immutability() only follows the corona (not
-        # the per-containment lock), so without it applets still report Mutable
-        # and keep their "Configure..." menu entries.
+        # Lock the panel (UserImmutable) inside the layout script, after the
+        # widgets are added and in the same evaluateScript run: a separate
+        # later lockCorona() raced the layout script and could leave the panel
+        # unbuilt. lockCorona() also raises the corona-level immutability, so
+        # the applets get no "Configure..." entry.
         extraSettings = "" + "panel.locked = true;" + "\n" + "lockCorona(true);";
         widgets = [
           {

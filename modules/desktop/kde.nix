@@ -23,20 +23,15 @@ let
     plasma-workspace = [
       ./../../patches/plasma-workspace/jobitem-null-check.patch
     ];
-    # The Power & Battery applet switched power profiles only on wheel events
-    # whose |angleDelta| >= 60 (Math.round(delta/120) per event, remainder
-    # dropped). Touchpads and high-resolution wheels send many small deltas, so
-    # scrolling was hit-or-miss. Accumulate the delta across events and advance
-    # one profile per full 120, keeping the remainder (volume applet idiom).
+    # The Power & Battery applet switched profiles only on wheel deltas of
+    # 120 or more, so touchpad and high-resolution wheels were unreliable.
+    # Accumulate the delta and keep the remainder (the volume applet idiom).
     powerdevil = [
       ./../../patches/powerdevil/battery-widget-wheel-accumulate.patch
     ];
-    # Greeter: revert to the fresh-start idle state on aboutToSuspend, so the
-    # first frame after wake shows no stale button highlight (hovered/active
-    # focus survive suspend; the compositor sends no pointer event to clear
-    # them). Same signal the lock screen uses. Also ignore action-button
-    # clicks while the UI is hidden, so stale input after wake cannot fire
-    # Sleep/Hibernate again.
+    # Greeter: revert to the idle state on aboutToSuspend, so the first frame
+    # after wake shows no stale button highlight. Ignore action-button clicks
+    # while the UI is hidden, so stale input cannot fire Sleep again.
     plasma-login-manager = [
       ./../../patches/plasma-login-manager/sleep-idle-across-suspend.patch
     ];
@@ -48,17 +43,12 @@ let
     breeze-gtk = [
       ./../../patches/breeze-gtk/theme-fixes.patch
     ];
-    # QML text fields and buttons do not use the widget style. plasma-integration
-    # gives a pure QML application the Breeze QML style, so widen the frame
-    # that highlights a text field and a button there. An application that
-    # links QtWidgets gets the desktop QML style instead, which already draws
-    # through the widget style. The Klassy overlay widens the frame of a
-    # Plasma component text field, which draws from the desktop theme.
-    #
-    # The highlighted frame is the one the style outlines in the focus color:
-    # a focused or hovered text field, and a hovered, checked, highlighted, or
-    # keyboard-focused button. The Breeze QML style draws it exactly as wide
-    # as the plain border, so it looks thin next to the widget style.
+    # QML text fields and buttons do not use the widget style.
+    # plasma-integration gives a pure QML application the Breeze QML style,
+    # and the Klassy overlay covers a Plasma component text field. Both draw
+    # the focus frame only as wide as the plain border, so it looks thin next
+    # to the widget style. Widen the frame of a focused or hovered text field
+    # and of a hovered, checked, highlighted, or focused button.
     qqc2-breeze-style = [
       ./../../patches/qqc2-breeze-style/widen-textfield-highlight-frame.patch
       ./../../patches/qqc2-breeze-style/widen-button-highlight-border.patch
@@ -72,14 +62,13 @@ in
 
   # kscreenlocker probes kde-fingerprint / kde-smartcard on every lock and
   # shows the "(or scan your fingerprint/smartcard)" hints while the
-  # noninteractive PAM stacks are running. Two measures:
-  # - These PAM stacks return PAM_AUTHINFO_UNAVAIL when no device is present
-  #   (without them Linux-PAM falls back to "other"/pam_deny, which returns
-  #   PAM_AUTH_ERR and reads as "available"). With hardware they also give
-  #   working fingerprint/smartcard auth.
-  # - hide-fingerprint-smartcard-hints.patch removes the hint labels from
-  #   the lock screen QML: the PAM probes take nonzero time (fprintd needs
-  #   dbus activation), so the hints would still flash on every lock.
+  # noninteractive PAM stacks run. Two measures:
+  # - These PAM stacks return PAM_AUTHINFO_UNAVAIL when no device is present;
+  #   without them Linux-PAM falls back to pam_deny, which reads as
+  #   "available". With hardware they also give working auth.
+  # - hide-fingerprint-smartcard-hints.patch removes the hint labels from the
+  #   lock screen QML: the PAM probes take nonzero time, so the hints would
+  #   still flash on every lock.
   # Users with hardware get working auth; the hints stay hidden.
   security.pam.services."kde-fingerprint" = {
     text = ''
@@ -113,12 +102,10 @@ in
   services.displayManager.plasma-login-manager.enable = true;
 
   # Match the desktop cursor in the PLM greeter.
-  # The greeter's kwin_wayland runs as the plasmalogin user whose config dir
-  # is empty, so KWin falls back to its default cursor size 24, while the
-  # desktop uses 30 (~/.config/kcminputrc [Mouse] cursorSize=30). KWin reads
-  # $XCURSOR_THEME/$XCURSOR_SIZE first, then kcminputrc; the greeter env is a
-  # PAM whitelist that carries neither, so write the plasmalogin user's
-  # kcminputrc directly. Keep these in sync with the desktop cursor settings.
+  # The greeter's kwin_wayland runs as the plasmalogin user with an empty
+  # config dir, so KWin uses its default cursor size 24 while the desktop uses
+  # 30. The greeter env carries neither XCURSOR_* nor a kcminputrc, so write
+  # the plasmalogin kcminputrc. Keep it in sync with the desktop settings.
   systemd.tmpfiles.rules = [
     "d /var/lib/plasmalogin/.config 0750 plasmalogin plasmalogin -"
     "f /var/lib/plasmalogin/.config/kcminputrc 0644 plasmalogin plasmalogin - [Mouse]\\ncursorTheme=breeze_cursors\\ncursorSize=30"
@@ -128,26 +115,20 @@ in
   services.power-profiles-daemon.enable = false;
 
   nixpkgs.overlays = [
-    # Use the unstable kdePackages set as the base for the whole desktop
-    # and apply the per-package patch sets from `kdePatches` above.
-    # Note: only the listed packages are rebuilt; packages that depend on
-    # them (e.g. kwin -> kscreenlocker) keep their stock outputs. This
-    # keeps the rebuild small and lets cache.nixos.org serve the rest.
-    # (overrideScope was tried but it rebuilds the whole kdePackages set,
-    # turning everything into custom builds that miss the binary cache.)
+    # Use the unstable kdePackages set as the base and apply the per-package
+    # patch sets from `kdePatches` above. Only the listed packages rebuild, so
+    # packages that depend on them keep their cached outputs. (overrideScope
+    # was tried but rebuilds the whole set and misses the binary cache.)
     (final: prev: {
       kdePackages =
         unstablePkgs.kdePackages // (repoLib.applyPatchesToSet kdePatches unstablePkgs.kdePackages);
     })
     # Qt5 apps (for example keepassxc) get their file dialog from the Qt5
-    # plasma-integration platform theme, which embeds KFileWidget from the
-    # KF5 kio. In kio 5 every layout from KFileWidget up to the dialog
-    # wrapper uses zero contents margins, so the bottom grid that holds the
-    # Open/Cancel buttons leaves no gap at the dialog's right edge. Patch
-    # the KF5 kio the Qt5 plugin is built against and rebuild
-    # plasma-integration on top of it (the plugin links
-    # libKF5KIOFileWidgets at runtime, so a bare kio override would still
-    # load the old library through its RPATH).
+    # plasma-integration theme, which embeds KFileWidget from the KF5 kio. In
+    # kio 5 the layouts up to the dialog wrapper use zero contents margins, so
+    # the Open/Cancel grid leaves no gap at the right edge. Patch the KF5 kio
+    # the Qt5 plugin links (a bare kio override would still load the old
+    # library through its RPATH) and rebuild plasma-integration on top.
     (final: prev: {
       kdePackages = prev.kdePackages // {
         plasma-integration = prev.kdePackages.plasma-integration.override {
@@ -163,11 +144,9 @@ in
         };
       };
     })
-    # Dolphin and the file portal use the patched kio and the location-bar
-    # fix. The plasma6 module pulls them from kdePackages, so the override
-    # must patch the kdePackages entries (a top-level override does not reach
-    # the desktop). The rest of the desktop keeps the stock kio. The rebuild
-    # stays small.
+    # Dolphin and the file portal take the patched kio and the location-bar
+    # fix from kdePackages. A top-level override does not reach the desktop, so
+    # patch the kdePackages entries. The rest keeps the stock kio.
     (
       final: prev:
       let

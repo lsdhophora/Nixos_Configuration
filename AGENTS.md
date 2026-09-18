@@ -51,22 +51,58 @@ layout changes.
 
 ## Notes
 
-- Hardware config is auto-generated
-- Package attr path may differ from pname (e.g. `terminus_font`)
-- Home Manager: git uses `settings` not `config`
-- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`. Config in `home/misc/herdr.nix` with the update checks off. Automatic toasts and sounds are off (`[ui.toast] delivery = "off"`, `[ui.sound] enabled = false`): herdr notifies on every finished agent turn, so a scheduled watchdog would pop "pi finished" on every check. A task that finishes sends one explicit `herdr notification show`; herdr still shows that with delivery off. No `/nix/store` program directory enters the pane PATH, so the Starship `nix_shell` heuristic stays quiet
-- Herdr agent states and skill: `home/dev/pi-agent/files.nix` generates the pi integration file with `herdr integration install pi` and links the skill from the herdr package, so both match the installed herdr.
-- Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
-- Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks
-- dae: package from nixpkgs-unstable (`modules/services/dae.nix`). Version 1.0.0 in nixpkgs 26.05 lacks the `sub()`, `node()` and `subnode()` selectors of the DNS request routing. The module sends the host resolution of the subscription and of the nodes to alidns, because the router of 56-606 answers a stale address for `p4.cnt.linuxlh.xin`. The selectors need a parameter: `sub()` does not parse
-- Home persistence: `~/.config` is persisted as one directory, never file by file. Never bind-mount a single file that an application rewrites with `rename(2)`: the write fails with EBUSY and is lost without an error. `home-config-prune.service` deletes every other path below `.config` at boot, before the Home Manager activation; see `modules/desktop/home-config-prune.nix`
-- Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`); change them in the module, not in the UI
-- Plasma panel: the plasma-manager layout script can lose the startup race against plasmashell and then no panel exists. A second startup script in `home/kde/plasma.nix` (priority 3) restarts plasmashell and runs the layout script again
-- Plasma Login Manager: the greeter home is `/var/lib/plasmalogin` on tmpfs. `modules/persistence.nix` persists `/var/lib/plasmalogin/.config`, because the Login Screen KCM writes the Plasma settings of the user there. The sync result must survive a reboot.
-- Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
-- LibreWolf PDF handler: `handlers.json` is runtime state; an activation script re-applies "save to disk" on every switch (see `docs/librewolf.md`)
-- pi `~/.pi/agent/settings.json` is runtime state: persisted in `home/persistence.nix`, and the keys in `piSettings.enforced` are restored on every activation.
-- pi notifications: `home/dev/pi-agent/extensions/notify-on-complete.ts` sends one desktop notification (via the `notify-send` from `home.packages`) when the model announces that work is done — a pi-goal marked complete, the agent closing its own scheduled task (`schedule_prompt` `delete`/`clear`), or the `notify_done` tool. Every trigger is model-driven, so a scheduler monitoring round never rings.
-- Shell prompt: Starship with a two-line format (`home/shell/starship.nix`). The icons come from the built-in `Symbols Nerd Font Mono` of WezTerm, scaled to 1.2 in `home/programs/wezterm.nix`. `allow_square_glyphs_to_overflow_width = "Always"` lets a square icon render wider than its cell even when the cell after it is not a plain space; the default `WhenFollowedBySpace` collapsed the icon to one cell while it was selected. The OS icon stays unstyled (`os.style = "none"`) and the `nix_shell` icon too (`[$symbol](none)` in its format, with the two spaces inside the symbol).
-- asr: transcribes local audio and video files with sherpa-onnx and the FunASR SenseVoice model (`overlays/asr.nix`, `packages/asr/`, skill `home/dev/pi-agent/skills/asr/SKILL.md`). The engine is in the binary cache, so the package installs no pip tree and needs no local build. The first run downloads the model files to `~/.local/share/asr/models`, which `home/persistence.nix` persists. Other machines need the nix files only: the command fetches the models on the first run.
-- Enable/disable features by commenting imports in `hosts/flowerpot/default.nix` or `home/default.nix`
+- Hardware config is auto-generated.
+- Package attr path may differ from pname (e.g. `terminus_font`).
+- Home Manager: git uses `settings`, not `config`.
+- Herdr: from nixpkgs-unstable (`home/misc/cli.nix`), patched by
+  `overlays/herdr.nix`; config in `home/misc/herdr.nix` with the update
+  checks off. Automatic toasts and sounds are off, because a scheduled
+  watchdog ends one agent turn per check; a finished task sends one
+  explicit `herdr notification show` instead.
+- Herdr agent states and skill: `home/dev/pi-agent/files.nix` generates
+  the pi integration file with `herdr integration install pi` and links
+  the skill from the herdr package, so both match the installed herdr.
+- Overlay patches: file in `patches/<pkg>/`, overlay in
+  `overlays/<pkg>.nix` (auto-discovered).
+- Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for
+  UI tweaks.
+- dae: from nixpkgs-unstable (`modules/services/dae.nix`). The 1.0.0 in
+  nixpkgs 26.05 lacks the `sub()`, `node()` and `subnode()` selectors of
+  the DNS request routing, so the module uses the 2.0.0 selectors and
+  resolves the subscription and node hosts through alidns.
+- Home persistence: persist `~/.config` as one directory, never file by
+  file. A single-file bind mount breaks an application that rewrites the
+  file with `rename(2)`: the write fails with EBUSY and is lost.
+  `home-config-prune.service` deletes every other path below `.config` at
+  boot; see `modules/desktop/home-config-prune.nix`.
+- Plasma settings are declarative via plasma-manager
+  (`home/kde/plasma.nix`); change them in the module, not in the UI.
+- Plasma panel: the layout script can lose the startup race against
+  plasmashell; a second script (priority 3) restarts plasmashell and runs
+  it again.
+- Plasma Login Manager: `modules/persistence.nix` persists
+  `/var/lib/plasmalogin/.config`, because the Login Screen KCM writes the
+  user's Plasma settings there.
+- Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the
+  repo, no rebuild needed.
+- LibreWolf PDF handler: `handlers.json` is runtime state; an activation
+  script re-applies "save to disk" on every switch (see
+  `docs/librewolf.md`).
+- pi `~/.pi/agent/settings.json` is runtime state: persisted in
+  `home/persistence.nix`, and `piSettings.enforced` is restored on every
+  activation.
+- pi notifications: `home/dev/pi-agent/extensions/notify-on-complete.ts`
+  sends one desktop notification when the model reports that work is done
+  (a goal marked complete, a closed scheduled task, or `notify_done`); a
+  monitoring round never rings.
+- Shell prompt: Starship, two lines (`home/shell/starship.nix`). The
+  icons come from the WezTerm `Symbols Nerd Font Mono`, scaled to 1.2 in
+  `home/programs/wezterm.nix`; `allow_square_glyphs_to_overflow_width =
+  "Always"` keeps a square glyph wide while it is selected.
+- asr: local audio and video to text, with sherpa-onnx and the FunASR
+  SenseVoice model (`overlays/asr.nix`, `packages/asr/`, skill
+  `home/dev/pi-agent/skills/asr/SKILL.md`). The engine is in the binary
+  cache; the first run downloads the model files to
+  `~/.local/share/asr/models`, which `home/persistence.nix` persists.
+- Comment out imports in `hosts/flowerpot/default.nix` or
+  `home/default.nix` to disable a feature.
