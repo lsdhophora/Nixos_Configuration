@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -10,6 +11,20 @@ let
   panelScript = "${config.xdg.dataHome}/plasma-manager/scripts/2_desktop_script_panels.sh";
   panelMarker = "${config.xdg.dataHome}/plasma-manager/last_run_desktop_script_panels";
 
+  # The applet types of the declared panel, in order. ensurePanel compares
+  # the live panel against this list, so a start that rebuilds a default
+  # panel (the layout script marker skipped the rebuild) is repaired.
+  expectedWidgets = [
+    "org.kde.plasma.kickoff"
+    "org.kde.plasma.panelspacer"
+    "org.kde.plasma.icontasks"
+    "org.kde.plasma.panelspacer"
+    "org.kde.plasma.systemtray"
+    "org.kde.plasma.digitalclock"
+    "org.kde.plasma.showdesktop"
+    "org.kde.plasma.marginsseparator"
+  ];
+
   # Repair the panel when the layout script loses the startup race.
   #
   # The layout script runs about one second after plasmashell starts, when
@@ -18,6 +33,11 @@ let
   # process fails too, because plasmashell keeps the failed plugin lookup.
   # Restart plasmashell and run the layout script again. plasma-manager runs
   # this script after the layout script, because its priority is higher.
+  #
+  # The same repair covers a different failure: a plasmashell restart (or a
+  # start where the layout script's marker already matched) rebuilds the
+  # stock Plasma panel. Compare the applet types against the declaration and
+  # rebuild when they differ.
   ensurePanel = ''
     set -u
     qdbus="${pkgs.kdePackages.qttools}/bin/qdbus"
@@ -25,23 +45,23 @@ let
     rm="${pkgs.coreutils}/bin/rm"
     sleep="${pkgs.coreutils}/bin/sleep"
 
-    # Print the number of panels.  Print nothing when plasmashell does not
-    # answer.
-    panel_count() {
+    expected="${lib.concatStringsSep "," expectedWidgets}"
+
+    # Print the applet types of the first panel, one per line. Print nothing
+    # when plasmashell does not answer.
+    panel_widgets() {
       "$qdbus" org.kde.plasmashell /PlasmaShell \
-        org.kde.PlasmaShell.evaluateScript 'print("" + panels().length)' 2>/dev/null
+        org.kde.PlasmaShell.evaluateScript \
+        'var ps = panels(); if (ps.length === 0) { print("NO_PANEL"); } else { print(ps[0].widgets().map(function (w) { return w.type; }).join("\n")); }' 2>/dev/null
     }
 
-    count="$(panel_count)"
-    if [ -z "$count" ]; then
-      echo "plasma-ensure-panel: plasmashell does not answer" >&2
-      exit 0
-    fi
-    if [ "$count" != "0" ]; then
+    live="$("$(panel_widgets)")"
+
+    if [ -n "$live" ] && [ "$live" = "$expected" ]; then
       exit 0
     fi
 
-    echo "plasma-ensure-panel: no panel, restart plasmashell" >&2
+    echo "plasma-ensure-panel: rebuilding the panel (live: $(echo "$live" | tr '\n' ' '))" >&2
     "$rm" -f "${panelMarker}"
     "$systemctl" --user restart plasma-plasmashell.service
 
@@ -60,11 +80,11 @@ let
     "$sleep" 5
     "${panelScript}"
 
-    count="$(panel_count)"
-    if [ -n "$count" ] && [ "$count" != "0" ]; then
+    live="$("$(panel_widgets)")"
+    if [ "$live" = "$expected" ]; then
       exit 0
     fi
-    echo "plasma-ensure-panel: the panel is still absent" >&2
+    echo "plasma-ensure-panel: the panel does not match the declaration" >&2
     exit 1
   '';
 in
