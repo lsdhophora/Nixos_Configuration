@@ -14,12 +14,12 @@
 #    closes a pane). The client forwarded them and typed a newline or EOF into
 #    the focused pane.
 #
-# The package carries no wrapper. The toasts of herdr use the "terminal"
-# delivery (home/misc/herdr.nix): the client asks the outer terminal, WezTerm,
-# to show the notification, and WezTerm shows it in-process over D-Bus. That
-# needs no notify-send program, where the older "system" delivery needed one on
-# the herdr PATH. A /nix/store program directory in the PATH of every pane also
-# made the Starship nix_shell heuristic report "nix shell" in the prompt.
+# The package carries no wrapper. Herdr raises a background notification for
+# every finished agent turn, and a scheduled watchdog would pop "pi finished"
+# on every check, so home/misc/herdr.nix turns the automatic popups and
+# sounds off and a finished task sends one explicit notification instead. No
+# /nix/store program directory enters the PATH of every pane, so the Starship
+# nix_shell heuristic stays quiet.
 #
 # The patch lives in its own derivation. A change to a file under
 # patches/herdr/ rebuilds `herdr-patched` with cargo and zig, which takes a

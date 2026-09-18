@@ -33,10 +33,11 @@
       # explicit `herdr notification show` instead. Herdr still shows an
       # explicit notification with delivery = "off".
       #
-      # This also keeps notify-send off the pane PATH: with the automatic
-      # popups off, herdr never runs notify-send, so no /nix/store program
-      # directory enters the PATH and the Starship nix_shell heuristic stays
-      # quiet (see overlays/herdr.nix).
+      # This also keeps a /nix/store program directory out of the pane
+      # PATH: with the automatic popups off, herdr never runs notify-send
+      # behind the user, so the Starship nix_shell heuristic stays quiet
+      # (see overlays/herdr.nix). The explicit notification uses the
+      # notify-send from the home profile.
       [ui.toast]
       delivery = "off"
 

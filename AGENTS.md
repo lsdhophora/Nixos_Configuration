@@ -54,7 +54,7 @@ layout changes.
 - Hardware config is auto-generated
 - Package attr path may differ from pname (e.g. `terminus_font`)
 - Home Manager: git uses `settings` not `config`
-- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`. Config in `home/misc/herdr.nix` with the update checks off. Automatic toasts and sounds are off (`[ui.toast] delivery = "off"`, `[ui.sound] enabled = false`): herdr notifies on every finished agent turn, so a scheduled watchdog would pop "pi finished" on every check. A task that finishes sends one explicit `herdr notification show`; herdr still shows that with delivery off. No `notify-send` enters the pane PATH, so the Starship `nix_shell` heuristic stays quiet
+- Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`. Config in `home/misc/herdr.nix` with the update checks off. Automatic toasts and sounds are off (`[ui.toast] delivery = "off"`, `[ui.sound] enabled = false`): herdr notifies on every finished agent turn, so a scheduled watchdog would pop "pi finished" on every check. A task that finishes sends one explicit `herdr notification show`; herdr still shows that with delivery off. No `/nix/store` program directory enters the pane PATH, so the Starship `nix_shell` heuristic stays quiet
 - Herdr agent states and skill: `home/dev/pi-agent/files.nix` generates the pi integration file with `herdr integration install pi` and links the skill from the herdr package, so both match the installed herdr.
 - Overlay patches: file in `patches/<pkg>/`, overlay in `overlays/<pkg>.nix` (auto-discovered)
 - Plasma 6: kdePackages from unstable nixpkgs; plasma-desktop patches for UI tweaks

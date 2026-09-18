@@ -66,16 +66,11 @@ in
       # adds Noto Sans Mono CJK SC for the CJK text and the built-in
       # Symbols Nerd Font Mono of WezTerm for the icons of the shell
       # prompt (see home/shell/starship.nix). The symbols font has a
-      # square cell, so WezTerm lets an icon overflow into the cell after
-      # it only when that cell holds a space with the same attributes. A
-      # square glyph that may not overflow is squeezed to 1.25 cells and
-      # then renders smaller than the text, so the prompt keeps the icon
-      # and the space after it unstyled. The scale of 1.2 makes the
-      # overflowing icon clearly larger than the capitals of the text. A
-      # squeezed glyph never grows past 1.25 cells, so the scale affects
-      # only the icons that overflow. The Iosevka Nerd Font variant is
-      # smaller, and WezTerm squeezes it to 1.25 cells, so it cannot show
-      # a large icon.
+      # square cell, and the scale of 1.2 makes an overflowing icon
+      # clearly larger than the capitals of the text. A glyph that may not
+      # overflow is squeezed to 1.25 cells and renders smaller than the
+      # text; the Iosevka Nerd Font variant is smaller and always
+      # squeezed, so it cannot show a large icon.
       # NWID=1: Iosevka maps ambiguous-width symbols (dash, arrows,
       # ellipsis, check marks, and so on) to 2-cell WWID glyphs by
       # default, but WezTerm lays them out in 1 cell, so their ink
@@ -83,7 +78,7 @@ in
       # character. The NWID OpenType feature switches those glyphs to the
       # built-in narrow variants (same advance as regular characters).
       # This gives the same result as kitty glyph rescaling. See
-      # patches/pi-agent notes.
+      # patches/pi-agent/.
       font = lib.generators.mkLuaInline ''
         wezterm.font_with_fallback({
           { family = "Iosevka", harfbuzz_features = { "NWID=1" } },
