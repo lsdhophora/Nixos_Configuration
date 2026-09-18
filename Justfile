@@ -6,8 +6,9 @@ default:
     @just --list
 
 # Fast static + eval checks (format, deadnix, statix, sops, invariants, lib-tests), ~1 min
+# --no-link keeps the working tree free of result* symlinks.
 check-fast:
-    nix build .#checks.x86_64-linux.format .#checks.x86_64-linux.deadnix .#checks.x86_64-linux.english-comments .#checks.x86_64-linux.statix .#checks.x86_64-linux.sops-integrity .#checks.x86_64-linux.sops-keys .#checks.x86_64-linux.invariants .#checks.x86_64-linux.lib-tests -L
+    nix build --no-link .#checks.x86_64-linux.format .#checks.x86_64-linux.deadnix .#checks.x86_64-linux.english-comments .#checks.x86_64-linux.statix .#checks.x86_64-linux.sops-integrity .#checks.x86_64-linux.sops-keys .#checks.x86_64-linux.invariants .#checks.x86_64-linux.lib-tests -L
 
 # Full checks: static + system toplevel + home activation (slow)
 check:
