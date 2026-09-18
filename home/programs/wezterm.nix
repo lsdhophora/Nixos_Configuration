@@ -91,6 +91,12 @@ in
           "Noto Sans Mono CJK SC",
         })
       '';
+
+      # Keep a square icon overflowing even when the cell after it is not a
+      # plain space, for example while the glyph is selected. The default,
+      # "WhenFollowedBySpace", only overflows into a following same-attribute
+      # space, so a selection collapses the icon to one cell.
+      allow_square_glyphs_to_overflow_width = "Always";
       # U+FE0F (VS16) turns its base code point into an emoji. The pi TUI
       # counts VS16 as one cell and gives such a sequence two cells.
       # WezTerm counts the base code point only and gives it one cell, so
