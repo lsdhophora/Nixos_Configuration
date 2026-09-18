@@ -35,11 +35,12 @@ in
         tcp_check_url: 'https://www.gstatic.com/generate_204,8.8.8.8,2001:4860:4860::8888'
         tcp_check_http_method: HEAD
 
-        # Check every 15s, and switch as soon as another alive node is
-        # even slightly faster. The default 50ms tolerance kept a
-        # degrading node in place.
+        # Check every 15s. The tolerance decides when to switch: 100ms keeps
+        # the choice stable. A 10ms tolerance re-selected a node about three
+        # times a minute, and every re-selection can move a sticky IP to a
+        # node that then fails.
         check_interval: 15s
-        check_tolerance: 10ms
+        check_tolerance: 100ms
       }
 
       subscription {
