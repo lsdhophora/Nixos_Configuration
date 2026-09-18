@@ -20,12 +20,30 @@ in
   };
 
   sops.templates."dae-config" = {
+    # sops-nix restarts the unit when the rendered secret changes. Without
+    # this, a rebuild rewrites /run/secrets/rendered/dae-config but dae keeps
+    # the old content until a manual restart.
+    restartUnits = [ "dae.service" ];
     content = ''
       global {
         wan_interface: auto
         log_level: info
         allow_insecure: false
         auto_config_kernel_parameter: true
+
+        # Node health check. The default target (cp.cloudflare.com) is
+        # throttled or polluted through many subscription nodes, which then
+        # reads as NOT ALIVE. A 204 endpoint has no body, so it costs
+        # little traffic and stays reliable. The two extra addresses pin
+        # the host resolution for the IPv4 and IPv6 checks.
+        tcp_check_url: 'https://www.gstatic.com/generate_204,8.8.8.8,2001:4860:4860::8888'
+        tcp_check_http_method: HEAD
+
+        # Check every 15s, and switch as soon as another alive node is
+        # even slightly faster. The default 50ms tolerance kept a
+        # degrading node in place.
+        check_interval: 15s
+        check_tolerance: 10ms
       }
 
       subscription {
@@ -64,7 +82,10 @@ in
       group {
         proxy {
           filter: !name(keyword: '剩余流量') && !name(keyword: '套餐到期') && !name(keyword: '过滤掉')
-          policy: min_moving_avg
+          # min_avg10 is steadier than min_moving_avg for a subscription
+          # whose nodes flap: it averages the last ten probes, so one slow
+          # probe does not move the choice.
+          policy: min_avg10
         }
       }
 
