@@ -11,11 +11,10 @@ in
   programs.emacs = {
     enable = true;
     # Stock emacs-pgtk from nixpkgs-unstable, straight from the binary cache.
-    # The previous config overrode it (withNativeCompilation = false plus the
-    # popup-title and wayland-cursor patches in patches/emacs-pgtk/), which
-    # forced a from-source rebuild of emacs AND every extra package against
-    # it. The overrides were dropped to reuse the cache; the patch files are
-    # kept in git history.
+    # The previous config overrode it (withNativeCompilation = false plus two
+    # patches), which forced a from-source rebuild of emacs and every extra
+    # package against it. The overrides were dropped to reuse the cache; the
+    # patches are only in the git history.
     package = unstableEmacs.emacs-pgtk;
     extraPackages =
       _: with unstableEmacs.emacs-pgtk.pkgs; [

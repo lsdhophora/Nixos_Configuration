@@ -4,15 +4,13 @@
   ...
 }:
 # LibreWolf (Firefox fork with signature checks disabled and unsigned addons
-# allowed), replacing Firefox.
+# allowed), replacing Firefox. The profile layout and the download and PDF
+# handling are in docs/librewolf.md.
 #
-# See docs/librewolf.md for the profile layout and the download/PDF handling.
-#
-# Migrated from home/programs/firefox.nix: profile settings, chrome CSS and
-# native messaging hosts are the same as for Firefox.  The profile directory
-# moves from ~/.config/mozilla/firefox to ~/.librewolf; user data (history,
-# cookies, logins, extension data) was copied over by hand once (see
-# docs/migration.md or the migration notes in the git history).
+# The profile settings, the chrome CSS and the native messaging hosts match
+# the former Firefox configuration. The profile moved from
+# ~/.config/mozilla/firefox to ~/.librewolf, and the user data was copied
+# over by hand once.
 {
   programs.librewolf = {
     enable = true;

@@ -1,6 +1,6 @@
 # NixOS Laptop Configuration
 
-Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, Chaotic Nyx, custom overlays, Plasma 6.
+Flake-based config for "flowerpot". Uses flake-parts, Home Manager, sops-nix, impermanence, plasma-manager, custom overlays, Plasma 6.
 
 ## Commands
 
@@ -14,7 +14,7 @@ nix flake update                                   # update inputs
 git push                                           # push
 ```
 
-The `home-manager` CLI is installed via `home/misc/cli.nix`, pinned to the flake input revision (`inputs.home-manager.packages.${pkgs.system}.home-manager`), and never run manually with `nix run`.
+The `home-manager` CLI is installed via `home/misc/cli.nix`, pinned to the flake input revision (`inputs.home-manager.packages.${pkgs.stdenv.hostPlatform.system}.home-manager`), and never run manually with `nix run`.
 
 ## Workflow
 
@@ -35,9 +35,8 @@ System changes (hosts, kernel, services, etc.) still require `nixos-rebuild swit
 
 ## Tests
 
-Run `just check-fast` before every commit and `just check` for full
-verification. See `docs/testing.md` for the check list and
-`flake-modules/checks.nix` for the definitions.
+See `docs/testing.md` for the check list and `flake-modules/checks.nix`
+for the definitions.
 
 ## Code Style
 
@@ -53,7 +52,7 @@ layout changes.
 ## Notes
 
 - Hardware config is auto-generated
-- Package attr path may differ from pname (e.g. `transmission_4-gtk`)
+- Package attr path may differ from pname (e.g. `terminus_font`)
 - Home Manager: git uses `settings` not `config`
 - Herdr: package from nixpkgs-unstable (`home/misc/cli.nix`), patched by `overlays/herdr.nix`. Config in `home/misc/herdr.nix` with the update checks off. Automatic toasts and sounds are off (`[ui.toast] delivery = "off"`, `[ui.sound] enabled = false`): herdr notifies on every finished agent turn, so a scheduled watchdog would pop "pi finished" on every check. A task that finishes sends one explicit `herdr notification show`; herdr still shows that with delivery off. No `notify-send` enters the pane PATH, so the Starship `nix_shell` heuristic stays quiet
 - Herdr agent states and skill: `home/dev/pi-agent/files.nix` generates the pi integration file with `herdr integration install pi` and links the skill from the herdr package, so both match the installed herdr.
@@ -64,7 +63,6 @@ layout changes.
 - Plasma panel/Task Manager settings are declarative via plasma-manager (`home/kde/plasma.nix`); change them in the module, not in the UI
 - Plasma panel: the plasma-manager layout script can lose the startup race against plasmashell and then no panel exists. A second startup script in `home/kde/plasma.nix` (priority 3) restarts plasmashell and runs the layout script again
 - Plasma Login Manager: the greeter home is `/var/lib/plasmalogin` on tmpfs. `modules/persistence.nix` persists `/var/lib/plasmalogin/.config`, because the Login Screen KCM writes the Plasma settings of the user there. The sync result must survive a reboot.
-- Granite portal accent color: GNOME returns named strings, Granite expects RGBA tuples — patched via overlay
 - Emacs elisp files are `mkOutOfStoreSymlink` targets: edit them in the repo, no rebuild needed
 - LibreWolf PDF handler: `handlers.json` is runtime state; an activation script re-applies "save to disk" on every switch (see `docs/librewolf.md`)
 - pi `~/.pi/agent/settings.json` is runtime state: persisted in `home/persistence.nix`, and the keys in `piSettings.enforced` are restored on every activation.
