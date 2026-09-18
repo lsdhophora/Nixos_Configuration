@@ -6,6 +6,7 @@
 {
   home.packages = with pkgs; [
     wl-clipboard
+    libnotify
     gh
     lazygit
     at
