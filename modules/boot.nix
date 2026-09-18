@@ -36,6 +36,10 @@
       enable = true;
       device = "nodev";
       efiSupport = true;
+      # Without this, every system generation stays in the boot menu; it
+      # held 69 entries. The limit also lets the garbage collector drop
+      # the older generations.
+      configurationLimit = 10;
     };
     loader.efi.canTouchEfiVariables = true;
 
