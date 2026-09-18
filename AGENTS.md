@@ -27,7 +27,7 @@ The `home-manager` CLI is installed via `home/misc/cli.nix`, pinned to the flake
    (`git commit`) with a GNU-format message
 6. Push only if the rebuild, the checks, and the commit succeeded
 
-Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`.
+Home-only changes (everything under `home/`) can skip the full `nixos-rebuild` for a quick check and use `home-manager switch --flake .#FeiHsueh` instead. Both paths share `home/default.nix`; `homeConfigurations` is wired in `flake-modules/nixos.nix`. The standalone switch is not durable: the NixOS `home-manager-FeiHsueh` activation re-links the home files from the NixOS generation on every boot, so run `nixos-rebuild switch` before the change has to survive a reboot.
 
 Exception: declarative Plasma/KDE config (`home/kde/*.nix`, e.g. `plasma.nix` panels) must be followed by a full OS rebuild (`run0 nixos-rebuild switch --flake .#flowerpot`) to take effect; `home-manager switch` alone does not apply it. The regenerated panel layout is only applied at the next Plasma session start.
 
