@@ -36,6 +36,15 @@ Patch a package as a file under `patches/<pkg>/` plus an overlay in
 `overlays/<pkg>.nix`. `overlays/default.nix` discovers the files in that
 directory automatically.
 
+## Builds
+
+`modules/nix-config.nix` caps the build load at the 12 threads of the Ryzen
+5 5500U. `max-jobs` (6) is the number of concurrent derivations and `cores`
+(2) is the thread budget of each one, so the two multiply to 12. The setup
+also lowers the nix-daemon CPU weight and disk IO class
+(`hosts/flowerpot/default.nix`), so Plasma keeps the machine during a
+rebuild.
+
 ## Home Manager
 
 Both switch paths share `home/default.nix`; `homeConfigurations` is wired in

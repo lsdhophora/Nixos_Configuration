@@ -13,7 +13,9 @@ nixpkgs-unstable: the 1.0.0 in nixpkgs 26.05 lacks the `sub()`, `node()` and
 The health check probes a 204 endpoint every 15s, and the group picks the
 node with `min_avg10`. The probe target matters: the default
 `cp.cloudflare.com` is throttled or polluted through many subscription nodes
-and then reads as NOT ALIVE, which drops good nodes.
+and then reads as NOT ALIVE, which drops good nodes. The tolerance is 100ms:
+at 10ms the group re-selected a node about three times a minute, and every
+re-selection can move a sticky IP to a node that then fails.
 
 The unit loads the rendered config through `LoadCredential`, and systemd
 does not watch that file for content. The module therefore sets two restart
