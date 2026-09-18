@@ -68,7 +68,7 @@ export default function notifyOnComplete(pi: ExtensionAPI) {
     } as any,
     async execute(_toolCallId: string, params: any) {
       const message = typeof params?.message === "string" ? params.message.trim() : "";
-      notify("任务完成", oneLine(message || "任务已完成"));
+      notify("Task complete", oneLine(message || "Task finished"));
       return { content: [{ type: "text", text: "Notification sent." }] };
     },
   });
@@ -81,7 +81,7 @@ export default function notifyOnComplete(pi: ExtensionAPI) {
     if (action !== "delete" && action !== "clear") return;
     if (action === "delete" && event.details?.removed === false) return;
     if (action === "clear" && !event.details?.count) return;
-    notify("任务完成", action === "clear" ? "已关闭全部调度任务" : "已关闭调度任务");
+    notify("Task complete", action === "clear" ? "All scheduled tasks closed" : "Scheduled task closed");
   });
 
   // A goal reached the complete state. Read it from the session and send
@@ -90,6 +90,6 @@ export default function notifyOnComplete(pi: ExtensionAPI) {
     const goal = latestGoal(ctx);
     if (!goal || goal.status !== "complete" || goal.id === notifiedGoalId) return;
     notifiedGoalId = goal.id;
-    notify("目标完成", oneLine(goal.objective ?? "目标已完成"));
+    notify("Goal complete", oneLine(goal.objective ?? "Goal achieved"));
   });
 }

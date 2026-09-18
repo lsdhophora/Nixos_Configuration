@@ -205,5 +205,14 @@ in
       General.TerminalApplication = "wezterm";
       General.TerminalService = "org.wezfurlong.wezterm.desktop";
     };
+
+    # notify-send carries no desktop entry, so Plasma groups its
+    # notifications under the "other" applications, and the default
+    # plasmanotifyrc of plasma-workspace keeps those out of the history.
+    # Keep them in the history: this covers the pi notification extension
+    # and every other command that calls notify-send.
+    configFile."plasmanotifyrc" = {
+      "Applications/@other".ShowInHistory = true;
+    };
   };
 }
