@@ -104,6 +104,7 @@ in
           "plan-mode/index.ts"
           "plan-mode/utils.ts"
           "plan-mode/README.md"
+          "notify-on-complete.ts"
           "root-session/index.ts"
           "root-session/daemon.js"
           "root-session/SKILL.md"
