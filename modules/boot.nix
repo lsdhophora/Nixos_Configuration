@@ -62,8 +62,6 @@
     scheduler = "scx_lavd";
   };
 
-  swapDevices = [ ];
-
   boot.tmp.cleanOnBoot = true;
 
   documentation.nixos.enable = false;
