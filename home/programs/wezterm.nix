@@ -70,7 +70,7 @@ in
       # it only when that cell holds a space with the same attributes. A
       # square glyph that may not overflow is squeezed to 1.25 cells and
       # then renders smaller than the text, so the prompt keeps the icon
-      # and the space after it unstyled. The scale of 1.4 makes the
+      # and the space after it unstyled. The scale of 1.2 makes the
       # overflowing icon clearly larger than the capitals of the text. A
       # squeezed glyph never grows past 1.25 cells, so the scale affects
       # only the icons that overflow. The Iosevka Nerd Font variant is
@@ -87,7 +87,7 @@ in
       font = lib.generators.mkLuaInline ''
         wezterm.font_with_fallback({
           { family = "Iosevka", harfbuzz_features = { "NWID=1" } },
-          { family = "Symbols Nerd Font Mono", scale = 1.4 },
+          { family = "Symbols Nerd Font Mono", scale = 1.2 },
           "Noto Sans Mono CJK SC",
         })
       '';
