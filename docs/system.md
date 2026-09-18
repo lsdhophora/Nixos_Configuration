@@ -17,6 +17,10 @@ the write is lost. `home-config-prune.service`
 Home Manager activation, and two guards keep a `nixos-rebuild switch` from
 running it mid-session.
 
+The persistent journal (`/var/log/journal`, on the data disk) is capped at
+1G in `hosts/flowerpot/default.nix`. The default cap is 10% of the file
+system, and dae alone writes about 0.5 MB an hour.
+
 ## Hardware
 
 `hosts/flowerpot/hardware-configuration.nix` is auto-generated.

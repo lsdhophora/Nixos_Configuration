@@ -82,4 +82,11 @@
     "vm.dirty_ratio" = 10;
   };
 
+  # Cap the persistent journal. The default is 10% of the file system,
+  # capped at 4G, and dae alone writes about 0.5 MB an hour, so the log
+  # reached 3G. 1G holds roughly 80 days at that rate.
+  services.journald.extraConfig = ''
+    SystemMaxUse=1G
+  '';
+
 }
