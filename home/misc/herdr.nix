@@ -26,13 +26,23 @@
       [ui]
       status_indicators = "symbols"
 
-      # Send background notifications to the outer terminal, which asks the
-      # desktop notification service. WezTerm does that in-process over D-Bus,
-      # so the herdr PATH needs no notify-send. A notify-send from the nix
-      # store in that PATH made the nix_shell heuristic of Starship report
-      # "nix shell" in the prompt of every pane.
+      # Herdr raises a background notification whenever a reported agent
+      # turn ends. A scheduled watchdog ends one turn per interval, so a
+      # non-off delivery pops "pi finished" on every check. Turn the
+      # automatic popups and sounds off; a task that finishes sends one
+      # explicit `herdr notification show` instead. Herdr still shows an
+      # explicit notification with delivery = "off".
+      #
+      # This also keeps notify-send off the pane PATH: with the automatic
+      # popups off, herdr never runs notify-send, so no /nix/store program
+      # directory enters the PATH and the Starship nix_shell heuristic stays
+      # quiet (see overlays/herdr.nix).
       [ui.toast]
-      delivery = "terminal"
+      delivery = "off"
+
+      # No sound alerts, for the same reason.
+      [ui.sound]
+      enabled = false
     '';
   };
 
