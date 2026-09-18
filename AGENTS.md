@@ -70,6 +70,13 @@ layout changes.
   nixpkgs 26.05 lacks the `sub()`, `node()` and `subnode()` selectors of
   the DNS request routing, so the module uses the 2.0.0 selectors and
   resolves the subscription and node hosts through alidns.
+- dae restart: the unit loads the rendered config through
+  `LoadCredential`, and systemd does not watch that file for content. The
+  module therefore sets two `restartTriggers`: the template's store file
+  (a config-text change) and the secret's `sopsFileHash` (a subscription
+  key change, which leaves the text alone). `sopsFileHash` hashes the
+  whole sops file, so any key in it triggers the restart, and it is empty
+  unless `sops.validateSopsFiles` stays true.
 - Home persistence: persist `~/.config` as one directory, never file by
   file. A single-file bind mount breaks an application that rewrites the
   file with `rename(2)`: the write fails with EBUSY and is lost.
