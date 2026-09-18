@@ -20,10 +20,6 @@ in
   };
 
   sops.templates."dae-config" = {
-    # sops-nix restarts the unit when the rendered secret changes. Without
-    # this, a rebuild rewrites /run/secrets/rendered/dae-config but dae keeps
-    # the old content until a manual restart.
-    restartUnits = [ "dae.service" ];
     content = ''
       global {
         wan_interface: auto
@@ -112,4 +108,12 @@ in
     package = dae;
     configFile = config.sops.templates."dae-config".path;
   };
+
+  # Restart dae when the rendered config changes. The unit loads the file
+  # through LoadCredential, and systemd tracks the path, not its content.
+  # The template's store file (.file) holds the static text, so a config
+  # change moves it and the trigger fires. This uses the native
+  # restartTriggers path instead of sops restartUnits, which still goes
+  # through the activation script that NixOS 26.11 removes.
+  systemd.services.dae.restartTriggers = [ config.sops.templates."dae-config".file ];
 }
